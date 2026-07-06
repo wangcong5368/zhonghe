@@ -88,6 +88,13 @@ export function getDeptUserTree() {
         method: 'get'
     });
 }
+// 获取部门和人员的树形列表新接口
+export function getNewDeptUserTree() {
+    return request({
+        url: '/project/supervise/selectOwnDeptUserTreeList',
+        method: 'get'
+    });
+}
 // 根据权限字符获取对应部门用户
 export function getQueryDeptOrPermission(permissionStr) {
     return request({

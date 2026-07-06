@@ -1,7 +1,6 @@
 <template>
     <div>
-        <el-dialog :title="'天津众和发文处理单'" :visible.sync="visible" width="900px" append-to-body @close="cancel"
-            :close-on-click-modal="false">
+        <el-dialog :title="'11111'" :visible.sync="visible" width="900px" append-to-body @close="cancel" :close-on-click-modal="false">
             <el-form ref="form" :model="form" :rules="rules" label-width="120px">
                 <!-- 公共信息 -->
                 <!-- <el-divider content-position="left">公共信息</el-divider> -->
@@ -9,8 +8,7 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="标题" prop="title">
-                            <el-input v-model="form.title" placeholder="请输入标题" maxlength="50" clearable
-                                :disabled="isFieldDisabled('title')" />
+                            <el-input v-model="form.title" placeholder="请输入标题" maxlength="50" clearable :disabled="isFieldDisabled('title')" />
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -18,17 +16,14 @@
                 <el-row>
                     <el-col :span="12">
                         <el-form-item label="紧急程度" prop="urgencyLevel">
-                            <el-select v-model="form.urgencyLevel" placeholder="请选择紧急程度" style="width: 100%"
-                                :disabled="isFieldDisabled('urgencyLevel')">
-                                <el-option v-for="dict in dict.type.official_urgency_level" :key="dict.value"
-                                    :label="dict.label" :value="dict.value"></el-option>
+                            <el-select v-model="form.urgencyLevel" placeholder="请选择紧急程度" style="width: 100%" :disabled="isFieldDisabled('urgencyLevel')">
+                                <el-option v-for="dict in dict.type.official_urgency_level" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
                             </el-select>
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="主送单位" prop="mainDeliveryAgency">
-                            <el-input v-model="form.mainDeliveryAgency" placeholder="请输入主送单位" maxlength="50" clearable
-                                :disabled="isFieldDisabled('mainDeliveryAgency')" />
+                            <el-input v-model="form.mainDeliveryAgency" placeholder="请输入主送单位" maxlength="50" clearable :disabled="isFieldDisabled('mainDeliveryAgency')" />
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -36,9 +31,16 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="正文" prop="text">
-                            <el-input v-model="form.text" type="textarea" placeholder="请输入正文" maxlength="2000" clearable
-                                :autosize="{ minRows: 4 }" class="custom-textarea"
-                                :disabled="isFieldDisabled('text')" />
+                            <el-input
+                                v-model="form.text"
+                                type="textarea"
+                                placeholder="请输入正文"
+                                maxlength="2000"
+                                clearable
+                                :autosize="{ minRows: 4 }"
+                                class="custom-textarea"
+                                :disabled="isFieldDisabled('text')"
+                            />
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -46,12 +48,9 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="附件" prop="filePath">
-                            <FileUpload v-if="!isFieldDisabled('filePath')" v-model="form.filePath"
-                                @upload-success="handleUploadSuccess" @file-deleted="handleFileDeleted"
-                                ref="fileUpload" />
+                            <FileUpload v-if="!isFieldDisabled('filePath')" v-model="form.filePath" @upload-success="handleUploadSuccess" @file-deleted="handleFileDeleted" ref="fileUpload" />
                             <div v-else-if="(form.filePathArray || []).length > 0">
-                                <div v-for="(filePath, index) in (form.filePathArray || [])" :key="index"
-                                    style="margin-bottom: 5px;">
+                                <div v-for="(filePath, index) in form.filePathArray || []" :key="index" style="margin-bottom: 5px">
                                     <el-link type="primary" @click="previewFile(filePath)">
                                         <i class="el-icon-document"></i>
                                         {{ getDisplayFileName(filePath) }}
@@ -66,8 +65,7 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="附件链接" prop="attachmentDescription">
-                            <el-input v-model="form.attachmentDescription" placeholder="请输入附件链接" maxlength="500"
-                                clearable :disabled="isFieldDisabled('attachmentDescription')" />
+                            <el-input v-model="form.attachmentDescription" placeholder="请输入附件链接" maxlength="500" clearable :disabled="isFieldDisabled('attachmentDescription')" />
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -75,14 +73,12 @@
                 <el-row>
                     <el-col :span="12">
                         <el-form-item label="抄送" prop="issuingAgency">
-                            <el-input v-model="form.issuingAgency" placeholder="请输入抄送" maxlength="50" clearable
-                                :disabled="isFieldDisabled('issuingAgency')" />
+                            <el-input v-model="form.issuingAgency" placeholder="请输入抄送" maxlength="50" clearable :disabled="isFieldDisabled('issuingAgency')" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="打印份数" prop="partNumber">
-                            <el-input-number v-model="form.partNumber" :min="0" placeholder="请输入打印份数"
-                                style="width: 100%" :disabled="isFieldDisabled('partNumber')" />
+                            <el-input-number v-model="form.partNumber" :min="0" placeholder="请输入打印份数" style="width: 100%" :disabled="isFieldDisabled('partNumber')" />
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -108,89 +104,100 @@
                     </el-col>
                 </el-row>
                 <!-- 主任批示：处理结果与意见 -->
-                                    <el-row>
+                <el-row>
                     <el-col :span="24">
                         <el-form-item label="主任处理结果">
                             <el-radio-group v-model="directorStatus" :disabled="isFieldDisabled('directorStatus')">
                                 <el-radio label="1">通过</el-radio>
                                 <el-radio label="2">退回</el-radio>
                             </el-radio-group>
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="主任意见">
-                            <el-input v-model="directorRemark" type="textarea" placeholder="请输入处理意见"
-                                :disabled="isFieldDisabled('directorRemark')"></el-input>
-                            <quick-reply v-if="!isFieldDisabled('directorRemark')" :onSelect="handleSelectPhrase"
-                                :superviseId="form.docId" :inputContent="directorRemark"
-                                @collected="handleCollected"></quick-reply>
+                            <el-input v-model="directorRemark" type="textarea" placeholder="请输入处理意见" :disabled="isFieldDisabled('directorRemark')"></el-input>
+                            <quick-reply
+                                v-if="!isFieldDisabled('directorRemark')"
+                                :onSelect="handleSelectPhrase"
+                                :superviseId="form.docId"
+                                :inputContent="directorRemark"
+                                @collected="handleCollected"
+                            ></quick-reply>
                         </el-form-item>
                     </el-col>
                 </el-row>
 
-                  <!-- 综合管理部意见（综合岗核稿） -->
-                  <el-divider content-position="left">综合管理部意见</el-divider>
+                <!-- 综合管理部意见（综合岗核稿） -->
+                <el-divider content-position="left">综合管理部意见</el-divider>
                 <!-- 综合岗审核字段 -->
                 <el-row>
-                        <el-col :span="24">
-                            <el-form-item label="发文字号" prop="wordSize">
-                            <el-input v-model="form.wordSize" placeholder="请输入发文字号（非必填）" maxlength="50" clearable
-                                :disabled="isFieldDisabled('wordSize')" />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
+                    <el-col :span="24">
+                        <el-form-item label="发文字号" prop="wordSize">
+                            <el-input v-model="form.wordSize" placeholder="请输入发文字号（非必填）" maxlength="50" clearable :disabled="isFieldDisabled('wordSize')" />
+                        </el-form-item>
+                    </el-col>
+                </el-row>
 
                 <el-row>
-                        <el-col :span="24">
-                            <el-form-item label="密级" prop="secrecy">
-                            <el-select v-model="form.secrecy" placeholder="请选择密级（非必填）" style="width: 100%" clearable
-                                :disabled="isFieldDisabled('secrecy')">
-                                    <el-option v-for="dict in dict.type.official_secrecy" :key="dict.value"
-                                        :label="dict.label" :value="dict.value"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
+                    <el-col :span="24">
+                        <el-form-item label="密级" prop="secrecy">
+                            <el-select v-model="form.secrecy" placeholder="请选择密级（非必填）" style="width: 100%" clearable :disabled="isFieldDisabled('secrecy')">
+                                <el-option v-for="dict in dict.type.official_secrecy" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
 
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="抄送机关" prop="cc">
-                            <el-input v-model="form.cc" type="textarea" placeholder="请输入抄送机关（非必填）" maxlength="200"
-                                clearable :autosize="{ minRows: 1, maxRows: 3 }" :disabled="isFieldDisabled('cc')" />
+                            <el-input
+                                v-model="form.cc"
+                                type="textarea"
+                                placeholder="请输入抄送机关（非必填）"
+                                maxlength="200"
+                                clearable
+                                :autosize="{ minRows: 1, maxRows: 3 }"
+                                :disabled="isFieldDisabled('cc')"
+                            />
                         </el-form-item>
                     </el-col>
                 </el-row>
 
                 <el-row>
                     <el-col :span="12">
-                            <el-form-item label="联系人" prop="contactPerson">
-                            <el-input v-model="form.contactPerson" placeholder="请输入联系人（非必填）" maxlength="20" clearable
-                                :disabled="isFieldDisabled('contactPerson')" />
-                            </el-form-item>
-                        </el-col>
+                        <el-form-item label="联系人" prop="contactPerson">
+                            <el-input v-model="form.contactPerson" placeholder="请输入联系人（非必填）" maxlength="20" clearable :disabled="isFieldDisabled('contactPerson')" />
+                        </el-form-item>
+                    </el-col>
                     <el-col :span="12">
-                            <el-form-item label="联系电话" prop="contactPhone">
-                            <el-input v-model="form.contactPhone" placeholder="请输入联系电话（非必填）" maxlength="11" clearable
-                                :disabled="isFieldDisabled('contactPhone')" />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
+                        <el-form-item label="联系电话" prop="contactPhone">
+                            <el-input v-model="form.contactPhone" placeholder="请输入联系电话（非必填）" maxlength="11" clearable :disabled="isFieldDisabled('contactPhone')" />
+                        </el-form-item>
+                    </el-col>
+                </el-row>
                 <el-row>
                     <el-col :span="24">
-                        <el-form-item label="下一审核人"
-                            :required="processType === 'comprehensiveCheck' && form.status === '1'">
-                            <el-select v-model="form.directorIds" multiple placeholder="请选择审核人（最多2人，必须包含孙强）"
-                                style="width: 100%" @change="handleDirectorIdsChange"
-                                :disabled="isFieldDisabled('directorIds')">
-                                <el-option v-for="item in (directorList || [])" :key="item.userId"
-                                    :label="item.nickName" :value="item.userId"
-                                    :disabled="isDirectorOptionDisabled(item.userId)"></el-option>
+                        <el-form-item label="下一审核人" :required="processType === 'comprehensiveCheck' && form.status === '1'">
+                            <el-select
+                                v-model="form.directorIds"
+                                multiple
+                                placeholder="请选择审核人（最多2人，必须包含孙强）"
+                                style="width: 100%"
+                                @change="handleDirectorIdsChange"
+                                :disabled="isFieldDisabled('directorIds')"
+                            >
+                                <el-option
+                                    v-for="item in directorList || []"
+                                    :key="item.userId"
+                                    :label="item.nickName"
+                                    :value="item.userId"
+                                    :disabled="isDirectorOptionDisabled(item.userId)"
+                                ></el-option>
                             </el-select>
-                            <div style="font-size: 12px; color: #909399; margin-top: 5px;">
-                                注意：最多选择2人，且必须包含孙强
-                            </div>
+                            <div style="font-size: 12px; color: #909399; margin-top: 5px">注意：最多选择2人，且必须包含孙强</div>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -211,18 +218,17 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="部门经理意见">
-                            <el-input v-model="managerRemark" type="textarea" placeholder="请输入处理意见"
-                                :disabled="isFieldDisabled('managerRemark')"></el-input>
-                            <quick-reply v-if="!isFieldDisabled('managerRemark')" :onSelect="handleSelectPhrase"
-                                :superviseId="form.docId" :inputContent="managerRemark"
-                                @collected="handleCollected"></quick-reply>
+                            <el-input v-model="managerRemark" type="textarea" placeholder="请输入处理意见" :disabled="isFieldDisabled('managerRemark')"></el-input>
+                            <quick-reply
+                                v-if="!isFieldDisabled('managerRemark')"
+                                :onSelect="handleSelectPhrase"
+                                :superviseId="form.docId"
+                                :inputContent="managerRemark"
+                                @collected="handleCollected"
+                            ></quick-reply>
                         </el-form-item>
                     </el-col>
                 </el-row>
-
-              
-
-
 
                 <!-- 文件套头 -->
                 <el-divider content-position="left">文件套头</el-divider>
@@ -230,10 +236,8 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="套头模板" :required="processType === 'directorHair'">
-                            <el-select v-model="form.word" placeholder="请选择套头模板" style="width: 100%"
-                                :disabled="isFieldDisabled('word')">
-                                <el-option v-for="item in (documentTemplates || [])" :key="item.dictValue"
-                                    :label="item.dictLabel" :value="item.dictValue"></el-option>
+                            <el-select v-model="form.word" placeholder="请选择套头模板" style="width: 100%" :disabled="isFieldDisabled('word')">
+                                <el-option v-for="item in documentTemplates || []" :key="item.dictValue" :label="item.dictLabel" :value="item.dictValue"></el-option>
                             </el-select>
                         </el-form-item>
                     </el-col>
@@ -243,16 +247,28 @@
                 <el-row>
                     <el-col :span="12">
                         <el-form-item label="成文日期" :required="processType === 'directorHair' && needsWrittenDate">
-                            <el-date-picker v-model="form.writtenDate" type="date" format="yyyy-MM-dd"
-                                value-format="yyyy-MM-dd" placeholder="成文日期" style="width: 100%"
-                                :disabled="isFieldDisabled('writtenDate')"></el-date-picker>
+                            <el-date-picker
+                                v-model="form.writtenDate"
+                                type="date"
+                                format="yyyy-MM-dd"
+                                value-format="yyyy-MM-dd"
+                                placeholder="成文日期"
+                                style="width: 100%"
+                                :disabled="isFieldDisabled('writtenDate')"
+                            ></el-date-picker>
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="印发日期" :required="processType === 'directorHair'">
-                            <el-date-picker v-model="form.issuingDate" type="date" format="yyyy-MM-dd"
-                                value-format="yyyy-MM-dd" placeholder="印发日期" style="width: 100%"
-                                :disabled="isFieldDisabled('issuingDate')"></el-date-picker>
+                            <el-date-picker
+                                v-model="form.issuingDate"
+                                type="date"
+                                format="yyyy-MM-dd"
+                                value-format="yyyy-MM-dd"
+                                placeholder="印发日期"
+                                style="width: 100%"
+                                :disabled="isFieldDisabled('issuingDate')"
+                            ></el-date-picker>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -261,14 +277,10 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="内部发送">
-                            <el-select v-model="form.internalCirculation" placeholder="请选择部门" style="width: 100%"
-                                clearable multiple :disabled="isFieldDisabled('internalCirculation')">
-                                <el-option v-for="item in (departmentList || [])" :key="item.id" :label="item.label"
-                                    :value="item.id"></el-option>
+                            <el-select v-model="form.internalCirculation" placeholder="请选择部门" style="width: 100%" clearable multiple :disabled="isFieldDisabled('internalCirculation')">
+                                <el-option v-for="item in departmentList || []" :key="item.id" :label="item.label" :value="item.id"></el-option>
                             </el-select>
-                            <div style="font-size: 12px; color: #909399; margin-top: 5px;">
-                                选择需要内部发送的部门，可多选，非必填项
-                            </div>
+                            <div style="font-size: 12px; color: #909399; margin-top: 5px">选择需要内部发送的部门，可多选，非必填项</div>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -277,14 +289,10 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="公文分发">
-                            <el-select v-model="form.userIds" multiple placeholder="请选择公文分发" style="width: 100%"
-                                clearable :disabled="isFieldDisabled('userIds')">
-                                <el-option v-for="item in (filteredUsers || [])" :key="item.id" :label="item.label"
-                                    :value="item.id"></el-option>
+                            <el-select v-model="form.userIds" multiple placeholder="请选择公文分发" style="width: 100%" clearable :disabled="isFieldDisabled('userIds')">
+                                <el-option v-for="item in filteredUsers || []" :key="item.id" :label="item.label" :value="item.id"></el-option>
                             </el-select>
-                            <div style="font-size: 12px; color: #909399; margin-top: 5px;">
-                                选择部门经理，可多选，非必填项
-                            </div>
+                            <div style="font-size: 12px; color: #909399; margin-top: 5px">选择部门经理，可多选，非必填项</div>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -293,11 +301,8 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="分发人员" :required="processType === 'leaderDistribute'">
-                            <el-select v-model="form.distributeUserIds" multiple placeholder="请选择分发人员"
-                                style="width: 100%" :disabled="isFieldDisabled('distributeUserIds')">
-                                <el-option v-for="item in (userList || [])" :key="item.userId" :label="item.nickName"
-                                    :value="item.userId">
-                                </el-option>
+                            <el-select v-model="form.distributeUserIds" multiple placeholder="请选择分发人员" style="width: 100%" :disabled="isFieldDisabled('distributeUserIds')">
+                                <el-option v-for="item in userList || []" :key="item.userId" :label="item.nickName" :value="item.userId"></el-option>
                             </el-select>
                         </el-form-item>
                     </el-col>
@@ -307,11 +312,14 @@
                 <el-row>
                     <el-col :span="24">
                         <el-form-item label="备注">
-                            <el-input v-model="form.remark" type="textarea" placeholder="请输入备注"
-                                :disabled="isFieldDisabled('remark')"></el-input>
-                            <quick-reply v-if="!isFieldDisabled('remark')" :onSelect="handleSelectPhrase"
-                                :superviseId="form.docId" :inputContent="form.remark"
-                                @collected="handleCollected"></quick-reply>
+                            <el-input v-model="form.remark" type="textarea" placeholder="请输入备注" :disabled="isFieldDisabled('remark')"></el-input>
+                            <quick-reply
+                                v-if="!isFieldDisabled('remark')"
+                                :onSelect="handleSelectPhrase"
+                                :superviseId="form.docId"
+                                :inputContent="form.remark"
+                                @collected="handleCollected"
+                            ></quick-reply>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -319,8 +327,7 @@
                 <el-divider content-position="left">处理流程</el-divider>
                 <div class="timeline-container">
                     <el-timeline>
-                        <el-timeline-item v-for="(item, index) in historicalRecord" :key="index"
-                            :timestamp="formatTime(item.processTime)" placement="top" :type="getStatusType(item.status)">
+                        <el-timeline-item v-for="(item, index) in historicalRecord" :key="index" :timestamp="formatTime(item.processTime)" placement="top" :type="getStatusType(item.status)">
                             <div class="history-item">
                                 <div class="history-header">
                                     <span class="history-title">{{ item.returnRemark || '处理流程' }}</span>
@@ -330,7 +337,10 @@
                                 </div>
                                 <div class="history-info" v-if="item.nickName">
                                     <span class="info-label">处理人：</span>
-                                    <span class="info-value">{{ item.nickName }}<template v-if="item.deptName">—{{ item.deptName }}</template></span>
+                                    <span class="info-value">
+                                        {{ item.nickName }}
+                                        <template v-if="item.deptName">—{{ item.deptName }}</template>
+                                    </span>
                                 </div>
                                 <div class="history-info" v-if="item.remark">
                                     <span class="info-label">处理意见：</span>
@@ -342,8 +352,7 @@
                 </div>
             </el-form>
             <div slot="footer" class="dialog-footer">
-                <el-button v-if="!isView && submitAction === 'resubmit'" type="primary"
-                    @click="resubmitForm">重新提交</el-button>
+                <el-button v-if="!isView && submitAction === 'resubmit'" type="primary" @click="resubmitForm">重新提交</el-button>
                 <el-button v-else-if="!isView && isProcessMode" type="primary" @click="submitProcess">确 定</el-button>
                 <el-button v-else-if="!isView" type="primary" @click="publishForm">确 定</el-button>
                 <el-button @click="cancel">关 闭</el-button>
@@ -356,14 +365,7 @@
 <script>
 import { addDraft, updateDraft, selectDocumentProcessListByDocId } from '@/api/oa/document';
 import { addDocument, submitDraft } from '@/api/oa/documentManagement';
-import {
-    documentLeaderCheck,
-    documentComprehensiveCheck,
-    documentDirectorCheck,
-    documentDirectorHair,
-    documentSealCheck,
-    departmentalDistribution
-} from '@/api/oa/documentManagement';
+import { documentLeaderCheck, documentComprehensiveCheck, documentDirectorCheck, documentDirectorHair, documentSealCheck, departmentalDistribution } from '@/api/oa/documentManagement';
 import conf from '@/conf.js'; // 导入配置文件
 import ViewFile from '@/components/viewFile';
 import { getQueryDeptOrPermission } from '@/api/oa/publicApi';
@@ -507,10 +509,14 @@ export default {
             if (!time) return '未知时间';
             try {
                 return new Date(time).toLocaleString('zh-CN', {
-                    year: 'numeric', month: '2-digit', day: '2-digit',
-                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
                 });
-            } catch(e) {
+            } catch (e) {
                 return time;
             }
         },
@@ -628,7 +634,7 @@ export default {
             if (!this.deptLeaderUserTreeList || !Array.isArray(this.deptLeaderUserTreeList)) {
                 return;
             }
-            const traverse = (nodes) => {
+            const traverse = nodes => {
                 if (!nodes) return;
                 nodes.forEach(node => {
                     // 只添加有用户列表（部门经理）的部门
@@ -724,11 +730,13 @@ export default {
             // 拉取处理流程
             const docId = this.form.docId || this.form.id;
             if (docId) {
-                selectDocumentProcessListByDocId({ id: docId }).then(res => {
-                    this.historicalRecord = Array.isArray(res.data) ? res.data : [];
-                }).catch(() => {
-                    this.historicalRecord = [];
-                });
+                selectDocumentProcessListByDocId({ id: docId })
+                    .then(res => {
+                        this.historicalRecord = Array.isArray(res.data) ? res.data : [];
+                    })
+                    .catch(() => {
+                        this.historicalRecord = [];
+                    });
             } else {
                 this.historicalRecord = [];
             }
@@ -1024,7 +1032,7 @@ export default {
                     docId: this.form.docId,
                     word: this.form.word,
                     remark: this.form.remark,
-                    issuingDate: this.form.issuingDate,
+                    issuingDate: this.form.issuingDate
                 };
                 // 如果需要成文日期，添加到参数中
                 if (this.needsWrittenDate) {
@@ -1084,7 +1092,7 @@ export default {
 
         loadAnyLeaveUsers() {
             const anyLeaveUsers = new Map();
-            
+
             // 获取有 anyLeave 权限的用户
             getQueryDeptOrPermission('system:user:anyLeave').then(res => {
                 if (res.data && res.data.length) {
@@ -1094,7 +1102,7 @@ export default {
                     this.anyLeaveUsers = Array.from(anyLeaveUsers.values());
                 }
             });
-            
+
             // 获取有 anyFinance 权限的用户并合并
             getQueryDeptOrPermission('system:user:anyFinance').then(res => {
                 if (res.data && res.data.length) {
@@ -1113,11 +1121,7 @@ export default {
         'form.word': {
             handler(newValue) {
                 // Check if selected template is one of the specific ones requiring writtenDate
-                const requiredTemplates = [
-                    '/调解风险建议书.docx',
-                    '/津众和发〔202X〕XX号.docx',
-                    '/津众和便函〔202X〕XX号.docx'
-                ];
+                const requiredTemplates = ['/调解风险建议书.docx', '/津众和发〔202X〕XX号.docx', '/津众和便函〔202X〕XX号.docx'];
                 // 通过事件通知父组件更新needsWrittenDate
                 this.$emit('update-needs-written-date', requiredTemplates.includes(newValue));
             },

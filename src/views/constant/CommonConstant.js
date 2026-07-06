@@ -287,4 +287,13 @@ export const DM_CHANNEL_TYPE = {
   MONITOR: "0", // 监管信访先行引导
   APPLY: "1", // 当事人自行申请调解
 };
+// 发文类型
+export const DM_DOCUMENT_SENDING_TYPE = {
+  '6': "津众和发",
+  '7': "调解风险建议书",
+  '8': "津众和党发",
+  '9': "津众和函",
+  '10': "津众和便函",
+  '11': "主任办公会议纪要",
+};
 

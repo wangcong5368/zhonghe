@@ -75,7 +75,8 @@
     "vue-router": "3.4.9",
     "vue-sticky-directive": "^0.0.10",
     "vuedraggable": "2.24.3",
-    "vuex": "3.6.0"
+    "vuex": "3.6.0",
+    "wangeditor": "^4.7.15"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "4.4.6",

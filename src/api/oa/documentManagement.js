@@ -1,4 +1,11 @@
 import request from '@/utils/request';
+import conf from '@/conf';
+
+function expandServiceUrl(path) {
+  const base = String(conf.server.expandBaseUrl || '').replace(/\/$/, '');
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${p}`;
+}
 
 // 查询公文发文列表
 export function listDocumentHandle(query) {
@@ -14,6 +21,21 @@ export function addDocument(data) {
     return request({
         url: '/project/document/addDocument',
         method: 'post',
+        data: data
+    });
+}
+// 公文发布时的保存附件文档接口
+export function documentImageSave(data) {
+    return request({
+        url: expandServiceUrl('/project/documentImage/save'),
+        method: 'post',
+        data: data
+    });
+}
+export function getDocumentImageList(data) {
+    return request({
+        url: expandServiceUrl(`/project/documentImage/list?document_id=${data.documentId}`),
+        method: 'get',
         data: data
     });
 }
