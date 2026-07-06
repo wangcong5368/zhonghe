@@ -62,8 +62,8 @@
                         </el-form-item>
                     </el-col>
                     <el-col :span="6">
-                        <el-form-item label="工单编号" prop="workOrderId">
-                            <el-input v-model="queryParams.workOrderId" placeholder="请输入工单编号" clearable @keyup.enter.native="handleQuery" style="width: 100%" />
+                        <el-form-item label="案件编号" prop="workOrderId">
+                            <el-input v-model="queryParams.workOrderId" placeholder="请输入案件编号" clearable @keyup.enter.native="handleQuery" style="width: 100%" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="6">
@@ -379,7 +379,7 @@
             :row-class-name="tableRowClassName"
         >
             >
-            <el-table-column label="工单编号" align="center" prop="workOrderId" v-if="columns.find(s => s.label === '工单编号').visible" sortable="custom" width="130px">
+            <el-table-column label="案件编号" align="center" prop="workOrderId" v-if="columns.find(s => s.label === '案件编号').visible" sortable="custom" width="130px">
                 <template slot-scope="scope">
                     <el-tooltip
                         v-if="!$store.getters.userInfo.isDMInstitution && scope.row.mediatorAcceptTime && !scope.row.finishTime"
@@ -1248,7 +1248,7 @@ export default {
             },
             // 列信息
             columns: [
-                { label: `工单编号`, visible: true },
+                { label: `案件编号`, visible: true },
                 { label: `消费者姓名`, visible: true },
                 { label: `联系方式`, visible: true },
                 { label: `接案时间`, visible: true },
@@ -1372,7 +1372,7 @@ export default {
         // 用印申请
         applyStamp(row) {
             this.$modal
-                .confirm('工单编号"' + row.workOrderId + '"是否要申请用印')
+                .confirm('案件编号"' + row.workOrderId + '"是否要申请用印')
                 .then(function () {
                     return applyStamp({ workOrderId: row.workOrderId });
                 })
@@ -1482,7 +1482,7 @@ export default {
         handleDelete(row) {
             const workOrderIds = row.workOrderId || this.ids;
             this.$modal
-                .confirm('是否确认删除纠纷业务工单编号为"' + workOrderIds + '"的数据项？')
+                .confirm('是否确认删除纠纷业务案件编号为"' + workOrderIds + '"的数据项？')
                 .then(function () {
                     return delDisputeMediation(workOrderIds);
                 })
@@ -1509,7 +1509,7 @@ export default {
         /** 办结 */
         handleFinish(row) {
             this.$modal
-                .confirm('是否确认办结纠纷业务工单编号为"' + row.workOrderId + '"的数据项？')
+                .confirm('是否确认办结纠纷业务案件编号为"' + row.workOrderId + '"的数据项？')
                 .then(function () {
                     return finish({ workOrderId: row.workOrderId });
                 })
@@ -1532,7 +1532,7 @@ export default {
         /** 提交归档 */
         handleArchiveApply(row) {
             this.$modal
-                .confirm('是否确认提交归档纠纷业务工单编号为"' + row.workOrderId + '"的数据项？')
+                .confirm('是否确认提交归档纠纷业务案件编号为"' + row.workOrderId + '"的数据项？')
                 .then(function () {
                     return archiveApply({ workOrderId: row.workOrderId });
                 })
@@ -1561,7 +1561,7 @@ export default {
         /** 归档 */
         handleArchive(row) {
             this.$modal
-                .confirm('是否确认归档纠纷业务工单编号为"' + row.workOrderId + '"的数据项？')
+                .confirm('是否确认归档纠纷业务案件编号为"' + row.workOrderId + '"的数据项？')
                 .then(function () {
                     return archive({ workOrderId: row.workOrderId });
                 })

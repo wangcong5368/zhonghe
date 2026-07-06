@@ -1,1369 +1,1476 @@
 <!-- 新增纠纷业务工单对话框 -->
 <template xmlns="http://www.w3.org/1999/html">
-    <el-dialog ref="disputeDialog" :visible.sync="visible" width="92%" append-to-body :close-on-click-modal="false" :show-close="false" class="dispute-dialog" :class="{ 'dispute-dialog--script-open': smartScriptVisible }" :close-on-press-escape="false">
+    <el-dialog
+        ref="disputeDialog"
+        :visible.sync="visible"
+        width="92%"
+        append-to-body
+        :close-on-click-modal="false"
+        :show-close="false"
+        class="dispute-dialog"
+        :class="{ 'dispute-dialog--script-open': smartScriptVisible }"
+        :close-on-press-escape="false"
+    >
         <div class="dispute-wrapper">
             <div class="dispute-main">
                 <el-row class="add-dispute" :gutter="3">
-            <el-col ref="dialogLeft" class="dialog-left" :span="14">
-                <div class="dialog-title">
-                    <span>添加纠纷业务工单</span>
-                    <i class="el-icon-close" @click="cancel" />
-                </div>
-                <el-form ref="form" :model="form" :rules="rules" label-width="120px">
-                    <div>
-                        <div class="min_title">工单信息</div>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item label="进件渠道" prop="entryChannel">
-                                    <el-cascader
-                                        v-model="form.entryChannel"
-                                        :options="dict.type.dm_entry_channel.options"
-                                        :props="{ expandTrigger: 'hover', emitPath: false }"
-                                        placeholder="请选择进件渠道"
-                                        clearable
-                                        style="width: 100%"
-                                        @change="changEntryChannel"
-                                    />
-                                    <!--              <el-select v-model="form.entryChannel" placeholder="请选择进件渠道" style="width: 100%" :disabled="$store.getters.userInfo.isDMInstitution" clearable>-->
-                                    <!--                <el-option-->
-                                    <!--                  v-for="dict in dict.type.dm_entry_channel"-->
-                                    <!--                  :key="dict.value"-->
-                                    <!--                  :label="dict.label"-->
-                                    <!--                  :value="dict.value"-->
-                                    <!--                ></el-option>-->
-                                    <!--              </el-select>-->
-                                </el-form-item>
-                            </el-col>
+                    <el-col ref="dialogLeft" class="dialog-left" :span="14">
+                        <div class="dialog-title">
+                            <span>添加纠纷业务工单</span>
+                            <i class="el-icon-close" @click="cancel" />
+                        </div>
+                        <el-form ref="form" :model="form" :rules="rules" label-width="120px">
+                            <div>
+                                <div class="min_title">工单信息</div>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="进件渠道" prop="entryChannel">
+                                            <el-cascader
+                                                v-model="form.entryChannel"
+                                                :options="dict.type.dm_entry_channel.options"
+                                                :props="{ expandTrigger: 'hover', emitPath: false }"
+                                                placeholder="请选择进件渠道"
+                                                clearable
+                                                style="width: 100%"
+                                                @change="changEntryChannel"
+                                            />
+                                            <!--              <el-select v-model="form.entryChannel" placeholder="请选择进件渠道" style="width: 100%" :disabled="$store.getters.userInfo.isDMInstitution" clearable>-->
+                                            <!--                <el-option-->
+                                            <!--                  v-for="dict in dict.type.dm_entry_channel"-->
+                                            <!--                  :key="dict.value"-->
+                                            <!--                  :label="dict.label"-->
+                                            <!--                  :value="dict.value"-->
+                                            <!--                ></el-option>-->
+                                            <!--              </el-select>-->
+                                        </el-form-item>
+                                    </el-col>
 
-                            <el-col
-                                :span="12"
-                                v-if="
-                                    $store.getters.userInfo.isDMEntryClerk ||
-                                    DEPT_TYPE.insuranceList.includes(form.deptType) ||
-                                    DEPT_TYPE.bankList.includes(form.deptType) ||
-                                    DEPT_TYPE.nonBankList.includes(form.deptType)
-                                "
-                            >
-                                <el-form-item label="渠道类型" prop="channelType">
-                                    <el-select disabled v-model="form.channelType" placeholder="请选择渠道类型" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12" v-if="DM_ENTRY_CHANNEL.COURT.includes(this.form.entryChannel)">
-                                <el-form-item label="调解员" prop="mediatorUserId">
-                                    <el-select v-model="form.mediatorUserId" placeholder="请选择调解员" clearable style="width: 100%">
-                                        <el-option v-for="item in mediatorList" :key="item.mediatorUserId" :label="item.remark" :value="item.mediatorUserId" :disabled="item.disabled"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="form.entryChannel && form.entryChannel !== DM_ENTRY_CHANNEL.E">
-                            <el-col :span="24">
-                                <el-form-item label="图片/pdf信息识别">
-                                    <el-upload
-                                        ref="ocrUpload"
-                                        action=""
-                                        accept="image/*,.pdf,application/pdf"
-                                        multiple
-                                        :show-file-list="false"
-                                        :limit="5"
-                                        :http-request="handleOcrUpload"
-                                        :before-upload="beforeOcrUpload"
-                                        :on-exceed="handleOcrExceed"
-                                        :auto-upload="true"
+                                    <el-col
+                                        :span="12"
+                                        v-if="
+                                            $store.getters.userInfo.isDMEntryClerk ||
+                                            DEPT_TYPE.insuranceList.includes(form.deptType) ||
+                                            DEPT_TYPE.bankList.includes(form.deptType) ||
+                                            DEPT_TYPE.nonBankList.includes(form.deptType)
+                                        "
                                     >
-                                        <el-button size="mini" type="primary">上传图片/PDF</el-button>
-                                        <span slot="tip" class="el-upload__tip" style="margin-left: 12px">支持一次选择多张图片或 PDF，批量识别工单相关信息</span>
-                                    </el-upload>
-                                    <ul v-if="ocrRecognizeRecords.length" class="recognize-records-list">
-                                        <li
-                                            v-for="(record, index) in ocrRecognizeRecords"
-                                            :key="record.id"
-                                            class="recognize-record-item"
-                                            :class="{ active: activeOcrRecordId === record.id }"
-                                            @click="applyOcrRecord(record)"
+                                        <el-form-item label="渠道类型" prop="channelType">
+                                            <el-select disabled v-model="form.channelType" placeholder="请选择渠道类型" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12" v-if="DM_ENTRY_CHANNEL.COURT.includes(this.form.entryChannel)">
+                                        <el-form-item label="调解员" prop="mediatorUserId">
+                                            <el-select v-model="form.mediatorUserId" placeholder="请选择调解员" clearable style="width: 100%">
+                                                <el-option
+                                                    v-for="item in mediatorList"
+                                                    :key="item.mediatorUserId"
+                                                    :label="item.remark"
+                                                    :value="item.mediatorUserId"
+                                                    :disabled="item.disabled"
+                                                ></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="form.entryChannel && form.entryChannel !== DM_ENTRY_CHANNEL.E">
+                                    <el-col :span="24">
+                                        <el-form-item label="图片/pdf信息识别">
+                                            <el-upload
+                                                ref="ocrUpload"
+                                                action=""
+                                                accept="image/*,.pdf,application/pdf"
+                                                multiple
+                                                :show-file-list="false"
+                                                :limit="5"
+                                                :http-request="handleOcrUpload"
+                                                :before-upload="beforeOcrUpload"
+                                                :on-exceed="handleOcrExceed"
+                                                :auto-upload="true"
+                                            >
+                                                <el-button size="mini" type="primary">上传图片/PDF</el-button>
+                                                <span slot="tip" class="el-upload__tip" style="margin-left: 12px">支持一次选择多张图片或 PDF，批量识别工单相关信息</span>
+                                            </el-upload>
+                                            <ul v-if="ocrRecognizeRecords.length" class="recognize-records-list">
+                                                <li
+                                                    v-for="(record, index) in ocrRecognizeRecords"
+                                                    :key="record.id"
+                                                    class="recognize-record-item"
+                                                    :class="{ active: activeOcrRecordId === record.id }"
+                                                    @click="applyOcrRecord(record)"
+                                                >
+                                                    <span class="record-label">{{ record.label }}</span>
+                                                    <span class="record-time">{{ record.time }}</span>
+                                                    <el-button type="text" class="record-delete" @click.stop="removeOcrRecord(index)">删除</el-button>
+                                                </li>
+                                            </ul>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="form.entryChannel && form.entryChannel === DM_ENTRY_CHANNEL.D">
+                                    <el-col :span="24">
+                                        <el-form-item label="表格信息识别">
+                                            <el-upload
+                                                ref="excelUpload"
+                                                action=""
+                                                accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                                                :show-file-list="false"
+                                                :limit="1"
+                                                :http-request="handleExcelUpload"
+                                                :before-upload="beforeExcelUpload"
+                                                :on-exceed="handleExcelExceed"
+                                                :auto-upload="true"
+                                            >
+                                                <el-button size="mini" type="primary">上传Excel</el-button>
+                                                <span slot="tip" class="el-upload__tip" style="margin-left: 12px">仅支持 Excel 文件，识别后自动填入左侧表单</span>
+                                            </el-upload>
+                                            <ul v-if="excelRecognizeRecords.length" class="recognize-records-list">
+                                                <li
+                                                    v-for="(record, index) in excelRecognizeRecords"
+                                                    :key="record.id"
+                                                    class="recognize-record-item"
+                                                    :class="{ active: activeExcelRecordId === record.id }"
+                                                    @click="applyExcelRecord(record)"
+                                                >
+                                                    <span class="record-label">{{ record.label }}</span>
+                                                    <span class="record-time">{{ record.time }}</span>
+                                                    <el-button type="text" class="record-delete" @click.stop="removeExcelRecord(index)">删除</el-button>
+                                                </li>
+                                            </ul>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                            <div>
+                                <div class="min_title">委托人信息</div>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="是否消费者本人" prop="isSelf">
+                                            <el-radio-group v-model="form.isSelf">
+                                                <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label }}</el-radio>
+                                            </el-radio-group>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12" v-if="SYS_YES_NO.sys_no === form.isSelf">
+                                        <el-form-item label="代理人姓名" prop="agentName">
+                                            <el-input v-model="form.agentName" placeholder="请输入代理人姓名" clearable maxlength="10" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="SYS_YES_NO.sys_no === form.isSelf">
+                                    <el-col :span="12">
+                                        <el-form-item label="代理人证件类型" prop="agentCertType">
+                                            <el-select v-model="form.agentCertType" placeholder="请选择代理人证件类型" style="width: 100%" clearable>
+                                                <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="代理人证件号码"
+                                            prop="agentCertNum"
+                                            :rules="[
+                                                { required: this.form.agentCertType, message: '代理人证件号码为必填项', trigger: 'blur' },
+                                                { validator: this.validCertNum(this.form.agentCertType), trigger: 'blur' }
+                                            ]"
                                         >
-                                            <span class="record-label">{{ record.label }}</span>
-                                            <span class="record-time">{{ record.time }}</span>
-                                            <el-button type="text" class="record-delete" @click.stop="removeOcrRecord(index)">删除</el-button>
-                                        </li>
-                                    </ul>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="form.entryChannel && form.entryChannel === DM_ENTRY_CHANNEL.D">
-                            <el-col :span="24">
-                                <el-form-item label="表格信息识别">
-                                    <el-upload
-                                        ref="excelUpload"
-                                        action=""
-                                        accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                                        :show-file-list="false"
-                                        :limit="1"
-                                        :http-request="handleExcelUpload"
-                                        :before-upload="beforeExcelUpload"
-                                        :on-exceed="handleExcelExceed"
-                                        :auto-upload="true"
-                                    >
-                                        <el-button size="mini" type="primary">上传Excel</el-button>
-                                        <span slot="tip" class="el-upload__tip" style="margin-left: 12px">仅支持 Excel 文件，识别后自动填入左侧表单</span>
-                                    </el-upload>
-                                    <ul v-if="excelRecognizeRecords.length" class="recognize-records-list">
-                                        <li
-                                            v-for="(record, index) in excelRecognizeRecords"
-                                            :key="record.id"
-                                            class="recognize-record-item"
-                                            :class="{ active: activeExcelRecordId === record.id }"
-                                            @click="applyExcelRecord(record)"
-                                        >
-                                            <span class="record-label">{{ record.label }}</span>
-                                            <span class="record-time">{{ record.time }}</span>
-                                            <el-button type="text" class="record-delete" @click.stop="removeExcelRecord(index)">删除</el-button>
-                                        </li>
-                                    </ul>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                    </div>
-                    <div>
-                        <div class="min_title">委托人信息</div>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item label="是否消费者本人" prop="isSelf">
-                                    <el-radio-group v-model="form.isSelf">
-                                        <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label }}</el-radio>
-                                    </el-radio-group>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12" v-if="SYS_YES_NO.sys_no === form.isSelf">
-                                <el-form-item label="代理人姓名" prop="agentName">
-                                    <el-input v-model="form.agentName" placeholder="请输入代理人姓名" clearable maxlength="10" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="SYS_YES_NO.sys_no === form.isSelf">
-                            <el-col :span="12">
-                                <el-form-item label="代理人证件类型" prop="agentCertType">
-                                    <el-select v-model="form.agentCertType" placeholder="请选择代理人证件类型" style="width: 100%" clearable>
-                                        <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item
-                                    label="代理人证件号码"
-                                    prop="agentCertNum"
-                                    :rules="[
-                                        { required: this.form.agentCertType, message: '代理人证件号码为必填项', trigger: 'blur' },
-                                        { validator: this.validCertNum(this.form.agentCertType), trigger: 'blur' }
-                                    ]"
+                                            <el-input
+                                                v-model="form.agentCertNum"
+                                                placeholder="请输入代理人证件号码"
+                                                :maxlength="this.validCertNumLength(this.form.agentCertType)"
+                                                show-word-limit
+                                                clearable
+                                            />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="SYS_YES_NO.sys_no === form.isSelf">
+                                    <el-col :span="12">
+                                        <el-form-item label="代理人联系方式" prop="agentPhone">
+                                            <el-input
+                                                v-model="form.agentPhone"
+                                                placeholder="请输入代理人联系方式"
+                                                maxlength="11"
+                                                show-word-limit
+                                                clearable
+                                                oninput="value=value.replace(/[^\d]/g,'')"
+                                            />
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="代理人性别" prop="agentSex">
+                                            <el-select v-model="form.agentSex" placeholder="请选择代理人性别" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                            <div>
+                                <div class="min_title">消费者信息</div>
+
+                                <el-row
+                                    v-if="
+                                        $store.getters.userInfo.isDMEntryClerk ||
+                                        DEPT_TYPE.insuranceList.includes(form.deptType) ||
+                                        DEPT_TYPE.bankList.includes(form.deptType) ||
+                                        DEPT_TYPE.nonBankList.includes(form.deptType)
+                                    "
                                 >
-                                    <el-input v-model="form.agentCertNum" placeholder="请输入代理人证件号码" :maxlength="this.validCertNumLength(this.form.agentCertType)" show-word-limit clearable />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="SYS_YES_NO.sys_no === form.isSelf">
-                            <el-col :span="12">
-                                <el-form-item label="代理人联系方式" prop="agentPhone">
-                                    <el-input v-model="form.agentPhone" placeholder="请输入代理人联系方式" maxlength="11" show-word-limit clearable oninput="value=value.replace(/[^\d]/g,'')" />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="代理人性别" prop="agentSex">
-                                    <el-select v-model="form.agentSex" placeholder="请选择代理人性别" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                    </div>
-                    <div>
-                        <div class="min_title">消费者信息</div>
-
-                        <el-row
-                            v-if="
-                                $store.getters.userInfo.isDMEntryClerk ||
-                                DEPT_TYPE.insuranceList.includes(form.deptType) ||
-                                DEPT_TYPE.bankList.includes(form.deptType) ||
-                                DEPT_TYPE.nonBankList.includes(form.deptType)
-                            "
-                        >
-                            <el-col :span="12">
-                                <el-form-item label="消费者身份类型" prop="consumerIdentityType">
-                                    <el-select v-model="form.consumerIdentityType" placeholder="请选择消费者身份类型" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.dm_consumer_identity_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item v-if="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL" label="法人或非法人组织" prop="name" label-width="140px">
-                                    <el-input v-model="form.name" placeholder="请输入法人或非法人组织" clearable maxlength="50" show-word-limit />
-                                </el-form-item>
-                                <el-form-item v-else label="消费者姓名" prop="name">
-                                    <el-input v-model="form.name" placeholder="请输入消费者姓名" clearable maxlength="50" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="联系方式" prop="phone">
-                                    <el-input v-model="form.phone" placeholder="请输入联系方式" oninput="value=value.replace(/[^\d]/g,'')" clearable maxlength="11" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item label="证件类型" prop="certType">
-                                    <el-select v-model="form.certType" placeholder="请选择证件类型" clearable style="width: 100%">
-                                        <!-- <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
+                                    <el-col :span="12">
+                                        <el-form-item label="消费者身份类型" prop="consumerIdentityType">
+                                            <el-select v-model="form.consumerIdentityType" placeholder="请选择消费者身份类型" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.dm_consumer_identity_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item v-if="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL" label="法人或非法人组织" prop="name" label-width="140px">
+                                            <el-input v-model="form.name" placeholder="请输入法人或非法人组织" clearable maxlength="50" show-word-limit />
+                                        </el-form-item>
+                                        <el-form-item v-else label="消费者姓名" prop="name">
+                                            <el-input v-model="form.name" placeholder="请输入消费者姓名" clearable maxlength="50" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="联系方式" prop="phone">
+                                            <el-input v-model="form.phone" placeholder="请输入联系方式" oninput="value=value.replace(/[^\d]/g,'')" clearable maxlength="11" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="证件类型" prop="certType">
+                                            <el-select v-model="form.certType" placeholder="请选择证件类型" clearable style="width: 100%">
+                                                <!-- <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
                       :value="dict.value"></el-option> -->
-                                        <el-option v-for="item in filteredCertTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item
-                                    v-if="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL"
-                                    label="统一社会信用代码"
-                                    prop="certNum"
-                                    :rules="[{ required: true, message: '统一社会信用代码为必填项', trigger: 'blur' }]"
-                                    label-width="140px"
+                                                <el-option v-for="item in filteredCertTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            v-if="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL"
+                                            label="统一社会信用代码"
+                                            prop="certNum"
+                                            :rules="[{ required: true, message: '统一社会信用代码为必填项', trigger: 'blur' }]"
+                                            label-width="140px"
+                                        >
+                                            <el-input
+                                                v-model="form.certNum"
+                                                placeholder="请输入统一社会信用代码"
+                                                :maxlength="this.validCertNumLength(this.form.certType)"
+                                                show-word-limit
+                                                clearable
+                                                @input="cardNumChange"
+                                            />
+                                        </el-form-item>
+                                        <el-form-item
+                                            v-else
+                                            label="证件号码"
+                                            prop="certNum"
+                                            :rules="[
+                                                { required: true, message: '消费者证件号码为必填项', trigger: 'blur' },
+                                                { validator: this.validCertNum(this.form.certType), trigger: 'blur' }
+                                            ]"
+                                        >
+                                            <el-input
+                                                v-model="form.certNum"
+                                                placeholder="请输入证件号码"
+                                                :maxlength="this.validCertNumLength(this.form.certType)"
+                                                show-word-limit
+                                                clearable
+                                                @input="cardNumChange"
+                                            />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="性别"
+                                            prop="sex"
+                                            :rules="[{ required: form.consumerIdentityType !== DM_IDENTITY_TYPE.LEGAL, message: '消费者性别为必填项', trigger: 'change' }]"
+                                        >
+                                            <el-select v-model="form.sex" placeholder="请选择性别" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="年龄"
+                                            prop="age"
+                                            :rules="[{ required: form.consumerIdentityType !== DM_IDENTITY_TYPE.LEGAL, message: '消费者年龄为必填项', trigger: 'blur' }]"
+                                        >
+                                            <el-input v-model="form.age" maxlength="3" show-word-limit placeholder="请输入年龄" clearable oninput="value=value.replace(/[^\d]/g,'')" />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="民族" prop="nation">
+                                            <el-input v-model="form.nation" maxlength="26" show-word-limit clearable placeholder="请输入民族" />
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="职业" prop="profession">
+                                            <el-input v-model="form.profession" maxlength="20" show-word-limit clearable placeholder="请输入职业" />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row
+                                    v-if="
+                                        $store.getters.userInfo.isDMEntryClerk ||
+                                        DEPT_TYPE.insuranceList.includes(form.deptType) ||
+                                        DEPT_TYPE.bankList.includes(form.deptType) ||
+                                        DEPT_TYPE.nonBankList.includes(form.deptType)
+                                    "
                                 >
-                                    <el-input
-                                        v-model="form.certNum"
-                                        placeholder="请输入统一社会信用代码"
-                                        :maxlength="this.validCertNumLength(this.form.certType)"
-                                        show-word-limit
-                                        clearable
-                                        @input="cardNumChange"
-                                    />
-                                </el-form-item>
-                                <el-form-item
-                                    v-else
-                                    label="证件号码"
-                                    prop="certNum"
-                                    :rules="[
-                                        { required: true, message: '消费者证件号码为必填项', trigger: 'blur' },
-                                        { validator: this.validCertNum(this.form.certType), trigger: 'blur' }
-                                    ]"
-                                >
-                                    <el-input
-                                        v-model="form.certNum"
-                                        placeholder="请输入证件号码"
-                                        :maxlength="this.validCertNumLength(this.form.certType)"
-                                        show-word-limit
-                                        clearable
-                                        @input="cardNumChange"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item label="性别" prop="sex" :rules="[{ required: form.consumerIdentityType !== DM_IDENTITY_TYPE.LEGAL, message: '消费者性别为必填项', trigger: 'change' }]">
-                                    <el-select v-model="form.sex" placeholder="请选择性别" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="年龄" prop="age" :rules="[{ required: form.consumerIdentityType !== DM_IDENTITY_TYPE.LEGAL, message: '消费者年龄为必填项', trigger: 'blur' }]">
-                                    <el-input v-model="form.age" maxlength="3" show-word-limit placeholder="请输入年龄" clearable oninput="value=value.replace(/[^\d]/g,'')" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item label="民族" prop="nation">
-                                    <el-input v-model="form.nation" maxlength="26" show-word-limit clearable placeholder="请输入民族" />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="职业" prop="profession">
-                                    <el-input v-model="form.profession" maxlength="20" show-word-limit clearable placeholder="请输入职业" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row
-                            v-if="
-                                $store.getters.userInfo.isDMEntryClerk ||
-                                DEPT_TYPE.insuranceList.includes(form.deptType) ||
-                                DEPT_TYPE.bankList.includes(form.deptType) ||
-                                DEPT_TYPE.nonBankList.includes(form.deptType)
-                            "
-                        >
-                            <el-col :span="12">
-                                <el-form-item label="邮箱" prop="email">
-                                    <el-input v-model="form.email" show-word-limit placeholder="请输入邮箱" clearable />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12" v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
-                                <el-form-item label="身份类型" prop="identityType">
-                                    <el-select v-model="form.identityType" placeholder="请选择身份类型" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.dm_identity_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12" v-if="!$store.getters.userInfo.isDMEntryClerk">
-                                <el-form-item label="调解次数" prop="mediationNumber" :rules="[{ required: $store.getters.userInfo.isMediator, message: '调解次数为必填项', trigger: 'blur' }]">
-                                    <el-input v-model="form.mediationNumber" show-word-limit placeholder="请输入调解次数" clearable />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="24">
-                                <el-form-item label="单位或住址" prop="address">
-                                    <el-input v-model="form.address" type="textarea" placeholder="请输入单位或住址" clearable maxlength="50" show-word-limit :autosize="{ minRows: 1 }" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="24">
-                                <el-form-item label="其他当事人信息" prop="remark">
-                                    <el-input v-model="form.remark" type="textarea" placeholder="请输入其他当事人信息" clearable maxlength="50" show-word-limit :autosize="{ minRows: 1 }" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType) || DEPT_TYPE.insuranceList.includes(form.deptType)">
-                            <el-col :span="12">
-                                <el-form-item label="是否屡投" prop="isRepeatedly">
-                                    <el-select v-model="form.isRepeatedly" placeholder="请选择是否屡投" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="是否涉及黑产" prop="isBlackIndustry">
-                                    <el-select v-model="form.isBlackIndustry" placeholder="请选择是否涉及黑产" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
-                            <el-col :span="12">
-                                <el-form-item label="是否涉及第三方代理" prop="isThirdPartyAgent" label-width="150px">
-                                    <el-select v-model="form.isThirdPartyAgent" placeholder="请选择是否涉及第三方代理" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="是否高危客群" prop="isHighRisk">
-                                    <el-select v-model="form.isHighRisk" placeholder="请选择是否高危客群" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                    </div>
-                    <div>
-                        <div class="min_title">机构信息</div>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item label="机构名称" prop="deptId">
-                                    <treeselect v-model="form.deptId" :options="deptOptions" :normalizer="normalizer" placeholder="请选择机构" @input="deptChange" @change="deptChangeClick" />
-                                </el-form-item>
-                            </el-col>
-                            <!-- <el-col :span="12">
+                                    <el-col :span="12">
+                                        <el-form-item label="邮箱" prop="email">
+                                            <el-input v-model="form.email" show-word-limit placeholder="请输入邮箱" clearable />
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12" v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
+                                        <el-form-item label="身份类型" prop="identityType">
+                                            <el-select v-model="form.identityType" placeholder="请选择身份类型" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.dm_identity_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12" v-if="!$store.getters.userInfo.isDMEntryClerk">
+                                        <el-form-item
+                                            label="调解次数"
+                                            prop="mediationNumber"
+                                            :rules="[
+                                                {
+                                                    required:
+                                                        !$store.getters.userInfo.isDMEntryClerk &&
+                                                        !DEPT_TYPE.insuranceList.includes(form.deptType) &&
+                                                        !DEPT_TYPE.bankList.includes(form.deptType) &&
+                                                        !DEPT_TYPE.nonBankList.includes(form.deptType),
+                                                    message: '调解次数为必填项',
+                                                    trigger: 'blur'
+                                                }
+                                            ]"
+                                        >
+                                            <el-input v-model="form.mediationNumber" show-word-limit placeholder="请输入调解次数" clearable />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="24">
+                                        <el-form-item label="单位或住址" prop="address">
+                                            <el-input v-model="form.address" type="textarea" placeholder="请输入单位或住址" clearable maxlength="50" show-word-limit :autosize="{ minRows: 1 }" />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="24">
+                                        <el-form-item label="其他当事人信息" prop="remark">
+                                            <el-input v-model="form.remark" type="textarea" placeholder="请输入其他当事人信息" clearable maxlength="50" show-word-limit :autosize="{ minRows: 1 }" />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType) || DEPT_TYPE.insuranceList.includes(form.deptType)">
+                                    <el-col :span="12">
+                                        <el-form-item label="是否屡投" prop="isRepeatedly">
+                                            <el-select v-model="form.isRepeatedly" placeholder="请选择是否屡投" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="是否涉及黑产" prop="isBlackIndustry">
+                                            <el-select v-model="form.isBlackIndustry" placeholder="请选择是否涉及黑产" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+                                    <el-col :span="12">
+                                        <el-form-item label="是否涉及第三方代理" prop="isThirdPartyAgent" label-width="150px">
+                                            <el-select v-model="form.isThirdPartyAgent" placeholder="请选择是否涉及第三方代理" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="是否高危客群" prop="isHighRisk">
+                                            <el-select v-model="form.isHighRisk" placeholder="请选择是否高危客群" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                            <div>
+                                <div class="min_title">机构信息</div>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="机构名称" prop="deptId">
+                                            <treeselect v-model="form.deptId" :options="deptOptions" :normalizer="normalizer" placeholder="请选择机构" @input="deptChange" @change="deptChangeClick" />
+                                        </el-form-item>
+                                    </el-col>
+                                    <!-- <el-col :span="12">
                                 <el-form-item label="机构类型" prop="type">
                                     <el-cascader v-model="form.deptType" :options="dict.type.dept_type.options" disabled :props="{ expandTrigger: 'hover', emitPath: false }" style="width: 100%" />
                                 </el-form-item>
                             </el-col> -->
-                            <el-col :span="12">
-                                <el-form-item label="机构类型" prop="institutionType">
-                                    <el-cascader
-                                        v-model="form.institutionType"
-                                        :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
-                                        :props="{ expandTrigger: 'hover', emitPath: false }"
-                                        placeholder="请选择机构类型"
-                                        clearable
-                                        style="width: 100%"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="24">
-                                <el-form-item label="住所地" prop="deptAddress">
-                                    <el-input v-model="form.deptAddress" type="textarea" placeholder="请输入机构住所地" clearable maxlength="100" show-word-limit :autosize="{ minRows: 1 }" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item label="纠纷发生日期" prop="disputeDate">
-                                    <el-date-picker
-                                        clearable
-                                        v-model="form.disputeDate"
-                                        type="date"
-                                        value-format="yyyy-MM-dd"
-                                        placeholder="请选择纠纷发生日期"
-                                        style="width: 100%"
-                                        :picker-options="{
-                                            disabledDate(time) {
-                                                // 禁用所有小于当前日期的日期
-                                                return time.getTime() > Date.now();
-                                            }
-                                        }"
-                                    ></el-date-picker>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="机构所在地区" prop="deptArea">
-                                    <el-input v-model="form.deptArea" placeholder="请输入机构所在地区" clearable maxlength="40" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
-                            <el-col :span="12">
-                                <el-form-item
-                                    label="业务经办人员"
-                                    prop="deptHandlerName"
-                                    :rules="[
-                                        {
-                                            required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                            message: '业务经办人员为必填项',
-                                            trigger: 'blur'
-                                        }
-                                    ]"
-                                >
-                                    <el-input v-model="form.deptHandlerName" placeholder="请输入业务经办人员" clearable maxlength="10" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item
-                                    label="经办人员联系电话"
-                                    prop="deptHandlerPhone"
-                                    label-width="140px"
-                                    :rules="[
-                                        {
-                                            required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                            message: '经办人员联系电话为必填项',
-                                            trigger: 'blur'
-                                        },
-                                        { validator: this.phoneRule, trigger: 'blur' }
-                                    ]"
-                                >
-                                    <el-input v-model="form.deptHandlerPhone" placeholder="请输入经办人员联系电话" clearable maxlength="11" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
-                            <el-col :span="12">
-                                <el-form-item
-                                    label="经办人身份证号"
-                                    prop="deptHandlerCertNum"
-                                    :rules="[
-                                        {
-                                            required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                            message: '经办人身份证号为必填项',
-                                            trigger: 'blur'
-                                        },
-                                        { validator: this.validCertNum(this.CERT_TYPE.CERT_TYPE0), trigger: 'blur' }
-                                    ]"
-                                >
-                                    <el-input v-model="form.deptHandlerCertNum" placeholder="请输入经办人身份证号" clearable maxlength="18" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="被投诉主体层级" prop="level">
-                                    <el-input v-model="form.level" placeholder="请输入被投诉主体层级" clearable maxlength="10" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
-                            <el-col :span="12">
-                                <el-form-item label="业务类别" prop="businessType1">
-                                    <el-cascader
-                                        v-model="form.businessType1"
-                                        :options="dict.type.dm_business_type.options2"
-                                        :props="{ emitPath: false, checkStrictly: false }"
-                                        placeholder="请选择业务类别"
-                                        clearable
-                                        style="width: 100%"
-                                        ref="businessType1Ref"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
-                            <el-col :span="12">
-                                <el-form-item label="级别二" prop="businessType2">
-                                    <el-input v-model="form.businessType2" placeholder="请输入级别二" clearable maxlength="20" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="级别三" prop="businessType3">
-                                    <el-input v-model="form.businessType3" placeholder="请输入级别三" clearable maxlength="20" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
-                            <el-col :span="12">
-                                <el-form-item
-                                    label="业务办理渠道"
-                                    prop="handleChannel"
-                                    :rules="[
-                                        {
-                                            required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                            message: '业务办理渠道为必填项',
-                                            trigger: 'change'
-                                        }
-                                    ]"
-                                >
-                                    <el-select v-model="form.handleChannel" placeholder="请选择业务办理渠道" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.dm_handle_channel" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item
-                                    label="投诉分类"
-                                    prop="bankComplaintType"
-                                    :rules="[
-                                        {
-                                            required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                            message: '投诉分类为必填项',
-                                            trigger: 'change'
-                                        }
-                                    ]"
-                                >
-                                    <el-select v-model="form.bankComplaintType" placeholder="请选择投诉分类" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.dm_bank_complaint_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
-                            <el-col :span="12">
-                                <el-form-item
-                                    label="险种类别"
-                                    prop="insuranceType1"
-                                    :rules="[
-                                        {
-                                            required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                            message: '险种类别为必填项',
-                                            trigger: 'change'
-                                        }
-                                    ]"
-                                >
-                                    <el-cascader
-                                        v-model="form.insuranceType1"
-                                        :options="dict.type.dm_insurance_type.options2"
-                                        :props="{ emitPath: false, checkStrictly: false }"
-                                        placeholder="请选择业务类别"
-                                        clearable
-                                        style="width: 100%"
-                                        ref="insuranceType1Ref"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="险种类别2" prop="insuranceType2">
-                                    <el-input v-model="form.insuranceType2" placeholder="请输入险种类别2" clearable maxlength="40" show-word-limit />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
-                            <el-col :span="12">
-                                <el-form-item label="产品销售渠道" prop="saleChannel">
-                                    <el-select v-model="form.saleChannel" placeholder="请选择产品销售渠道" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.dm_sale_channel" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item
-                                    label="保险消费投诉事由分类"
-                                    prop="insuranceComplaintType"
-                                    label-width="165px"
-                                    :rules="[
-                                        {
-                                            required: DEPT_TYPE.insuranceList.includes(form.deptType),
-                                            message: '保险消费投诉事由分类为必填项',
-                                            trigger: 'change'
-                                        }
-                                    ]"
-                                >
-                                    <el-select v-model="form.insuranceComplaintType" placeholder="请选择保险消费投诉事由分类" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.dm_insurance_complaint_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item
-                                    label="金融服务发生地"
-                                    prop="financialServiceArea"
-                                    :rules="[
-                                        {
-                                            required: true,
-                                            message: '金融服务发生地为必填项',
-                                            trigger: 'change'
-                                        }
-                                    ]"
-                                >
-                                    <el-cascader
-                                        ref="financialServiceAreaRef"
-                                        v-model="form.financialServiceArea"
-                                        :options="areaOptions"
-                                        :props="{
-                                            lazy: true,
-                                            lazyLoad: (node, resolve) => {
-                                                if (!node) {
-                                                    resolve([]);
-                                                    return;
+                                    <el-col :span="12">
+                                        <el-form-item label="机构类型" prop="institutionType">
+                                            <el-cascader
+                                                v-model="form.institutionType"
+                                                :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
+                                                :props="{ expandTrigger: 'hover', emitPath: false }"
+                                                placeholder="请选择机构类型"
+                                                clearable
+                                                style="width: 100%"
+                                            />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="24">
+                                        <el-form-item label="住所地" prop="deptAddress">
+                                            <el-input v-model="form.deptAddress" type="textarea" placeholder="请输入机构住所地" clearable maxlength="100" show-word-limit :autosize="{ minRows: 1 }" />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="纠纷发生日期" prop="disputeDate">
+                                            <el-date-picker
+                                                clearable
+                                                v-model="form.disputeDate"
+                                                type="date"
+                                                value-format="yyyy-MM-dd"
+                                                placeholder="请选择纠纷发生日期"
+                                                style="width: 100%"
+                                                :picker-options="{
+                                                    disabledDate(time) {
+                                                        // 禁用所有小于当前日期的日期
+                                                        return time.getTime() > Date.now();
+                                                    }
+                                                }"
+                                            ></el-date-picker>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="机构所在地区" prop="deptArea">
+                                            <el-input v-model="form.deptArea" placeholder="请输入机构所在地区" clearable maxlength="40" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="业务经办人员"
+                                            prop="deptHandlerName"
+                                            :rules="[
+                                                {
+                                                    required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                    message: '业务经办人员为必填项',
+                                                    trigger: 'blur'
                                                 }
-                                                if (node.level === 0) {
-                                                    this.loadProvinces(node, resolve);
-                                                } else {
-                                                    this.loadCities(node, resolve);
+                                            ]"
+                                        >
+                                            <el-input v-model="form.deptHandlerName" placeholder="请输入业务经办人员" clearable maxlength="10" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="经办人员联系电话"
+                                            prop="deptHandlerPhone"
+                                            label-width="140px"
+                                            :rules="[
+                                                {
+                                                    required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                    message: '经办人员联系电话为必填项',
+                                                    trigger: 'blur'
+                                                },
+                                                { validator: this.phoneRule, trigger: 'blur' }
+                                            ]"
+                                        >
+                                            <el-input v-model="form.deptHandlerPhone" placeholder="请输入经办人员联系电话" clearable maxlength="11" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="经办人身份证号"
+                                            prop="deptHandlerCertNum"
+                                            :rules="[
+                                                {
+                                                    required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                    message: '经办人身份证号为必填项',
+                                                    trigger: 'blur'
+                                                },
+                                                { validator: this.validCertNum(this.CERT_TYPE.CERT_TYPE0), trigger: 'blur' }
+                                            ]"
+                                        >
+                                            <el-input v-model="form.deptHandlerCertNum" placeholder="请输入经办人身份证号" clearable maxlength="18" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="被投诉主体层级" prop="level">
+                                            <el-input v-model="form.level" placeholder="请输入被投诉主体层级" clearable maxlength="10" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+                                    <el-col :span="12">
+                                        <el-form-item label="业务类别" prop="businessType1">
+                                            <el-cascader
+                                                v-model="form.businessType1"
+                                                :options="dict.type.dm_business_type.options2"
+                                                :props="{ emitPath: false, checkStrictly: false }"
+                                                placeholder="请选择业务类别"
+                                                clearable
+                                                style="width: 100%"
+                                                ref="businessType1Ref"
+                                            />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+                                    <el-col :span="12">
+                                        <el-form-item label="级别二" prop="businessType2">
+                                            <el-input v-model="form.businessType2" placeholder="请输入级别二" clearable maxlength="20" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="级别三" prop="businessType3">
+                                            <el-input v-model="form.businessType3" placeholder="请输入级别三" clearable maxlength="20" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="业务办理渠道"
+                                            prop="handleChannel"
+                                            :rules="[
+                                                {
+                                                    required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                    message: '业务办理渠道为必填项',
+                                                    trigger: 'change'
                                                 }
-                                            },
-                                            value: 'value',
-                                            label: 'label',
-                                            children: 'children',
-                                            emitPath: false,
-                                            checkStrictly: true,
-                                            multiple: false
-                                        }"
-                                        placeholder="请选择金融服务发生地"
-                                        clearable
-                                        style="width: 100%"
-                                        @change="handleAreaChange"
-                                        @clear="resetAreaData"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12" v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
-                                <el-form-item
-                                    label="产品/服务"
-                                    prop="disputedProductType"
-                                    :rules="[
-                                        {
-                                            required: DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType),
-                                            message: '产品/服务为必填项',
-                                            trigger: 'change'
-                                        }
-                                    ]"
-                                >
-                                    <el-select v-model="form.disputedProductType" placeholder="请选择产品/服务" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.dm_disputed_product_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
+                                            ]"
+                                        >
+                                            <el-select v-model="form.handleChannel" placeholder="请选择业务办理渠道" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.dm_handle_channel" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="投诉分类"
+                                            prop="bankComplaintType"
+                                            :rules="[
+                                                {
+                                                    required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                    message: '投诉分类为必填项',
+                                                    trigger: 'change'
+                                                }
+                                            ]"
+                                        >
+                                            <el-select v-model="form.bankComplaintType" placeholder="请选择投诉分类" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.dm_bank_complaint_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="险种类别"
+                                            prop="insuranceType1"
+                                            :rules="[
+                                                {
+                                                    required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                    message: '险种类别为必填项',
+                                                    trigger: 'change'
+                                                }
+                                            ]"
+                                        >
+                                            <el-cascader
+                                                v-model="form.insuranceType1"
+                                                :options="dict.type.dm_insurance_type.options2"
+                                                :props="{ emitPath: false, checkStrictly: false }"
+                                                placeholder="请选择业务类别"
+                                                clearable
+                                                style="width: 100%"
+                                                ref="insuranceType1Ref"
+                                            />
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="险种类别2" prop="insuranceType2">
+                                            <el-input v-model="form.insuranceType2" placeholder="请输入险种类别2" clearable maxlength="40" show-word-limit />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
+                                    <el-col :span="12">
+                                        <el-form-item label="产品销售渠道" prop="saleChannel">
+                                            <el-select v-model="form.saleChannel" placeholder="请选择产品销售渠道" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.dm_sale_channel" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="保险消费投诉事由分类"
+                                            prop="insuranceComplaintType"
+                                            label-width="165px"
+                                            :rules="[
+                                                {
+                                                    required: DEPT_TYPE.insuranceList.includes(form.deptType),
+                                                    message: '保险消费投诉事由分类为必填项',
+                                                    trigger: 'change'
+                                                }
+                                            ]"
+                                        >
+                                            <el-select v-model="form.insuranceComplaintType" placeholder="请选择保险消费投诉事由分类" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.dm_insurance_complaint_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item
+                                            label="金融服务发生地"
+                                            prop="financialServiceArea"
+                                            :rules="[
+                                                {
+                                                    required: true,
+                                                    message: '金融服务发生地为必填项',
+                                                    trigger: 'change'
+                                                }
+                                            ]"
+                                        >
+                                            <el-cascader
+                                                ref="financialServiceAreaRef"
+                                                v-model="form.financialServiceArea"
+                                                :options="areaOptions"
+                                                :props="{
+                                                    lazy: true,
+                                                    lazyLoad: (node, resolve) => {
+                                                        if (!node) {
+                                                            resolve([]);
+                                                            return;
+                                                        }
+                                                        if (node.level === 0) {
+                                                            this.loadProvinces(node, resolve);
+                                                        } else {
+                                                            this.loadCities(node, resolve);
+                                                        }
+                                                    },
+                                                    value: 'value',
+                                                    label: 'label',
+                                                    children: 'children',
+                                                    emitPath: false,
+                                                    checkStrictly: true,
+                                                    multiple: false
+                                                }"
+                                                placeholder="请选择金融服务发生地"
+                                                clearable
+                                                style="width: 100%"
+                                                @change="handleAreaChange"
+                                                @clear="resetAreaData"
+                                            />
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12" v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+                                        <el-form-item
+                                            label="产品/服务"
+                                            prop="disputedProductType"
+                                            :rules="[
+                                                {
+                                                    required: DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType),
+                                                    message: '产品/服务为必填项',
+                                                    trigger: 'change'
+                                                }
+                                            ]"
+                                        >
+                                            <el-select v-model="form.disputedProductType" placeholder="请选择产品/服务" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.dm_disputed_product_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
 
-                        <el-row>
-                            <el-col :span="24">
-                                <el-form-item label="投诉内容" prop="complaintContent">
-                                    <el-input v-model="form.complaintContent" type="textarea" placeholder="请输入内容" clearable maxlength="5000" show-word-limit :autosize="{ minRows: 3 }" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="24">
-                                <el-form-item label="主要诉求" prop="appeal">
-                                    <el-input v-model="form.appeal" type="textarea" placeholder="请输入内容" clearable maxlength="400" show-word-limit :autosize="{ minRows: 3 }" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row v-if="$store.getters.userInfo.isDMEntryClerk || $store.getters.userInfo.isDMMediator">
-                            <el-col :span="12">
-                                <el-form-item label="调解员向当事人电话确认" prop="needCheck" label-width="180px">
-                                    <el-select v-model="form.needCheck" placeholder="请选择调解员向当事人电话确认" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                    </div>
-                    <div class="min_title">机构授权调解代理人信息</div>
-                    <el-row>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="委派/委托代表姓名"
-                                prop="deptContact"
-                                label-width="140px"
-                                :rules="[
-                                    {
-                                        required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                        message: '委派/委托代表姓名为必填项',
-                                        trigger: 'blur'
-                                    }
-                                ]"
+                                <el-row>
+                                    <el-col :span="24">
+                                        <el-form-item label="投诉内容" prop="complaintContent">
+                                            <el-input v-model="form.complaintContent" type="textarea" placeholder="请输入内容" clearable maxlength="5000" show-word-limit :autosize="{ minRows: 3 }" />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="24">
+                                        <el-form-item label="主要诉求" prop="appeal">
+                                            <el-input v-model="form.appeal" type="textarea" placeholder="请输入内容" clearable maxlength="400" show-word-limit :autosize="{ minRows: 3 }" />
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row v-if="$store.getters.userInfo.isDMEntryClerk || $store.getters.userInfo.isDMMediator">
+                                    <el-col :span="12">
+                                        <el-form-item label="调解员向当事人电话确认" prop="needCheck" label-width="180px">
+                                            <el-select v-model="form.needCheck" placeholder="请选择调解员向当事人电话确认" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                            <div class="min_title">机构授权调解代理人信息</div>
+                            <el-row>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="委派/委托代表姓名"
+                                        prop="deptContact"
+                                        label-width="140px"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '委派/委托代表姓名为必填项',
+                                                trigger: 'blur'
+                                            }
+                                        ]"
+                                    >
+                                        <el-input v-model="form.deptContact" placeholder="请输入机构代表姓名" clearable maxlength="10" show-word-limit />
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="性别"
+                                        prop="deptContactSex"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '性别为必填项',
+                                                trigger: 'change'
+                                            }
+                                        ]"
+                                    >
+                                        <el-select v-model="form.deptContactSex" placeholder="请选择性别" clearable style="width: 100%">
+                                            <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col :span="24">
+                                    <el-form-item
+                                        label="所在部门及职务"
+                                        prop="deptContactPosition"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '所在部门及职务为必填项',
+                                                trigger: 'blur'
+                                            }
+                                        ]"
+                                    >
+                                        <el-input
+                                            v-model="form.deptContactPosition"
+                                            type="textarea"
+                                            placeholder="请输入机构代表所在部门及职务"
+                                            clearable
+                                            maxlength="30"
+                                            show-word-limit
+                                            :autosize="{ minRows: 1 }"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="证件类型"
+                                        prop="deptContactCertType"
+                                        label-width="130px"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '证件类型为必填项',
+                                                trigger: 'change'
+                                            }
+                                        ]"
+                                    >
+                                        <el-select v-model="form.deptContactCertType" placeholder="请选择证件类型" clearable style="width: 100%">
+                                            <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="证件号码"
+                                        prop="deptContactCertNum"
+                                        label-width="130px"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '机构代表证件号码为必填项',
+                                                trigger: 'blur'
+                                            },
+                                            { validator: this.validCertNum(this.form.deptContactCertType), trigger: 'blur' }
+                                        ]"
+                                    >
+                                        <el-input
+                                            v-model="form.deptContactCertNum"
+                                            placeholder="请输入机构代表证件号码"
+                                            clearable
+                                            :maxlength="this.validCertNumLength(this.form.deptContactCertType)"
+                                            show-word-limit
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="联系方式"
+                                        prop="deptContactPhone"
+                                        label-width="130px"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '联系方式为必填项',
+                                                trigger: 'blur'
+                                            },
+                                            { validator: this.phoneRule, trigger: 'blur' }
+                                        ]"
+                                    >
+                                        <el-input
+                                            v-model="form.deptContactPhone"
+                                            placeholder="请输入机构代表联系方式"
+                                            maxlength="11"
+                                            show-word-limit
+                                            clearable
+                                            oninput="value=value.replace(/[^\d]/g,'')"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <div class="min_title">调解信息</div>
+                            <el-row>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="涉及产品或服务名称"
+                                        prop="product"
+                                        label-width="150px"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '涉及产品或服务名称为必填项',
+                                                trigger: 'blur'
+                                            }
+                                        ]"
+                                    >
+                                        <el-input v-model="form.product" placeholder="请输入涉及产品或服务名称" clearable maxlength="40" show-word-limit />
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="涉及产品或服务合同号"
+                                        prop="contract"
+                                        label-width="170px"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '涉及产品或服务合同号为必填项',
+                                                trigger: 'blur'
+                                            }
+                                        ]"
+                                    >
+                                        <el-input v-model="form.contract" placeholder="请输入涉及产品或服务合同号" clearable maxlength="40" show-word-limit />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="涉案金额（元）"
+                                        prop="involveAmount"
+                                        :rules="[
+                                            {
+                                                required: this.DEPT_TYPE.bankList.includes(this.form.deptType) || this.DEPT_TYPE.nonBankList.includes(this.form.deptType),
+                                                message: '涉案金额为必填项',
+                                                trigger: 'blur'
+                                            }
+                                        ]"
+                                    >
+                                        <el-input
+                                            v-model="form.involveAmount"
+                                            placeholder="请输入涉案金额"
+                                            maxlength="12"
+                                            show-word-limit
+                                            @input="validAmount(form.involveAmount, 'involveAmount')"
+                                            clearable
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="诉请金额（元）"
+                                        prop="appealAmount"
+                                        :rules="[
+                                            {
+                                                required: this.DEPT_TYPE.bankList.includes(this.form.deptType) || this.DEPT_TYPE.nonBankList.includes(this.form.deptType),
+                                                message: '诉请金额为必填项',
+                                                trigger: 'blur'
+                                            }
+                                        ]"
+                                    >
+                                        <el-input
+                                            v-model="form.appealAmount"
+                                            placeholder="请输入诉请金额"
+                                            maxlength="12"
+                                            show-word-limit
+                                            @input="validAmount(form.appealAmount, 'appealAmount')"
+                                            clearable
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row v-if="$store.getters.userInfo.isDMInstitution">
+                                <!--        <el-col :span="12">-->
+                                <!--          <el-form-item-->
+                                <!--            label="金融机构是否接受调解"-->
+                                <!--            prop="deptAcceptMediate"-->
+                                <!--            label-width="135px"-->
+                                <!--          >-->
+                                <!--            <el-select-->
+                                <!--              v-model="form.deptAcceptMediate"-->
+                                <!--              placeholder="请选择金融机构是否接受调解"-->
+                                <!--              clearable-->
+                                <!--              style="width: 100%"-->
+                                <!--            >-->
+                                <!--              <el-option-->
+                                <!--                v-for="dict in dict.type.sys_yes_no"-->
+                                <!--                :key="dict.value"-->
+                                <!--                :label="dict.label"-->
+                                <!--                :value="dict.value"-->
+                                <!--              ></el-option>-->
+                                <!--            </el-select>-->
+                                <!--          </el-form-item>-->
+                                <!--        </el-col>-->
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="金融消费者是否接受调解"
+                                        prop="consumerAcceptMediate"
+                                        label-width="180px"
+                                        :rules="[{ required: this.$store.getters.userInfo.isDMInstitution, message: '金融消费者是否接受调解为必填项', trigger: 'change' }]"
+                                    >
+                                        <el-select v-model="form.consumerAcceptMediate" placeholder="请选择金融消费者是否接受调解" clearable style="width: 100%">
+                                            <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="调解方案金额"
+                                        prop="solutionAmount"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '调解方案金额为必填项',
+                                                trigger: 'blur'
+                                            }
+                                        ]"
+                                    >
+                                        <el-input
+                                            v-model="form.solutionAmount"
+                                            placeholder="请输入调解方案金额"
+                                            maxlength="10"
+                                            show-word-limit
+                                            clearable
+                                            @input="validAmount(form.solutionAmount, 'solutionAmount')"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) && $store.getters.userInfo.isDMInstitution">
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="履约类型"
+                                        prop="enforceAgreementType"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '履约类型为必填项',
+                                                trigger: 'change'
+                                            }
+                                        ]"
+                                    >
+                                        <el-select v-model="form.enforceAgreementType" placeholder="请选择履约类型" clearable style="width: 100%">
+                                            <el-option v-for="dict in dict.type.dm_enforce_agreement_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row
+                                v-if="
+                                    !$store.getters.userInfo.isDMEntryClerk &&
+                                    (DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType))
+                                "
                             >
-                                <el-input v-model="form.deptContact" placeholder="请输入机构代表姓名" clearable maxlength="10" show-word-limit />
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="性别"
-                                prop="deptContactSex"
-                                :rules="[
-                                    { required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '性别为必填项', trigger: 'change' }
-                                ]"
-                            >
-                                <el-select v-model="form.deptContactSex" placeholder="请选择性别" clearable style="width: 100%">
-                                    <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row>
-                        <el-col :span="24">
-                            <el-form-item
-                                label="所在部门及职务"
-                                prop="deptContactPosition"
-                                :rules="[
-                                    {
-                                        required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                        message: '所在部门及职务为必填项',
-                                        trigger: 'blur'
-                                    }
-                                ]"
-                            >
-                                <el-input
-                                    v-model="form.deptContactPosition"
-                                    type="textarea"
-                                    placeholder="请输入机构代表所在部门及职务"
-                                    clearable
-                                    maxlength="30"
-                                    show-word-limit
-                                    :autosize="{ minRows: 1 }"
-                                />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="证件类型"
-                                prop="deptContactCertType"
-                                label-width="130px"
-                                :rules="[
-                                    { required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '证件类型为必填项', trigger: 'change' }
-                                ]"
-                            >
-                                <el-select v-model="form.deptContactCertType" placeholder="请选择证件类型" clearable style="width: 100%">
-                                    <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="证件号码"
-                                prop="deptContactCertNum"
-                                label-width="130px"
-                                :rules="[
-                                    {
-                                        required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                        message: '机构代表证件号码为必填项',
-                                        trigger: 'blur'
-                                    },
-                                    { validator: this.validCertNum(this.form.deptContactCertType), trigger: 'blur' }
-                                ]"
-                            >
-                                <el-input
-                                    v-model="form.deptContactCertNum"
-                                    placeholder="请输入机构代表证件号码"
-                                    clearable
-                                    :maxlength="this.validCertNumLength(this.form.deptContactCertType)"
-                                    show-word-limit
-                                />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="联系方式"
-                                prop="deptContactPhone"
-                                label-width="130px"
-                                :rules="[
-                                    { required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '联系方式为必填项', trigger: 'blur' },
-                                    { validator: this.phoneRule, trigger: 'blur' }
-                                ]"
-                            >
-                                <el-input v-model="form.deptContactPhone" placeholder="请输入机构代表联系方式" maxlength="11" show-word-limit clearable oninput="value=value.replace(/[^\d]/g,'')" />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <div class="min_title">调解信息</div>
-                    <el-row>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="涉及产品或服务名称"
-                                prop="product"
-                                label-width="150px"
-                                :rules="[
-                                    {
-                                        required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                        message: '涉及产品或服务名称为必填项',
-                                        trigger: 'blur'
-                                    }
-                                ]"
-                            >
-                                <el-input v-model="form.product" placeholder="请输入涉及产品或服务名称" clearable maxlength="40" show-word-limit />
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="涉及产品或服务合同号"
-                                prop="contract"
-                                label-width="170px"
-                                :rules="[
-                                    {
-                                        required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                        message: '涉及产品或服务合同号为必填项',
-                                        trigger: 'blur'
-                                    }
-                                ]"
-                            >
-                                <el-input v-model="form.contract" placeholder="请输入涉及产品或服务合同号" clearable maxlength="40" show-word-limit />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="涉案金额（元）"
-                                prop="involveAmount"
-                                :rules="[
-                                    {
-                                        required: this.DEPT_TYPE.bankList.includes(this.form.deptType) || this.DEPT_TYPE.nonBankList.includes(this.form.deptType),
-                                        message: '涉案金额为必填项',
-                                        trigger: 'blur'
-                                    }
-                                ]"
-                            >
-                                <el-input
-                                    v-model="form.involveAmount"
-                                    placeholder="请输入涉案金额"
-                                    maxlength="12"
-                                    show-word-limit
-                                    @input="validAmount(form.involveAmount, 'involveAmount')"
-                                    clearable
-                                />
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="诉请金额（元）"
-                                prop="appealAmount"
-                                :rules="[
-                                    {
-                                        required: this.DEPT_TYPE.bankList.includes(this.form.deptType) || this.DEPT_TYPE.nonBankList.includes(this.form.deptType),
-                                        message: '诉请金额为必填项',
-                                        trigger: 'blur'
-                                    }
-                                ]"
-                            >
-                                <el-input v-model="form.appealAmount" placeholder="请输入诉请金额" maxlength="12" show-word-limit @input="validAmount(form.appealAmount, 'appealAmount')" clearable />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="$store.getters.userInfo.isDMInstitution">
-                        <!--        <el-col :span="12">-->
-                        <!--          <el-form-item-->
-                        <!--            label="金融机构是否接受调解"-->
-                        <!--            prop="deptAcceptMediate"-->
-                        <!--            label-width="135px"-->
-                        <!--          >-->
-                        <!--            <el-select-->
-                        <!--              v-model="form.deptAcceptMediate"-->
-                        <!--              placeholder="请选择金融机构是否接受调解"-->
-                        <!--              clearable-->
-                        <!--              style="width: 100%"-->
-                        <!--            >-->
-                        <!--              <el-option-->
-                        <!--                v-for="dict in dict.type.sys_yes_no"-->
-                        <!--                :key="dict.value"-->
-                        <!--                :label="dict.label"-->
-                        <!--                :value="dict.value"-->
-                        <!--              ></el-option>-->
-                        <!--            </el-select>-->
-                        <!--          </el-form-item>-->
-                        <!--        </el-col>-->
-                        <el-col :span="12">
-                            <el-form-item
-                                label="金融消费者是否接受调解"
-                                prop="consumerAcceptMediate"
-                                label-width="180px"
-                                :rules="[{ required: this.$store.getters.userInfo.isDMInstitution, message: '金融消费者是否接受调解为必填项', trigger: 'change' }]"
-                            >
-                                <el-select v-model="form.consumerAcceptMediate" placeholder="请选择金融消费者是否接受调解" clearable style="width: 100%">
-                                    <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12">
-                            <el-form-item
-                                label="调解方案金额"
-                                prop="solutionAmount"
-                                :rules="[
-                                    {
-                                        required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                        message: '调解方案金额为必填项',
-                                        trigger: 'blur'
-                                    }
-                                ]"
-                            >
-                                <el-input
-                                    v-model="form.solutionAmount"
-                                    placeholder="请输入调解方案金额"
-                                    maxlength="10"
-                                    show-word-limit
-                                    clearable
-                                    @input="validAmount(form.solutionAmount, 'solutionAmount')"
-                                />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) && $store.getters.userInfo.isDMInstitution">
-                        <el-col :span="12">
-                            <el-form-item
-                                label="履约类型"
-                                prop="enforceAgreementType"
-                                :rules="[
-                                    { required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '履约类型为必填项', trigger: 'change' }
-                                ]"
-                            >
-                                <el-select v-model="form.enforceAgreementType" placeholder="请选择履约类型" clearable style="width: 100%">
-                                    <el-option v-for="dict in dict.type.dm_enforce_agreement_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
-                        <el-col :span="12">
-                            <el-form-item
-                                label="案件类型"
-                                prop="selfCollectionCaseType"
-                                :rules="[
-                                    {
-                                        required:
-                                            (!$store.getters.userInfo.isDMEntryClerk &&
-                                                (DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType))) ||
-                                            (!$store.getters.userInfo.isMediator &&
-                                                (DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType))),
-                                        message: '案件类型为必填项',
-                                        trigger: 'change'
-                                    }
-                                ]"
-                            >
-                                <el-select v-if="DEPT_TYPE.insuranceList.includes(form.deptType)" v-model="form.selfCollectionCaseType" placeholder="请选择案件类型" clearable style="width: 100%">
-                                    <el-option v-for="dict in dict.type.dm_insurance_self_collection_case_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                </el-select>
-                                <el-select v-else v-model="form.selfCollectionCaseType" placeholder="请选择案件类型" clearable style="width: 100%">
-                                    <el-option v-for="dict in dict.type.dm_bank_self_collection_case_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12" v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) && isControversyCaseType(form.selfCollectionCaseType)">
-                            <el-form-item
-                                label="争议事由"
-                                prop="controversyCause"
-                                :rules="[
-                                    {
-                                        required:
-                                            (!$store.getters.userInfo.isDMEntryClerk &&
-                                                (DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) &&
-                                                isControversyCaseType(form.selfCollectionCaseType)) ||
-                                            ($store.getters.userInfo.isDMEntryClerk.isMediator &&
-                                                (DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) &&
-                                                isControversyCaseType(form.selfCollectionCaseType)),
-                                        message: '争议事由为必填项',
-                                        trigger: 'change'
-                                    }
-                                ]"
-                            >
-                                <el-select v-model="form.controversyCause" placeholder="请选择争议事由" clearable style="width: 100%">
-                                    <el-option v-for="dict in dict.type.dm_controversy_cause_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row>
-                        <el-col :span="24">
-                            <el-form-item
-                                label="自查情况、调解方案及依据"
-                                prop="solution"
-                                class="endItem"
-                                :rules="[
-                                    {
-                                        required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
-                                        message: '自查情况、调解方案及依据为必填项',
-                                        trigger: 'blur'
-                                    }
-                                ]"
-                            >
-                                <el-input v-model="form.solution" type="textarea" placeholder="请输入自查情况、调解方案及依据" clearable maxlength="2000" show-word-limit :autosize="{ minRows: 3 }" />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
-                        <el-col :span="12">
-                            <el-form-item label="投保人" prop="policyholder">
-                                <el-input v-model="form.policyholder" placeholder="请输入投保人" clearable maxlength="10" show-word-limit />
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12">
-                            <el-form-item label="被保险人" prop="insured">
-                                <el-input v-model="form.insured" placeholder="请输入被保险人" clearable maxlength="10" show-word-limit />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
-                        <el-col :span="12">
-                            <el-form-item label="寿险现金价值/产险权益价值" prop="cashValue" label-width="185px">
-                                <el-input
-                                    v-model="form.cashValue"
-                                    placeholder="请输入寿险现金价值/产险权益价值"
-                                    maxlength="10"
-                                    show-word-limit
-                                    clearable
-                                    @input="validAmount(form.cashValue, 'cashValue')"
-                                />
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12">
-                            <el-form-item label="定损金额" prop="lossAssessmentAmount">
-                                <el-input
-                                    v-model="form.lossAssessmentAmount"
-                                    placeholder="请输入定损金额"
-                                    maxlength="10"
-                                    show-word-limit
-                                    clearable
-                                    @input="validAmount(form.lossAssessmentAmount, 'lossAssessmentAmount')"
-                                />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
-                        <el-col :span="12">
-                            <el-form-item label="理赔金额" prop="claimAmount">
-                                <el-input v-model="form.claimAmount" placeholder="请输入理赔金额" maxlength="10" show-word-limit clearable @input="validAmount(form.claimAmount, 'claimAmount')" />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
-                        <el-col :span="12">
-                            <el-form-item label="业务所属支公司" prop="businessCompany">
-                                <el-input v-model="form.businessCompany" placeholder="请输入业务所属支公司" clearable maxlength="100" show-word-limit />
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12">
-                            <el-form-item label="销售人员（网点、理赔人员）" prop="salesman" label-width="200px">
-                                <el-input v-model="form.salesman" placeholder="请输入销售人员" clearable maxlength="10" show-word-limit />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
-                        <el-col :span="12">
-                            <el-form-item label="销售、网点、理赔工号" prop="salesmanJobNum" label-width="160px">
-                                <el-input v-model="form.salesmanJobNum" placeholder="请输入销售、网点、理赔工号" clearable maxlength="20" show-word-limit />
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="12">
-                            <el-form-item label="销售人员、理赔人员证件号码" prop="salesmanCertNum" label-width="200px">
-                                <el-input v-model="form.salesmanCertNum" placeholder="请输入销售人员、理赔人员证件号码" clearable maxlength="18" show-word-limit />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="$store.getters.userInfo.isDMInstitution">
-                        <el-col :span="24">
-                            <el-form-item
-                                label="人民调解申请书"
-                                prop="applicationAttachment"
-                                :rules="[
-                                    {
-                                        required: this.$store.getters.userInfo.isDMInstitution && SYS_YES_NO.sys_yes === this.form.consumerAcceptMediate,
-                                        message: '请上传《人民调解申请书》或其他金融消费者同意调解作证材',
-                                        trigger: 'change'
-                                    }
-                                ]"
-                            >
-                                <file-upload
-                                    v-model="form.applicationAttachment"
-                                    :fileType="[
-                                        'bmp',
-                                        'jpg',
-                                        'jpeg',
-                                        'png',
-                                        'tif',
-                                        'gif',
-                                        'pdf',
-                                        'doc',
-                                        'docx',
-                                        'xls',
-                                        'xlsx',
-                                        'csv',
-                                        'mp4',
-                                        'avi',
-                                        'rmvb',
-                                        'flv',
-                                        'm4v',
-                                        'mov',
-                                        '3gp',
-                                        '3g2',
-                                        'wmv',
-                                        'mpg',
-                                        'mpeg',
-                                        'cd',
-                                        'wave',
-                                        'aiff',
-                                        'mp3',
-                                        'wav'
-                                    ]"
-                                    :limit="3"
-                                />
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="24">
-                            <el-form-item label="已盖章反馈单" prop="stampedFeedbackAttachment">
-                                <file-upload
-                                    v-model="form.stampedFeedbackAttachment"
-                                    :fileType="[
-                                        'bmp',
-                                        'jpg',
-                                        'jpeg',
-                                        'png',
-                                        'tif',
-                                        'gif',
-                                        'pdf',
-                                        'doc',
-                                        'docx',
-                                        'xls',
-                                        'xlsx',
-                                        'csv',
-                                        'mp4',
-                                        'avi',
-                                        'rmvb',
-                                        'flv',
-                                        'm4v',
-                                        'mov',
-                                        '3gp',
-                                        '3g2',
-                                        'wmv',
-                                        'mpg',
-                                        'mpeg',
-                                        'cd',
-                                        'wave',
-                                        'aiff',
-                                        'mp3',
-                                        'wav'
-                                    ]"
-                                    :limit="1"
-                                />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <el-row v-if="$store.getters.userInfo.isDMInstitution || $store.getters.userInfo.isDMEntryClerk">
-                        <el-col :span="24">
-                            <el-form-item label="附件" prop="attachment">
-                                <file-upload
-                                    v-model="form.attachment"
-                                    :fileType="[
-                                        'bmp',
-                                        'jpg',
-                                        'jpeg',
-                                        'png',
-                                        'tif',
-                                        'gif',
-                                        'pdf',
-                                        'doc',
-                                        'docx',
-                                        'xls',
-                                        'xlsx',
-                                        'csv',
-                                        'mp4',
-                                        'avi',
-                                        'rmvb',
-                                        'flv',
-                                        'm4v',
-                                        'mov',
-                                        '3gp',
-                                        '3g2',
-                                        'wmv',
-                                        'mpg',
-                                        'mpeg',
-                                        'cd',
-                                        'wave',
-                                        'aiff',
-                                        'mp3',
-                                        'wav'
-                                    ]"
-                                    :limit="5"
-                                />
-                            </el-form-item>
-                        </el-col>
-                        <el-col :span="24">
-                            <el-form-item label="身份证复印件、工作证复印件" prop="photocopyAttachment">
-                                <file-upload
-                                    v-model="form.photocopyAttachment"
-                                    :fileType="[
-                                        'bmp',
-                                        'jpg',
-                                        'jpeg',
-                                        'png',
-                                        'tif',
-                                        'gif',
-                                        'pdf',
-                                        'doc',
-                                        'docx',
-                                        'xls',
-                                        'xlsx',
-                                        'csv',
-                                        'mp4',
-                                        'avi',
-                                        'rmvb',
-                                        'flv',
-                                        'm4v',
-                                        'mov',
-                                        '3gp',
-                                        '3g2',
-                                        'wmv',
-                                        'mpg',
-                                        'mpeg',
-                                        'cd',
-                                        'wave',
-                                        'aiff',
-                                        'mp3',
-                                        'wav'
-                                    ]"
-                                    :limit="3"
-                                />
-                            </el-form-item>
-                        </el-col>
-                    </el-row>
-                    <div v-if="$store.getters.userInfo.isDMEntryClerk || $store.getters.userInfo.isDMMediator">
-                        <div class="min_title">受理信息</div>
-                        <el-row>
-                            <el-col :span="12">
-                                <el-form-item label="受理状态" prop="acceptStatus">
-                                    <el-select v-model="form.acceptStatus" placeholder="请选择受理状态" style="width: 100%" clearable @change="form.selfRejectReason = null">
-                                        <el-option v-for="dict in dict.type.dm_accept_status" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <!-- <el-col :span="12" v-if="DM_ACCEPT_STATUS.reject === form.acceptStatus">
+                                <el-col :span="12">
+                                    <el-form-item
+                                        label="案件类型"
+                                        prop="selfCollectionCaseType"
+                                        :rules="[
+                                            {
+                                                required:
+                                                    DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType),
+                                                message: '案件类型为必填项',
+                                                trigger: 'change'
+                                            }
+                                        ]"
+                                    >
+                                        <el-select
+                                            v-if="DEPT_TYPE.insuranceList.includes(form.deptType)"
+                                            v-model="form.selfCollectionCaseType"
+                                            placeholder="请选择案件类型"
+                                            clearable
+                                            style="width: 100%"
+                                        >
+                                            <el-option v-for="dict in dict.type.dm_insurance_self_collection_case_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                        </el-select>
+                                        <el-select v-else v-model="form.selfCollectionCaseType" placeholder="请选择案件类型" clearable style="width: 100%">
+                                            <el-option v-for="dict in dict.type.dm_bank_self_collection_case_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-col>
+                                <el-col
+                                    :span="12"
+                                    v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) && isControversyCaseType(form.selfCollectionCaseType)"
+                                >
+                                    <el-form-item
+                                        label="争议事由"
+                                        prop="controversyCause"
+                                        :rules="[
+                                            {
+                                                required:
+                                                    (!$store.getters.userInfo.isDMEntryClerk &&
+                                                        (DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) &&
+                                                        isControversyCaseType(form.selfCollectionCaseType)) ||
+                                                    ($store.getters.userInfo.isDMEntryClerk.isMediator &&
+                                                        (DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) &&
+                                                        isControversyCaseType(form.selfCollectionCaseType)),
+                                                message: '争议事由为必填项',
+                                                trigger: 'change'
+                                            }
+                                        ]"
+                                    >
+                                        <el-select v-model="form.controversyCause" placeholder="请选择争议事由" clearable style="width: 100%">
+                                            <el-option v-for="dict in dict.type.dm_controversy_cause_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col :span="24">
+                                    <el-form-item
+                                        label="自查情况、调解方案及依据"
+                                        prop="solution"
+                                        class="endItem"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate,
+                                                message: '自查情况、调解方案及依据为必填项',
+                                                trigger: 'blur'
+                                            }
+                                        ]"
+                                    >
+                                        <el-input
+                                            v-model="form.solution"
+                                            type="textarea"
+                                            placeholder="请输入自查情况、调解方案及依据"
+                                            clearable
+                                            maxlength="2000"
+                                            show-word-limit
+                                            :autosize="{ minRows: 3 }"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
+                                <el-col :span="12">
+                                    <el-form-item label="投保人" prop="policyholder">
+                                        <el-input v-model="form.policyholder" placeholder="请输入投保人" clearable maxlength="10" show-word-limit />
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item label="被保险人" prop="insured">
+                                        <el-input v-model="form.insured" placeholder="请输入被保险人" clearable maxlength="10" show-word-limit />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
+                                <el-col :span="12">
+                                    <el-form-item label="寿险现金价值/产险权益价值" prop="cashValue" label-width="185px">
+                                        <el-input
+                                            v-model="form.cashValue"
+                                            placeholder="请输入寿险现金价值/产险权益价值"
+                                            maxlength="10"
+                                            show-word-limit
+                                            clearable
+                                            @input="validAmount(form.cashValue, 'cashValue')"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item label="定损金额" prop="lossAssessmentAmount">
+                                        <el-input
+                                            v-model="form.lossAssessmentAmount"
+                                            placeholder="请输入定损金额"
+                                            maxlength="10"
+                                            show-word-limit
+                                            clearable
+                                            @input="validAmount(form.lossAssessmentAmount, 'lossAssessmentAmount')"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
+                                <el-col :span="12">
+                                    <el-form-item label="理赔金额" prop="claimAmount">
+                                        <el-input
+                                            v-model="form.claimAmount"
+                                            placeholder="请输入理赔金额"
+                                            maxlength="10"
+                                            show-word-limit
+                                            clearable
+                                            @input="validAmount(form.claimAmount, 'claimAmount')"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
+                                <el-col :span="12">
+                                    <el-form-item label="业务所属支公司" prop="businessCompany">
+                                        <el-input v-model="form.businessCompany" placeholder="请输入业务所属支公司" clearable maxlength="100" show-word-limit />
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item label="销售人员（网点、理赔人员）" prop="salesman" label-width="200px">
+                                        <el-input v-model="form.salesman" placeholder="请输入销售人员" clearable maxlength="10" show-word-limit />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
+                                <el-col :span="12">
+                                    <el-form-item label="销售、网点、理赔工号" prop="salesmanJobNum" label-width="160px">
+                                        <el-input v-model="form.salesmanJobNum" placeholder="请输入销售、网点、理赔工号" clearable maxlength="20" show-word-limit />
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item label="销售人员、理赔人员证件号码" prop="salesmanCertNum" label-width="200px">
+                                        <el-input v-model="form.salesmanCertNum" placeholder="请输入销售人员、理赔人员证件号码" clearable maxlength="18" show-word-limit />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row v-if="$store.getters.userInfo.isDMInstitution">
+                                <el-col :span="24">
+                                    <el-form-item
+                                        label="人民调解申请书"
+                                        prop="applicationAttachment"
+                                        :rules="[
+                                            {
+                                                required: this.$store.getters.userInfo.isDMInstitution && SYS_YES_NO.sys_yes === this.form.consumerAcceptMediate,
+                                                message: '请上传《人民调解申请书》或其他金融消费者同意调解作证材',
+                                                trigger: 'change'
+                                            }
+                                        ]"
+                                    >
+                                        <file-upload
+                                            v-model="form.applicationAttachment"
+                                            :fileType="[
+                                                'bmp',
+                                                'jpg',
+                                                'jpeg',
+                                                'png',
+                                                'tif',
+                                                'gif',
+                                                'pdf',
+                                                'doc',
+                                                'docx',
+                                                'xls',
+                                                'xlsx',
+                                                'csv',
+                                                'mp4',
+                                                'avi',
+                                                'rmvb',
+                                                'flv',
+                                                'm4v',
+                                                'mov',
+                                                '3gp',
+                                                '3g2',
+                                                'wmv',
+                                                'mpg',
+                                                'mpeg',
+                                                'cd',
+                                                'wave',
+                                                'aiff',
+                                                'mp3',
+                                                'wav'
+                                            ]"
+                                            :limit="3"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="24">
+                                    <el-form-item label="已盖章反馈单" prop="stampedFeedbackAttachment">
+                                        <file-upload
+                                            v-model="form.stampedFeedbackAttachment"
+                                            :fileType="[
+                                                'bmp',
+                                                'jpg',
+                                                'jpeg',
+                                                'png',
+                                                'tif',
+                                                'gif',
+                                                'pdf',
+                                                'doc',
+                                                'docx',
+                                                'xls',
+                                                'xlsx',
+                                                'csv',
+                                                'mp4',
+                                                'avi',
+                                                'rmvb',
+                                                'flv',
+                                                'm4v',
+                                                'mov',
+                                                '3gp',
+                                                '3g2',
+                                                'wmv',
+                                                'mpg',
+                                                'mpeg',
+                                                'cd',
+                                                'wave',
+                                                'aiff',
+                                                'mp3',
+                                                'wav'
+                                            ]"
+                                            :limit="1"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row v-if="$store.getters.userInfo.isDMInstitution || $store.getters.userInfo.isDMEntryClerk">
+                                <el-col :span="24">
+                                    <el-form-item label="附件" prop="attachment">
+                                        <file-upload
+                                            v-model="form.attachment"
+                                            :fileType="[
+                                                'bmp',
+                                                'jpg',
+                                                'jpeg',
+                                                'png',
+                                                'tif',
+                                                'gif',
+                                                'pdf',
+                                                'doc',
+                                                'docx',
+                                                'xls',
+                                                'xlsx',
+                                                'csv',
+                                                'mp4',
+                                                'avi',
+                                                'rmvb',
+                                                'flv',
+                                                'm4v',
+                                                'mov',
+                                                '3gp',
+                                                '3g2',
+                                                'wmv',
+                                                'mpg',
+                                                'mpeg',
+                                                'cd',
+                                                'wave',
+                                                'aiff',
+                                                'mp3',
+                                                'wav'
+                                            ]"
+                                            :limit="5"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="24">
+                                    <el-form-item label="身份证复印件、工作证复印件" prop="photocopyAttachment">
+                                        <file-upload
+                                            v-model="form.photocopyAttachment"
+                                            :fileType="[
+                                                'bmp',
+                                                'jpg',
+                                                'jpeg',
+                                                'png',
+                                                'tif',
+                                                'gif',
+                                                'pdf',
+                                                'doc',
+                                                'docx',
+                                                'xls',
+                                                'xlsx',
+                                                'csv',
+                                                'mp4',
+                                                'avi',
+                                                'rmvb',
+                                                'flv',
+                                                'm4v',
+                                                'mov',
+                                                '3gp',
+                                                '3g2',
+                                                'wmv',
+                                                'mpg',
+                                                'mpeg',
+                                                'cd',
+                                                'wave',
+                                                'aiff',
+                                                'mp3',
+                                                'wav'
+                                            ]"
+                                            :limit="3"
+                                        />
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <div v-if="$store.getters.userInfo.isDMEntryClerk || $store.getters.userInfo.isDMMediator">
+                                <div class="min_title">受理信息</div>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="受理状态" prop="acceptStatus">
+                                            <el-select v-model="form.acceptStatus" placeholder="请选择受理状态" style="width: 100%" clearable @change="form.selfRejectReason = null">
+                                                <el-option v-for="dict in dict.type.dm_accept_status" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <!-- <el-col :span="12" v-if="DM_ACCEPT_STATUS.reject === form.acceptStatus">
                                 <el-form-item label="不予受理原因" prop="rejectReason">
                                     <el-select v-model="form.rejectReason" placeholder="请选择不予受理原因" clearable style="width: 100%">
                                         <el-option v-for="dict in dict.type.dm_reject_reason" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
                                     </el-select>
                                 </el-form-item>
                             </el-col> -->
-                            <el-col :span="12" v-if="DM_ACCEPT_STATUS.reject === form.acceptStatus">
-                                <el-form-item label="不予受理原因" prop="selfRejectReason">
-                                    <el-select v-model="form.selfRejectReason" placeholder="请选择不予受理原因" clearable style="width: 100%">
-                                        <el-option v-for="dict in dict.type.dm_self_reject_reason" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                    </div>
-                </el-form>
-                <div class="dialog-footer">
-                    <el-button type="primary" @click="submitForm" :loading="loading">确 定</el-button>
-                    <el-button @click="cancel">取 消</el-button>
-                </div>
-            </el-col>
-            <el-col class="dialog-right" :span="10">
-                <div ref="rightT" class="right-t">
-                    <el-form ref="diaputeFormRef" :model="diaputeForm" label-width="120px" hide-required-asterisk>
-                        <div class="consumer-info-wrap">
-                            <el-row class="is-self-row">
-                                <el-col :span="24">
-                                    <el-form-item label="是否消费者本人" prop="isSelf" label-width="200px">
-                                        <el-radio-group v-model="diaputeForm.isSelf">
-                                            <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label }}</el-radio>
-                                        </el-radio-group>
-                                    </el-form-item>
-                                </el-col>
-                            </el-row>
-                            <div v-if="SYS_YES_NO.sys_no === diaputeForm.isSelf" class="right-section-block agent-section-block">
-                                <div class="region-title">*委托人信息</div>
-                                <div class="agent-fields-grid">
-                                    <el-row class="line-row agent-field-row">
-                                        <el-col :span="11">
-                                            <el-form-item label="代理人姓名" prop="agentName">
-                                                <el-input v-model="diaputeForm.agentName" placeholder="请输入代理人姓名" clearable maxlength="10" show-word-limit />
-                                            </el-form-item>
-                                        </el-col>
-                                        <el-col :span="13">
-                                            <el-form-item label="联系方式" prop="agentPhone" class="agent-phone-item">
-                                                <el-input
-                                                    v-model="diaputeForm.agentPhone"
-                                                    placeholder="请输入联系方式"
-                                                    type="tel"
-                                                    maxlength="11"
-                                                    show-word-limit
-                                                    clearable
-                                                    oninput="value=value.replace(/[^\d]/g,'')"
-                                                />
-                                            </el-form-item>
-                                        </el-col>
-                                    </el-row>
-                                    <el-row class="line-row agent-field-row">
-                                        <el-col :span="12">
-                                            <el-form-item label="代理人性别" prop="agentSex">
-                                                <el-select v-model="diaputeForm.agentSex" placeholder="请选择代理人性别" clearable>
-                                                    <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                                </el-select>
-                                            </el-form-item>
-                                        </el-col>
-                                        <el-col :span="12">
-                                            <el-form-item label="代理人证件类型" prop="agentCertType">
-                                                <el-select v-model="diaputeForm.agentCertType" placeholder="请选择代理人证件类型" clearable>
-                                                    <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                                </el-select>
-                                            </el-form-item>
-                                        </el-col>
-                                    </el-row>
-                                    <el-row class="line-row agent-field-row agent-field-row-last">
-                                        <el-col :span="24">
-                                            <el-form-item label="代理人证件号码" prop="agentCertNum">
-                                                <el-input
-                                                    v-model="diaputeForm.agentCertNum"
-                                                    placeholder="请输入代理人证件号码"
-                                                    :maxlength="validCertNumLength(diaputeForm.agentCertType)"
-                                                    show-word-limit
-                                                    clearable
-                                                />
-                                            </el-form-item>
-                                        </el-col>
-                                    </el-row>
-                                </div>
-                            </div>
-                            <div class="right-section-block">
-                                <div class="region-title">*消费者信息</div>
-                                <el-row class="line-row">
-                                    <el-col :span="12">
-                                        <el-form-item label="消费者姓名" prop="name">
-                                            <el-input v-model="diaputeForm.name" placeholder="请输入消费者姓名" maxlength="50" show-word-limit />
-                                        </el-form-item>
-                                    </el-col>
-                                    <el-col :span="12">
-                                        <el-form-item label="联系方式" prop="phone">
-                                            <el-input v-model="diaputeForm.phone" placeholder="请输入联系方式" type="tel" maxlength="11" show-word-limit />
+                                    <el-col :span="12" v-if="DM_ACCEPT_STATUS.reject === form.acceptStatus">
+                                        <el-form-item label="不予受理原因" prop="selfRejectReason">
+                                            <el-select v-model="form.selfRejectReason" placeholder="请选择不予受理原因" clearable style="width: 100%">
+                                                <el-option v-for="dict in dict.type.dm_self_reject_reason" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                            </el-select>
                                         </el-form-item>
                                     </el-col>
                                 </el-row>
-                                <div class="cert-column-fields">
-                                    <el-form-item label="证件类型" prop="certType">
-                                        <el-select v-model="diaputeForm.certType" placeholder="请选择证件类型" clearable>
-                                            <el-option v-for="item in filteredCertTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
-                                        </el-select>
-                                    </el-form-item>
-                                    <el-form-item label="证件号码" prop="certNum">
-                                        <el-input v-model="diaputeForm.certNum" placeholder="请输入证件号码" :maxlength="validCertNumLength(diaputeForm.certType)" show-word-limit clearable />
-                                    </el-form-item>
-                                </div>
-                                <!-- <el-row class="line-row">
+                            </div>
+                        </el-form>
+                        <div class="dialog-footer">
+                            <el-button type="primary" @click="submitForm" :loading="loading">确 定</el-button>
+                            <el-button @click="cancel">取 消</el-button>
+                        </div>
+                    </el-col>
+                    <el-col class="dialog-right" :span="10">
+                        <div ref="rightT" class="right-t">
+                            <el-form ref="diaputeFormRef" :model="diaputeForm" label-width="120px" hide-required-asterisk>
+                                <div class="consumer-info-wrap">
+                                    <el-row class="is-self-row">
+                                        <el-col :span="24">
+                                            <el-form-item label="是否消费者本人" prop="isSelf" label-width="200px">
+                                                <el-radio-group v-model="diaputeForm.isSelf">
+                                                    <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label }}</el-radio>
+                                                </el-radio-group>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                    <div v-if="SYS_YES_NO.sys_no === diaputeForm.isSelf" class="right-section-block agent-section-block">
+                                        <div class="region-title">*委托人信息</div>
+                                        <div class="agent-fields-grid">
+                                            <el-row class="line-row agent-field-row">
+                                                <el-col :span="11">
+                                                    <el-form-item label="代理人姓名" prop="agentName">
+                                                        <el-input v-model="diaputeForm.agentName" placeholder="请输入代理人姓名" clearable maxlength="10" show-word-limit />
+                                                    </el-form-item>
+                                                </el-col>
+                                                <el-col :span="13">
+                                                    <el-form-item label="联系方式" prop="agentPhone" class="agent-phone-item">
+                                                        <el-input
+                                                            v-model="diaputeForm.agentPhone"
+                                                            placeholder="请输入联系方式"
+                                                            type="tel"
+                                                            maxlength="11"
+                                                            show-word-limit
+                                                            clearable
+                                                            oninput="value=value.replace(/[^\d]/g,'')"
+                                                        />
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                            <el-row class="line-row agent-field-row">
+                                                <el-col :span="12">
+                                                    <el-form-item label="代理人性别" prop="agentSex">
+                                                        <el-select v-model="diaputeForm.agentSex" placeholder="请选择代理人性别" clearable>
+                                                            <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                                        </el-select>
+                                                    </el-form-item>
+                                                </el-col>
+                                                <el-col :span="12">
+                                                    <el-form-item label="代理人证件类型" prop="agentCertType">
+                                                        <el-select v-model="diaputeForm.agentCertType" placeholder="请选择代理人证件类型" clearable>
+                                                            <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                                        </el-select>
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                            <el-row class="line-row agent-field-row agent-field-row-last">
+                                                <el-col :span="24">
+                                                    <el-form-item label="代理人证件号码" prop="agentCertNum">
+                                                        <el-input
+                                                            v-model="diaputeForm.agentCertNum"
+                                                            placeholder="请输入代理人证件号码"
+                                                            :maxlength="validCertNumLength(diaputeForm.agentCertType)"
+                                                            show-word-limit
+                                                            clearable
+                                                        />
+                                                    </el-form-item>
+                                                </el-col>
+                                            </el-row>
+                                        </div>
+                                    </div>
+                                    <div class="right-section-block">
+                                        <div class="region-title">*消费者信息</div>
+                                        <el-row class="line-row">
+                                            <el-col :span="12">
+                                                <el-form-item label="消费者姓名" prop="name">
+                                                    <el-input v-model="diaputeForm.name" placeholder="请输入消费者姓名" maxlength="50" show-word-limit />
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :span="12">
+                                                <el-form-item label="联系方式" prop="phone">
+                                                    <el-input v-model="diaputeForm.phone" placeholder="请输入联系方式" type="tel" maxlength="11" show-word-limit />
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                        <div class="cert-column-fields">
+                                            <el-form-item label="证件类型" prop="certType">
+                                                <el-select v-model="diaputeForm.certType" placeholder="请选择证件类型" clearable>
+                                                    <el-option v-for="item in filteredCertTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+                                                </el-select>
+                                            </el-form-item>
+                                            <el-form-item label="证件号码" prop="certNum">
+                                                <el-input v-model="diaputeForm.certNum" placeholder="请输入证件号码" :maxlength="validCertNumLength(diaputeForm.certType)" show-word-limit clearable />
+                                            </el-form-item>
+                                        </div>
+                                        <!-- <el-row class="line-row">
                 <el-col :span="12">
                   <el-form-item label="性别" prop="sex">
                     <el-select v-model="diaputeForm.sex" placeholder="请选择性别" clearable style="width: 100%">
@@ -1379,38 +1486,38 @@
                   </el-form-item>
                 </el-col>
               </el-row> -->
-                                <el-row class="line-row">
-                                    <el-col :span="12">
-                                        <el-form-item label="民族" prop="nation">
-                                            <el-input v-model="diaputeForm.nation" maxlength="26" show-word-limit clearable placeholder="请输入民族" />
-                                        </el-form-item>
-                                    </el-col>
-                                    <el-col :span="12">
-                                        <el-form-item label="职业" prop="profession">
-                                            <el-input v-model="diaputeForm.profession" maxlength="20" show-word-limit clearable placeholder="请输入职业" />
-                                        </el-form-item>
-                                    </el-col>
-                                </el-row>
-                                <el-row class="line-row">
-                                    <el-col :span="24">
-                                        <el-form-item label="单位或住址" prop="address">
-                                            <el-input
-                                                v-model="diaputeForm.address"
-                                                type="textarea"
-                                                placeholder="请输入单位或住址"
-                                                clearable
-                                                maxlength="50"
-                                                show-word-limit
-                                                :autosize="{ minRows: 1 }"
-                                            />
-                                        </el-form-item>
-                                    </el-col>
-                                </el-row>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="region-title">*机构信息</div>
-                            <!-- 暂时注释：住所地
+                                        <el-row class="line-row">
+                                            <el-col :span="12">
+                                                <el-form-item label="民族" prop="nation">
+                                                    <el-input v-model="diaputeForm.nation" maxlength="26" show-word-limit clearable placeholder="请输入民族" />
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :span="12">
+                                                <el-form-item label="职业" prop="profession">
+                                                    <el-input v-model="diaputeForm.profession" maxlength="20" show-word-limit clearable placeholder="请输入职业" />
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                        <el-row class="line-row">
+                                            <el-col :span="24">
+                                                <el-form-item label="单位或住址" prop="address">
+                                                    <el-input
+                                                        v-model="diaputeForm.address"
+                                                        type="textarea"
+                                                        placeholder="请输入单位或住址"
+                                                        clearable
+                                                        maxlength="50"
+                                                        show-word-limit
+                                                        :autosize="{ minRows: 1 }"
+                                                    />
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="region-title">*机构信息</div>
+                                    <!-- 暂时注释：住所地
               <el-row class="line-row">
                 <el-col :span="24">
                   <el-form-item label="住所地" prop="deptAddress">
@@ -1420,25 +1527,25 @@
                 </el-col>
               </el-row>
               -->
-                            <el-row class="line-row">
-                                <el-col :span="24">
-                                    <el-form-item label="纠纷发生日期" prop="disputeDate" class="dispute-date-form-item">
-                                        <el-date-picker
-                                            clearable
-                                            v-model="diaputeForm.disputeDate"
-                                            type="date"
-                                            value-format="yyyy-MM-dd"
-                                            placeholder="请选择纠纷发生日期"
-                                            class="dispute-date-picker"
-                                            :picker-options="{
-                                                disabledDate(time) {
-                                                    return time.getTime() > Date.now();
-                                                }
-                                            }"
-                                        />
-                                    </el-form-item>
-                                </el-col>
-                                <!-- 暂时注释：机构所在地区
+                                    <el-row class="line-row">
+                                        <el-col :span="24">
+                                            <el-form-item label="纠纷发生日期" prop="disputeDate" class="dispute-date-form-item">
+                                                <el-date-picker
+                                                    clearable
+                                                    v-model="diaputeForm.disputeDate"
+                                                    type="date"
+                                                    value-format="yyyy-MM-dd"
+                                                    placeholder="请选择纠纷发生日期"
+                                                    class="dispute-date-picker"
+                                                    :picker-options="{
+                                                        disabledDate(time) {
+                                                            return time.getTime() > Date.now();
+                                                        }
+                                                    }"
+                                                />
+                                            </el-form-item>
+                                        </el-col>
+                                        <!-- 暂时注释：机构所在地区
                 <el-col :span="12">
                   <el-form-item label="机构所在地区" prop="deptArea">
                     <el-input v-model="diaputeForm.deptArea" placeholder="请输入机构所在地区" clearable maxlength="40"
@@ -1446,40 +1553,40 @@
                   </el-form-item>
                 </el-col>
                 -->
-                            </el-row>
-                            <el-row class="line-row">
-                                <el-col :span="12">
-                                    <el-form-item label="调解员向当事人电话确认" prop="needCheck" label-width="180px">
-                                        <el-select v-model="diaputeForm.needCheck" placeholder="请选择调解员向当事人电话确认" clearable style="width: 100%">
-                                            <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                        </el-select>
-                                    </el-form-item>
-                                </el-col>
-                            </el-row>
-                            <el-row class="line-row">
-                                <el-col :span="24">
-                                    <el-form-item label="投诉内容" prop="complaintContent">
-                                        <el-input
-                                            v-model="diaputeForm.complaintContent"
-                                            type="textarea"
-                                            placeholder="请输入内容"
-                                            clearable
-                                            maxlength="5000"
-                                            show-word-limit
-                                            :autosize="{ minRows: 3 }"
-                                        />
-                                    </el-form-item>
-                                </el-col>
-                            </el-row>
-                            <el-row class="line-row">
-                                <el-col :span="24">
-                                    <el-form-item label="主要诉求" prop="appeal">
-                                        <el-input v-model="diaputeForm.appeal" type="textarea" placeholder="请输入内容" clearable maxlength="400" show-word-limit :autosize="{ minRows: 3 }" />
-                                    </el-form-item>
-                                </el-col>
-                            </el-row>
-                        </div>
-                        <!-- 暂时注释：调解信息
+                                    </el-row>
+                                    <el-row class="line-row">
+                                        <el-col :span="12">
+                                            <el-form-item label="调解员向当事人电话确认" prop="needCheck" label-width="180px">
+                                                <el-select v-model="diaputeForm.needCheck" placeholder="请选择调解员向当事人电话确认" clearable style="width: 100%">
+                                                    <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                                </el-select>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                    <el-row class="line-row">
+                                        <el-col :span="24">
+                                            <el-form-item label="投诉内容" prop="complaintContent">
+                                                <el-input
+                                                    v-model="diaputeForm.complaintContent"
+                                                    type="textarea"
+                                                    placeholder="请输入内容"
+                                                    clearable
+                                                    maxlength="5000"
+                                                    show-word-limit
+                                                    :autosize="{ minRows: 3 }"
+                                                />
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                    <el-row class="line-row">
+                                        <el-col :span="24">
+                                            <el-form-item label="主要诉求" prop="appeal">
+                                                <el-input v-model="diaputeForm.appeal" type="textarea" placeholder="请输入内容" clearable maxlength="400" show-word-limit :autosize="{ minRows: 3 }" />
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+                                <!-- 暂时注释：调解信息
             <div>
               <div class="region-title">*调解信息</div>
               <el-row class="line-row">
@@ -1514,78 +1621,71 @@
               </el-row>
             </div>
             -->
-                        <div>
-                            <div class="region-title">*受理信息</div>
-                            <el-row class="line-row">
-                                <el-col :span="12">
-                                    <el-form-item label="受理状态" prop="acceptStatus">
-                                        <el-select v-model="diaputeForm.acceptStatus" placeholder="请选择受理状态" style="width: 100%" clearable @change="diaputeForm.selfRejectReason = null">
-                                            <el-option v-for="dict in dict.type.dm_accept_status" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                        </el-select>
-                                    </el-form-item>
-                                </el-col>
-                                <el-col :span="12" v-if="DM_ACCEPT_STATUS.reject === diaputeForm.acceptStatus">
-                                    <el-form-item label="不予受理原因" prop="selfRejectReason">
-                                        <el-select v-model="diaputeForm.selfRejectReason" placeholder="请选择不予受理原因" clearable style="width: 100%">
-                                            <el-option v-for="dict in dict.type.dm_self_reject_reason" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-                                        </el-select>
-                                    </el-form-item>
-                                </el-col>
-                            </el-row>
-                        </div>
-                    </el-form>
-                    <ul v-if="asrRecognizeRecords.length" class="recognize-records-list asr-records">
-                        <li class="recognize-records-title">识别记录</li>
-                        <li
-                            v-for="(record, index) in asrRecognizeRecords"
-                            :key="record.id"
-                            class="recognize-record-item"
-                            :class="{ active: activeAsrRecordId === record.id }"
-                            @click="applyAsrRecord(record)"
-                        >
-                            <span class="record-label">记录 {{ index + 1 }}</span>
-                            <span class="record-time">{{ record.time }}</span>
-                        </li>
-                    </ul>
-                    <div class="confirm-btn">
-                        <el-button @click="handelCoverForm">确认信息，自动覆盖</el-button>
-                    </div>
-                    <div v-if="!smartScriptSessionEnded" class="smart-script-trigger">
-                        <el-button
-                            size="small"
-                            :type="smartScriptVisible ? 'info' : 'primary'"
-                            icon="el-icon-chat-dot-round"
-                            @click="toggleSmartScript"
-                        >
-                            智能话术
-                        </el-button>
-                    </div>
-                </div>
-                <div ref="rightB" class="right-b">
-                    <div class="right-b-chat">
-                        <div v-for="(item, index) in sseList" :key="index" class="socket-item">
-                        <div class="socket-l" v-if="item.role === '调解员'">
-                            <div class="person-info">
-                                <p class="name">调解员</p>
-                                <img class="avatar" src="@/assets/images/form-avatar.png" alt="" />
+                                <div>
+                                    <div class="region-title">*受理信息</div>
+                                    <el-row class="line-row">
+                                        <el-col :span="12">
+                                            <el-form-item label="受理状态" prop="acceptStatus">
+                                                <el-select v-model="diaputeForm.acceptStatus" placeholder="请选择受理状态" style="width: 100%" clearable @change="diaputeForm.selfRejectReason = null">
+                                                    <el-option v-for="dict in dict.type.dm_accept_status" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                                </el-select>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :span="12" v-if="DM_ACCEPT_STATUS.reject === diaputeForm.acceptStatus">
+                                            <el-form-item label="不予受理原因" prop="selfRejectReason">
+                                                <el-select v-model="diaputeForm.selfRejectReason" placeholder="请选择不予受理原因" clearable style="width: 100%">
+                                                    <el-option v-for="dict in dict.type.dm_self_reject_reason" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                                                </el-select>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+                            </el-form>
+                            <ul v-if="asrRecognizeRecords.length" class="recognize-records-list asr-records">
+                                <li class="recognize-records-title">识别记录</li>
+                                <li
+                                    v-for="(record, index) in asrRecognizeRecords"
+                                    :key="record.id"
+                                    class="recognize-record-item"
+                                    :class="{ active: activeAsrRecordId === record.id }"
+                                    @click="applyAsrRecord(record)"
+                                >
+                                    <span class="record-label">记录 {{ index + 1 }}</span>
+                                    <span class="record-time">{{ record.time }}</span>
+                                </li>
+                            </ul>
+                            <div class="confirm-btn">
+                                <el-button @click="handelCoverForm">确认信息，自动覆盖</el-button>
                             </div>
-                            <div class="person-message">
-                                <span>{{ item.message }}</span>
+                            <div v-if="!smartScriptSessionEnded" class="smart-script-trigger">
+                                <el-button size="small" :type="smartScriptVisible ? 'info' : 'primary'" icon="el-icon-chat-dot-round" @click="toggleSmartScript">智能话术</el-button>
                             </div>
                         </div>
-                        <div class="socket-r" v-if="item.role === '投诉人'">
-                            <div class="person-message">
-                                <span>{{ item.message }}</span>
-                            </div>
-                            <div class="person-info">
-                                <p class="name">客户</p>
-                                <img class="avatar" src="@/assets/images/form-avatar.png" />
+                        <div ref="rightB" class="right-b">
+                            <div class="right-b-chat">
+                                <div v-for="(item, index) in sseList" :key="index" class="socket-item">
+                                    <div class="socket-l" v-if="item.role === '调解员'">
+                                        <div class="person-info">
+                                            <p class="name">调解员</p>
+                                            <img class="avatar" src="@/assets/images/form-avatar.png" alt="" />
+                                        </div>
+                                        <div class="person-message">
+                                            <span>{{ item.message }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="socket-r" v-if="item.role === '投诉人'">
+                                        <div class="person-message">
+                                            <span>{{ item.message }}</span>
+                                        </div>
+                                        <div class="person-info">
+                                            <p class="name">客户</p>
+                                            <img class="avatar" src="@/assets/images/form-avatar.png" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                </div>
-            </el-col>
+                    </el-col>
                 </el-row>
             </div>
             <div v-if="smartScriptVisible" class="dialog-script">

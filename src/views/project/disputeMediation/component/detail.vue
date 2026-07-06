@@ -571,7 +571,12 @@
                         </el-form-item>
                     </el-col>
                 </el-row>
-                <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+                <el-row
+                    v-if="
+                        !$store.getters.userInfo.isDMEntryClerk &&
+                        (DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType))
+                    "
+                >
                     <el-col :span="12">
                         <el-form-item label="案件类型" prop="selfCollectionCaseType">
                             <el-select v-if="DEPT_TYPE.insuranceList.includes(form.deptType)" v-model="form.selfCollectionCaseType" placeholder="" clearable style="width: 100%" disabled>

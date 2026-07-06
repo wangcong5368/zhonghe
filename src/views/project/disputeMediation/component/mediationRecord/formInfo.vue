@@ -192,7 +192,7 @@
                     <el-form-item
                         label="是否获得司法确认"
                         prop="isGetJudicialCheck"
-                        :rules="[{ required: formInfo.isApplyJudicialCheck === SYS_YES_NO.sys_yes, trigger: 'change', message: '请选择是否获得司法确认' }]"
+                        :rules="[{ required: formInfo.isApplyJudicialCheck === SYS_YES_NO.sys_no, trigger: 'change', message: '请选择是否获得司法确认' }]"
                     >
                         <el-select
                             v-model="formInfo.isGetJudicialCheck"

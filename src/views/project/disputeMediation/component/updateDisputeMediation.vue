@@ -252,7 +252,7 @@
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
-                        <el-form-item label="调解次数" prop="mediationNumber" :rules="disabled ? [] : [{ required: $store.getters.userInfo.isMediator, message: '调解次数为必填项', trigger: 'blur' }]">
+                        <el-form-item label="调解次数" prop="mediationNumber" :rules="disabled ? [] : [{ required: true, message: '调解次数为必填项', trigger: 'blur' }]">
                             <el-input v-model="form.mediationNumber" show-word-limit clearable :placeholder="disabled ? '' : '请输入调解次数'" :disabled="disabled" />
                         </el-form-item>
                     </el-col>
@@ -470,7 +470,7 @@
                 </el-row>
                 <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
                     <el-col :span="12">
-                        <el-form-item label="业务类别" prop="businessType1" :rules="disabled ? [] : [{ required: true, message: '业务类别为必填项', trigger: 'change' }]">
+                        <el-form-item label="业务类别" prop="businessType1">
                             <el-cascader
                                 v-model="form.businessType1"
                                 :options="dict.type.dm_business_type.options2"
@@ -1333,6 +1333,7 @@ export default {
         'dm_insurance_complaint_type',
         'dm_accept_status',
         'dm_self_accept_status',
+        'dm_self_reject_reason',
         'dm_reject_reason',
         'dm_business_type',
         'cert_type',
