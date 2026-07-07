@@ -93,22 +93,6 @@
                             ></el-input>
                         </td>
                     </tr>
-                    <tr>
-                        <td class="label-cell">内容</td>
-                        <td class="input-cell" colspan="3">
-                            <!-- <el-input
-                                v-model="form.text"
-                                type="textarea"
-                                :rows="6"
-                                placeholder="自由输入不超2000字符"
-                                maxlength="2000"
-                                show-word-limit
-                                :disabled="isView || (putEditStatus !== null && putEditStatus !== 7)"
-                                class="table-textarea"
-                            ></el-input> -->
-                            <RichEditor v-model="form.text" :disabled="isView || (putEditStatus !== null && putEditStatus !== 7)" />
-                        </td>
-                    </tr>
                 </table>
 
                 <!-- 附件表格 -->
