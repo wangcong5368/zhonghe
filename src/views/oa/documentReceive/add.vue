@@ -504,13 +504,13 @@ export default {
             return '提交';
         },
         filteredProcessingRecords() {
-            console.log(this.form.processingRecords, 'this.form.processingRecords');
+            // console.log(this.form.processingRecords, 'this.form.processingRecords');
 
             // 显示除了主任批示、综合管理部经理意见、综合管理部意见之外的所有记录
             return this.form.processingRecords.filter(record => {
                 if (!record.text) return false;
-
                 const text = record.text;
+
                 // 排除这三种类型的记录
                 const excludePatterns = ['主任岗审核通过', '综合部经理审核通过', '收文综合部文秘岗分发'];
 
@@ -1195,7 +1195,7 @@ export default {
         },
         showReadButton() {
             // 显示已阅按钮的条件：只有状态5时部门成员且有相应权限才显示
-            return this.putEditStatus === 5 && this.userPermissions.canDepartmentReadConfirm;
+            return this.putEditStatus === 5;
         },
         handleNextHandlerConfirm() {
             if (!this.selectedNextReviewer || this.selectedNextReviewer.length === 0) {
