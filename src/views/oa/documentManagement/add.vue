@@ -389,7 +389,7 @@
 
         <!-- 操作按钮 -->
         <div class="action-buttons">
-            <el-button type="primary" :disabled="editStatus === null" @click="openDocSignDialog">查看文签</el-button>
+            <el-button type="primary" :disabled="editStatus === null" @click="openDocSignDialog">打印</el-button>
             <el-button type="primary" :disabled="!canClickNextHandler" @click="openNextHandlerDialog">下一处理人</el-button>
             <el-button type="success" :disabled="!canClickApprove" @click="handleApprove">通过</el-button>
             <el-button type="danger" :disabled="!canClickReject" @click="handleReject">退回</el-button>

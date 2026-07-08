@@ -71,10 +71,30 @@ export default {
     methods: {
         initEditor() {
             if (!this.$refs.editor) return;
-
             try {
                 const editor = new E(this.$refs.editor);
                 editor.config.zIndex = 100;
+                // 1. 首先获取默认的菜单配置
+                // 2. 从默认配置中过滤掉你不想要的菜单，比如 'emotion' (表情)
+                editor.config.menus = [
+                    'head',
+                    'bold',
+                    'fontSize',
+                    'fontName',
+                    'italic',
+                    'underline',
+                    'strikeThrough',
+                    'indent',
+                    'lineHeight',
+                    'foreColor',
+                    'backColor',
+                    'list',
+                    'justify',
+                    'quote',
+                    'splitLine',
+                    'undo',
+                    'redo'
+                ];
                 editor.config.onchange = html => {
                     this.$emit('input', html);
                     this.$emit('change', html);
