@@ -12,7 +12,7 @@
                 <table class="word-table">
                     <tr>
                         <td class="label-cell">发文类型</td>
-                        <td class="input-cell" colspan="3">
+                        <td class="word-input-cell" colspan="3">
                             <el-select v-model="form.type" placeholder="请选择发文类型" :disabled="isReadOnly" class="table-select" @change="handleTypeChange">
                                 <el-option v-for="dict in dict.type.document_sending_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
                             </el-select>
@@ -26,11 +26,11 @@
                     <table class="word-table">
                         <tr v-if="shouldShowField('wordSize')">
                             <td class="label-cell">发文字号</td>
-                            <td class="input-cell">
+                            <td class="word-input-cell">
                                 <el-input v-model="form.wordSize" placeholder="保存后由系统自动生成" :disabled="true" class="table-input"></el-input>
                             </td>
                             <td class="label-cell" v-if="shouldShowField('draftDate')">发文日期</td>
-                            <td class="input-cell" v-if="shouldShowField('draftDate')">
+                            <td class="word-input-cell" v-if="shouldShowField('draftDate')">
                                 <el-date-picker
                                     v-model="form.draftDate"
                                     type="date"
@@ -43,7 +43,7 @@
                         </tr>
                         <tr v-if="shouldShowField('urgencyLevel')">
                             <td class="label-cell">紧急程度</td>
-                            <td class="input-cell" colspan="3">
+                            <td class="word-input-cell" colspan="3">
                                 <el-select v-model="form.urgencyLevel" placeholder="选择紧急程度" :disabled="isReadOnly" class="table-select">
                                     <el-option v-for="dict in dict.type.official_urgency_level" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
                                 </el-select>
@@ -55,7 +55,7 @@
                     <table class="word-table" v-if="shouldShowField('mainDeliveryAgency')">
                         <tr>
                             <td class="label-cell">主送单位</td>
-                            <td class="input-cell" colspan="3">
+                            <td class="word-input-cell" colspan="3">
                                 <el-input v-model="form.mainDeliveryAgency" placeholder="请输入主送单位" :disabled="isReadOnly" class="table-input"></el-input>
                                 <quick-reply
                                     style="margin: 5px 10px"
@@ -76,13 +76,13 @@
                     <table class="word-table">
                         <tr v-if="shouldShowField('title')">
                             <td class="label-cell">标题</td>
-                            <td class="input-cell" colspan="3">
+                            <td class="word-input-cell" colspan="3">
                                 <el-input v-model="form.title" placeholder="请输入标题" maxlength="200" show-word-limit :disabled="isReadOnly" class="table-input"></el-input>
                             </td>
                         </tr>
                         <tr v-if="shouldShowField('text')">
                             <td class="label-cell">内容</td>
-                            <td class="input-cell" colspan="3">
+                            <td class="word-input-cell" colspan="3">
                                 <!-- <el-input
                                     v-model="form.text"
                                     type="textarea"
@@ -389,16 +389,159 @@
 
         <!-- 操作按钮 -->
         <div class="action-buttons">
-            <el-button type="primary" :disabled="editStatus === null" @click="openDocSignDialog">打印</el-button>
             <el-button type="primary" :disabled="!canClickNextHandler" @click="openNextHandlerDialog">下一处理人</el-button>
             <el-button type="success" :disabled="!canClickApprove" @click="handleApprove">通过</el-button>
             <el-button type="danger" :disabled="!canClickReject" @click="handleReject">退回</el-button>
             <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
+            <el-button type="primary" :disabled="editStatus === null" @click="printDialogVisible = true">打印</el-button>
             <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText }}</el-button>
             <el-button v-if="canClickConfirmRead" type="info" @click="handleConfirmRead">已阅</el-button>
             <el-button @click="handleExit">退出</el-button>
         </div>
 
+        <el-dialog :visible.sync="printDialogVisible" width="800px" custom-class="doc-sign-dialog" :close-on-click-modal="false">
+            <div class="dialogVisible-wrap" id="printArea">
+                <div slot="title" class="dialog-title">
+                    <span>天津众和发文处理单</span>
+                </div>
+
+                <!-- 1. 公文头部：密级、缓急 -->
+                <div class="doc-header">
+                    <div class="header-top">
+                        <!-- <span class="security-level">密级</span>
+                    <span class="urgency-level">〔非密〕</span> -->
+                    </div>
+                    <div class="header-top" v-if="shouldShowField('urgencyLevel')">
+                        <span class="security-level">紧急程度</span>
+                        <span class="urgency-level">〔{{ form.urgencyLevel === 'routine' ? '普通' : form.urgencyLevel === 'emergency' ? '一般' : '加急' }}〕</span>
+                    </div>
+                </div>
+
+                <!-- 2. 信息表格 -->
+                <div v-if="form.type && visibleFields.fields.length > 0">
+                    <div class="docSignWord-table">
+                        <div class="docSignWord-table-item-unit">
+                            <div class="label-cell-unit">发文类型</div>
+                            <div class="input-cell-unit">{{ DM_DOCUMENT_SENDING_TYPE[form.type] || '' }}</div>
+                        </div>
+                        <div class="docSignWord-table-item">
+                            <div class="docSignWord-label-cell" v-if="shouldShowField('wordSize')">发文字号</div>
+                            <div class="docSignWord-input-cell">{{ form.wordSize || '' }}</div>
+                        </div>
+                        <div class="docSignWord-table-item" v-if="shouldShowField('draftDate')">
+                            <div class="docSignWord-label-cell">发文日期</div>
+                            <div class="docSignWord-input-cell">{{ form.draftDate || '' }}</div>
+                        </div>
+                        <div class="docSignWord-table-item-unit" v-if="shouldShowField('mainDeliveryAgency')">
+                            <div class="label-cell-unit">主送单位</div>
+                            <div class="input-cell-unit">{{ form.mainDeliveryAgency || '' }}</div>
+                        </div>
+                    </div>
+                    <div class="docSignWord-div" v-if="shouldShowField('text')">
+                        <div class="docSignWord-title-cell">内容</div>
+                        <div class="docSignWord-title-input" v-html="form.text || ''"></div>
+                    </div>
+
+                    <!-- 3. 标题 -->
+                    <div class="docSignWord-div">
+                        <div class="docSignWord-title-cell">标题</div>
+                        <div class="docSignWord-title-input1">{{ form.title || '' }}</div>
+                    </div>
+                    <div class="docSignWord-table1" v-if="shouldShowField('cc') || shouldShowField('internalCirculation')">
+                        <div class="docSignWord-table-item" v-if="shouldShowField('cc')">
+                            <div class="docSignWord-label-cell">抄送</div>
+                            <div class="docSignWord-input-cell">{{ form.cc || '' }}</div>
+                        </div>
+                        <div class="docSignWord-table-item" v-if="shouldShowField('internalCirculation')">
+                            <div class="docSignWord-label-cell">内部发送</div>
+                            <div class="docSignWord-input-cell">{{ form.internalCirculation || '' }}</div>
+                        </div>
+                    </div>
+                    <div class="docSignWord-table1" v-if="shouldShowField('contactPerson') || shouldShowField('contactPhone')">
+                        <div class="docSignWord-table-item" v-if="shouldShowField('contactPerson')">
+                            <div class="docSignWord-label-cell">联系人</div>
+                            <div class="docSignWord-input-cell">{{ form.contactPerson || '' }}</div>
+                        </div>
+                        <div class="docSignWord-table-item" v-if="shouldShowField('contactPhone')">
+                            <div class="docSignWord-label-cell">联系电话</div>
+                            <div class="docSignWord-input-cell">{{ form.contactPhone || '' }}</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 3. 印发日期 -->
+                <div class="docSignWord-div-wrap" v-if="shouldShowField('issuingDate')">
+                    <div class="docSignWord-title-cell">印发日期</div>
+                    <div class="docSignWord-title-input2">{{ form.issuingDate || '' }}</div>
+                </div>
+
+                <!-- 4. 主任批示 -->
+                <div class="docSignWord-div">
+                    <div class="docSignWord-title-cell">主任批示</div>
+
+                    <div class="docSignWord-div-handle">
+                        <div class="docSignWord-title-input">
+                            {{ directorRemark || '' }}
+                        </div>
+                        <div class="handler-info" v-if="directorHandler">
+                            <span class="handler-time">处理人: {{ directorHandler }} 日期: {{ directorDate }} 时间: {{ directorTime }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. 综合管理部经理意见 -->
+                <div class="docSignWord-div">
+                    <div class="docSignWord-title-cell">综合管理部经理意见</div>
+                    <div class="docSignWord-div-handle">
+                        <div class="docSignWord-title-input">{{ comprehensiveRemark || '' }}</div>
+                        <div class="handler-info" v-if="comprehensiveHandler">
+                            <span class="handler-time">处理人: {{ comprehensiveHandler }} 日期: {{ comprehensiveDate }} 时间: {{ comprehensiveTime }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. 主办处室及意见表格 -->
+                <div class="docSignWord-zhu">
+                    <div class="docSignWord-zhu-cell">主办处室:</div>
+                    <div class="docSignWord-zhu-input">{{ '综合管理部' }}</div>
+                </div>
+                <!-- 7. 主办处室意见表格 -->
+                <div class="docSignWord-ban">
+                    <div class="docSignWord-ban-item1">
+                        <div class="docSignWord-ban-cell">主办处室意见</div>
+                        <div class="docSignWord-div-handle">
+                            <div class="docSignWord-ban-input">{{ comprehensiveProcessRemark }}</div>
+                            <div class="handler-info" v-if="comprehensiveProcessHandler">
+                                <span class="handler-time">处理人: {{ comprehensiveProcessHandler }} 日期: {{ comprehensiveProcessDate }} 时间: {{ comprehensiveProcessTime }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. 备注 -->
+                <div class="docSignWord-div">
+                    <div class="docSignWord-title-cell">备注</div>
+                    <div class="docSignWord-title-input">{{ form.documentRemark || '' }}</div>
+                </div>
+            </div>
+            <!-- <div class="docSignWord-fu" v-if="shouldShowField('filePath')">
+                <div class="docSignWord-fu-cell">附件</div>
+                <div class="attachment-list">
+                    <div v-for="(filePath, index) in (form.filePath || '').split(',')" :key="index" class="attachment-item" v-if="filePath.trim()">
+                        <span class="file-info">
+                            <i class="el-icon-document"></i>
+                            {{ getDisplayFileName(filePath) }}
+                        </span>
+                    </div>
+                </div>
+            </div> -->
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="printDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="confirmPrint">确定打印</el-button>
+            </span>
+        </el-dialog>
+        <div v-if="printImage" style="display: none">
+            <img :src="printImage" id="printImage" />
+        </div>
         <!-- 分隔线 -->
         <el-divider></el-divider>
 
@@ -438,25 +581,6 @@
                 <el-button type="primary" @click="handleNextHandlerConfirm">确 定</el-button>
             </span>
         </el-dialog>
-        <!-- 文签弹窗 -->
-        <doc-sign-dialog
-            :visible.sync="dialogVisible"
-            :form="form"
-            :director-remark="directorRemark"
-            :comprehensive-remark="comprehensiveRemark"
-            :comprehensive-process-remark="comprehensiveProcessRemark"
-            :director-handler="directorHandler"
-            :director-date="directorDate"
-            :director-time="directorTime"
-            :comprehensive-process-handler="comprehensiveProcessHandler"
-            :comprehensive-process-date="comprehensiveProcessDate"
-            :comprehensive-process-time="comprehensiveProcessTime"
-            :comprehensive-handler="comprehensiveHandler"
-            :comprehensive-date="comprehensiveDate"
-            :comprehensive-time="comprehensiveTime"
-            @close="handleClose"
-            type="发文"
-        />
     </div>
 </template>
 
@@ -467,6 +591,7 @@ import QuickReply from '@/components/quickReply/index.vue';
 import RichEditor from '../components/RichEditor.vue';
 import DocSignDialog from '../components/DocSignDialog.vue';
 import conf from '@/conf.js';
+import html2canvas from 'html2canvas';
 import {
     addDocument,
     documentImageSave,
@@ -484,6 +609,7 @@ import { getDirectorList, getDeptUserTree, getDocumentDict } from '@/api/oa/publ
 import { getDeptLeaderUserTreeList, getPreviewRedHeaderDoc } from '@/api/oa/document';
 import { mapGetters } from 'vuex';
 import { getToken } from '@/utils/auth';
+import { DM_DOCUMENT_SENDING_TYPE } from '@/views/constant/CommonConstant.js';
 
 export default {
     name: 'DocumentAdd',
@@ -506,7 +632,9 @@ export default {
             return callback();
         };
         return {
-            dialogVisible: false,
+            printImage: null,
+            DM_DOCUMENT_SENDING_TYPE: DM_DOCUMENT_SENDING_TYPE,
+            printDialogVisible: false,
             editStatus: null,
             needsWrittenDate: false,
             nextApproverUsers: [],
@@ -828,26 +956,31 @@ export default {
                         notApprovedUserNames: p.notApprovedUserNames ? '未处理' : '已处理'
                     }));
 
-                    console.log('processFlowList', this.processFlowList);
+                    // console.log('processFlowList', this.processFlowList);
 
                     // 反显审批意见（仅反显意见内容和处理人信息，不反显通过/退回状态）
                     documentProcessList.forEach(p => {
+                        console.log('🚀 ~p.returnRemark  ~ :', p.returnRemark);
                         if (p.returnRemark === '部门经理审核通过') {
+                            console.log('🚀 ~ 部门经理审核通过 ~ :');
                             this.managerRemark = p.remark || '';
                             this.managerHandler = p.nickName || '未知';
                             this.managerDate = p.createTime ? p.createTime.split(' ')[0] : '';
                             this.managerTime = p.createTime ? p.createTime.split(' ')[1] : '';
                         } else if (p.returnRemark && p.returnRemark.includes('综合部审核通过')) {
+                            console.log('🚀 ~ 综合部审核通过 ~ :');
                             this.comprehensiveRemark = p.remark || '';
                             this.comprehensiveHandler = p.nickName || '未知';
                             this.comprehensiveDate = p.createTime ? p.createTime.split(' ')[0] : '';
                             this.comprehensiveTime = p.createTime ? p.createTime.split(' ')[1] : '';
                         } else if (p.returnRemark && p.returnRemark.includes('主任审核通过')) {
+                            console.log('🚀 ~ 主任审核通过 ~ :');
                             this.directorRemark = p.remark || '';
                             this.directorHandler = p.nickName || '未知';
                             this.directorDate = p.createTime ? p.createTime.split(' ')[0] : '';
                             this.directorTime = p.createTime ? p.createTime.split(' ')[1] : '';
-                        } else if (p.returnRemark && p.returnRemark.includes('综合部经理发文办结')) {
+                        } else if (p.returnRemark && p.returnRemark.includes('发文办结')) {
+                            console.log('🚀 ~综合部经理发文办结  ~ :');
                             this.comprehensiveProcessRemark = p.remark || '';
                             this.comprehensiveProcessHandler = p.nickName || '未知';
                             this.comprehensiveProcessDate = p.createTime ? p.createTime.split(' ')[0] : '';
@@ -1666,6 +1799,117 @@ export default {
                 this.directorStatus = '2';
             }
             this.handleProcess();
+        },
+        async handlePrint() {
+            try {
+                this.$message({ message: '正在生成打印内容...', duration: 0, loading: true });
+
+                const element = document.getElementById('printArea');
+                await this.$nextTick();
+
+                // 获取元素实际尺寸
+                const rect = element.getBoundingClientRect();
+                const targetWidth = 780; // A4 宽度（像素）
+                const targetHeight = Math.round(targetWidth * (rect.height / rect.width));
+
+                const canvas = await html2canvas(element, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    // 固定宽度，自适应高度
+                    width: targetWidth,
+                    height: targetHeight,
+                    windowWidth: targetWidth,
+                    windowHeight: targetHeight,
+                    onclone: clonedDoc => {
+                        const clonedElement = clonedDoc.getElementById('printArea');
+                        if (clonedElement) {
+                            clonedElement.style.width = targetWidth + 'px';
+                            clonedElement.style.transform = 'none';
+                        }
+                    }
+                });
+
+                this.printImage = canvas.toDataURL('image/png');
+
+                this.$message.closeAll();
+                this.$message.success('生成成功！');
+                this.previewDialogVisible = true;
+            } catch (error) {
+                console.error('生成打印图片失败:', error);
+                this.$message.closeAll();
+                this.$message.error('生成打印内容失败，请重试');
+            } finally {
+                this.printDialogVisible = false;
+            }
+        },
+
+        async confirmPrint() {
+            await this.handlePrint();
+            if (!this.printImage) return;
+
+            // 打印图片
+            const printWindow = window.open('', '_blank', 'width=800,height=600');
+            printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+             <title></title>
+            <style>
+              * { margin: 0; padding: 0; }
+              @page {
+                size: A4;
+                margin: 0; /* 去除默认边距 */
+              }
+              body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background: #fff;
+              }
+              img {
+                max-width: 100%;
+                height: auto;
+              }
+              @media print {
+                body { min-height: auto; }
+                img {
+                  max-width: 100%;
+                  page-break-inside: avoid;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${this.printImage}" />
+          </body>
+        </html>
+      `);
+            printWindow.document.close();
+
+            // 等待图片加载完成后打印
+            printWindow.onload = function () {
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 300);
+            };
+        },
+
+        closePreview() {
+            // 清理资源
+            this.printImage = null;
+        }
+    },
+
+    beforeDestroy() {
+        // 清理图片资源
+        if (this.printImage) {
+            URL.revokeObjectURL(this.printImage);
         }
     }
 };
@@ -2169,5 +2413,252 @@ export default {
 ::v-deep .el-input__inner {
     background-color: #ffffff !important;
     border: none !important;
+}
+
+.dialogVisible-wrap {
+    padding: 40px 40px 0 40px;
+    /* ========== 对话框标题样式 ========== */
+    .dialog-title {
+        font-size: 30px;
+        text-align: center;
+        letter-spacing: 4px;
+        color: red;
+    }
+    .doc-header {
+        padding: 5px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .header-top {
+        display: flex;
+    }
+    .security-level {
+        color: red;
+    }
+
+    .docSignWord-table {
+        width: 100%;
+        border: 1px solid #000;
+        margin-bottom: 0;
+        display: flex;
+        text-align: center;
+        flex-wrap: wrap;
+        border-left: none;
+        border-right: none;
+    }
+    .docSignWord-table1 {
+        width: 100%;
+        border: 1px solid #000;
+        margin-bottom: 0;
+        display: flex;
+        text-align: center;
+        flex-wrap: wrap;
+        border-left: none;
+        border-right: none;
+        border-top: none;
+    }
+    .docSignWord-table-item {
+        display: flex;
+        width: 50%;
+        height: 40px;
+    }
+    .docSignWord-table-item-unit {
+        display: flex;
+        width: 100%;
+        height: 40px;
+    }
+
+    .docSignWord-label-cell {
+        color: red;
+        white-space: nowrap;
+        text-align: left;
+        width: 80px;
+        padding: 5px 0;
+    }
+    .label-cell-unit {
+        color: red;
+        white-space: nowrap;
+        text-align: left;
+        width: 80px;
+        padding: 5px 0;
+    }
+    .docSignWord-input-cell {
+        white-space: nowrap;
+        text-align: left;
+        padding: 5px 0;
+        flex: 1;
+    }
+    .input-cell-unit {
+        white-space: nowrap;
+        text-align: left;
+        padding: 5px 0;
+        flex: 1;
+    }
+    .docSignWord-div {
+        padding: 5px 0;
+        border-bottom: 1px solid #000;
+    }
+    .docSignWord-div-wrap {
+        padding: 5px 0;
+        border-bottom: 1px solid #000;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .docSignWord-div-handle {
+        display: flex;
+        justify-content: space-between;
+    }
+    .docSignWord-title-cell {
+        color: red;
+        white-space: nowrap;
+        text-align: left;
+    }
+    .docSignWord-title-input {
+        white-space: nowrap;
+        text-align: left;
+        min-height: 60px;
+    }
+    .docSignWord-title-input1 {
+        white-space: nowrap;
+        text-align: left;
+        min-height: 40px;
+    }
+    .docSignWord-title-input2 {
+        white-space: nowrap;
+        text-align: left;
+    }
+    .docSignWord-zhu {
+        display: flex;
+        padding: 10px 0;
+        border-bottom: 1px solid #000;
+    }
+    .docSignWord-zhu-cell {
+        color: red;
+        white-space: nowrap;
+        text-align: left;
+    }
+    .docSignWord-zhu-input {
+        white-space: nowrap;
+        text-align: left;
+    }
+
+    .docSignWord-ban {
+        display: flex;
+        border-bottom: 1px solid #000;
+    }
+
+    .docSignWord-ban-item1 {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+    }
+    .docSignWord-ban-item1 .handler-info {
+        flex-shrink: 0;
+    }
+
+    .docSignWord-ban-item {
+        display: flex;
+        width: 50%;
+        border-right: 1px dashed #ccc;
+        flex-direction: column;
+    }
+    .docSignWord-ban-item2 {
+        display: flex;
+        width: 50%;
+        flex-direction: column;
+    }
+    .docSignWord-ban-cell {
+        color: red;
+        white-space: nowrap;
+        text-align: left;
+
+        padding: 5px 0;
+        border-bottom: 1px dashed #ccc;
+    }
+    .docSignWord-ban-item .docSignWord-ban-cell {
+        padding: 5px;
+    }
+    .docSignWord-ban-input {
+        text-align: left;
+        min-height: 80px;
+        padding: 5px 0;
+        flex-wrap: wrap;
+        display: flex;
+        word-break: break-word;
+    }
+    .docSignWord-ban-item .docSignWord-ban-input {
+        padding: 5px;
+    }
+
+    .record-text {
+        margin-right: 10px;
+    }
+
+    .docSignWord-time {
+        display: flex;
+        border-bottom: 1px solid #000;
+    }
+    .docSignWord-time-item1 {
+        flex: 1;
+        display: flex;
+        padding: 5px 0;
+        gap: 5px;
+        border-right: 1px solid #000;
+    }
+    .docSignWord-time-item2 {
+        flex: 1;
+        display: flex;
+        padding: 5px 5px 0 5px;
+        gap: 5px;
+        border-right: 1px solid #000;
+    }
+    .docSignWord-time-item3 {
+        flex: 1;
+        display: flex;
+        padding: 5px 5px 0 5px;
+        gap: 5px;
+    }
+    .docSignWord-time-cell {
+        color: red;
+        white-space: nowrap;
+        text-align: left;
+    }
+    .docSignWord-time-input {
+        text-align: left;
+    }
+}
+.docSignWord-fu {
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+}
+.docSignWord-fu-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+}
+.docSignWord-fu-input {
+    white-space: nowrap;
+    text-align: left;
+    min-height: 30px;
+}
+.docSignWord-btn {
+    margin-top: 10px;
+    padding: 0px 50px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+::v-deep .doc-sign-dialog {
+    .el-dialog {
+        border-radius: 4px;
+    }
+    .el-dialog__header {
+        padding: 0;
+    }
+    .el-dialog__footer {
+        padding: 20px 40px;
+    }
 }
 </style>
