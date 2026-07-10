@@ -72,7 +72,7 @@
             <el-form-item label="是否执行完毕" prop="executionCompletedFlag">
               <el-select v-model="queryParams.params.executionCompletedFlag" placeholder="请选择是否执行完毕" clearable
                 style="width: 100%">
-                <el-option v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.label"
+                <el-option v-for="dict in this.executionCompletedFlagOptions" :key="dict.value" :label="dict.label"
                   :value="dict.value" />
               </el-select>
             </el-form-item>
@@ -1173,6 +1173,11 @@ export default {
         { label: `是否打分`, visible: true },
         { label: `创建时间`, visible: true },
         { label: `修改时间`, visible: false }
+      ],
+      executionCompletedFlagOptions: [
+        { label: `是`, value: 'Y' },
+        { label: `否`, value: 'N' },
+        { label: `待执行`, value: 'P' },
       ],
       // 常量
       DEPT_TYPE: DEPT_TYPE, // 机构类型
