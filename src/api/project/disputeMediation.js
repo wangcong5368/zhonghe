@@ -9,6 +9,14 @@ function expandServiceUrl(path) {
   return `${base}${p}`;
 }
 
+export function ocrServiceUrl(path) {
+    const base = String(conf.server.ocrBaseUrl || '')
+        .trim()
+        .replace(/\/$/, '');
+    const p = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${p}`;
+}
+
 function assertExpandBaseUrl() {
   const base = String(conf.server.expandBaseUrl || '').trim();
   if (!base || !/^https?:\/\//i.test(base)) {
@@ -784,6 +792,13 @@ export function getFulfillmentExpandListByWorkOrderId(workOrderId) {
 export function getByDeptId(deptId) {
   return request({
     url: expandServiceUrl(`/project/bankDepart/getByDeptId/${deptId}`),
+    method: "get",
+  });
+}
+
+export function getCompare(deptId) {
+  return request({
+    url: ocrServiceUrl(`/evidence/compare?work_order_id=${deptId}`),
     method: "get",
   });
 }

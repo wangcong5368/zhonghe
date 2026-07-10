@@ -31,8 +31,10 @@
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="渠道类型" prop="channelType">
-              <el-select v-model="form.channelType" disabled placeholder="请选择渠道类型" clearable style="width: 100%">
+            <el-form-item label="渠道类型" prop="channelType"
+              :rules="disabled ? [] : [{ required: true, message: '渠道类型为必填项', trigger: 'change' }]">
+              <el-select v-model="form.channelType" :disabled="disabled" placeholder="请选择渠道类型" clearable
+                style="width: 100%">
                 <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
@@ -300,7 +302,7 @@
                     </el-col> -->
           <el-col :span="12">
             <el-form-item label="机构类型" prop="institutionType">
-              <el-cascader v-model="form.institutionType" disabled
+              <el-cascader v-model="form.institutionType" :disabled="disabled"
                 :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
                 :props="{ expandTrigger: 'hover', emitPath: false }" :placeholder="disabled ? '' : '请选择机构类型'" clearable
                 style="width: 100%" />
@@ -539,8 +541,17 @@
           </el-col>
           <el-col :span="12"
             v-if="DEPT_TYPE.bankList.includes(this.form.deptType) || DEPT_TYPE.nonBankList.includes(this.form.deptType)">
-            <el-form-item label="产品/服务" prop="disputedProductType">
-              <el-select disabled v-model="form.disputedProductType" placeholder="" clearable style="width: 100%">
+            <el-form-item label="产品/服务" prop="disputedProductType" :rules="disabled
+              ? []
+              : [
+                {
+                  required: DEPT_TYPE.bankList.includes(this.form.deptType) || DEPT_TYPE.nonBankList.includes(this.form.deptType),
+                  message: '产品/服务为必填项',
+                  trigger: 'change'
+                }
+              ]">
+              <el-select :disabled="disabled" v-model="form.disputedProductType"
+                :placeholder="disabled ? '' : '请选择产品/服务'" clearable style="width: 100%">
                 <el-option v-for="dict in dict.type.dm_disputed_product_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
@@ -1703,17 +1714,17 @@ export default {
         })
         .catch(() => { });
 
-      // if (!this.form.institutionType) {
-      //   if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
-      //     this.form.institutionType = this.form.deptType;
-      //   }
-      //   if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
-      //     const res = await getByDeptId(this.form.deptId);
-      //     if (res.code === 200) {
-      //       this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
-      //     }
-      //   }
-      // }
+      if (!this.form.institutionType) {
+        if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
+          this.form.institutionType = this.form.deptType;
+        }
+        if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
+          const res = await getByDeptId(this.form.deptId);
+          if (res.code === 200) {
+            this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
+          }
+        }
+      }
 
       this.visible = true;
     },
