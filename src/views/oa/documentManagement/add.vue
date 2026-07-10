@@ -221,7 +221,7 @@
                   @collected="handleCollected" />
                 <div class="handler-info" v-if="directorHandler">
                   <span class="handler-time">处理人: {{ directorHandler }} 日期: {{ directorDate }} 时间: {{ directorTime
-                  }}</span>
+                    }}</span>
                 </div>
               </div>
             </td>
@@ -268,7 +268,7 @@
                   @collected="handleCollected" />
                 <div class="handler-info" v-if="managerHandler">
                   <span class="handler-time">处理人: {{ managerHandler }} 日期: {{ managerDate }} 时间: {{ managerTime
-                  }}</span>
+                    }}</span>
                 </div>
               </div>
             </td>
@@ -344,7 +344,7 @@
       <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
       <el-button type="primary" :disabled="editStatus === null" @click="confirmPrint">打印</el-button>
       <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText
-      }}</el-button>
+        }}</el-button>
       <el-button v-if="canClickConfirmRead" type="info" @click="handleConfirmRead">已阅</el-button>
       <el-button @click="handleExit">退出</el-button>
     </div>
@@ -480,7 +480,7 @@
     </div>
 
     <div v-if="printImage" style="display: none">
-      <img :src="printImage" id="printImage" />
+      <img :src="printImage" id="printImage" style="width:794px;height:auto;" />
     </div>
     <!-- 分隔线 -->
     <el-divider></el-divider>
@@ -524,7 +524,6 @@ import QuickReply from '@/components/quickReply/index.vue';
 import RichEditor from '../components/RichEditor.vue';
 import DocSignDialog from '../components/DocSignDialog.vue';
 import conf from '@/conf.js';
-import html2canvas from 'html2canvas';
 import {
   addDocument,
   documentImageSave,
@@ -565,7 +564,6 @@ export default {
       return callback();
     };
     return {
-      printImage: null,
       DM_DOCUMENT_SENDING_TYPE: DM_DOCUMENT_SENDING_TYPE,
       editStatus: null,
       needsWrittenDate: false,
@@ -1732,108 +1730,318 @@ export default {
       }
       this.handleProcess();
     },
-    async handlePrint() {
-      try {
-        this.$message({
-          message: '正在生成打印内容.',
-          duration: 0,
-          loading: true
-        });
+    // handlePrint() {
+    //   this.$nextTick(() => {
 
-        await this.$nextTick();
+    //     window.print();
 
-        const element = document.getElementById('printArea');
+    //   });
+    // },
 
-        const rect = element.getBoundingClientRect();
+    confirmPrint() {
 
-        const targetWidth = 780;
-        const targetHeight = Math.round(
-          targetWidth * (rect.height / rect.width)
-        );
-
-        const canvas = await html2canvas(element, {
-          scale: 3,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          width: targetWidth,
-          height: targetHeight,
-          windowWidth: targetWidth,
-          windowHeight: targetHeight
-        });
-
-
-        this.printImage = canvas.toDataURL('image/png');
-
-        this.$message.closeAll();
-
-        return true;
-
-      } catch (error) {
-
-        console.error('生成打印图片失败:', error);
-
-        this.$message.closeAll();
-
-        this.$message.error('生成打印内容失败');
-
-        return false;
-      }
-    },
-
-    async confirmPrint() {
-      await this.handlePrint();
-      if (!this.printImage) return;
-
-      // 打印图片
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      const printContent = document.getElementById('printArea').outerHTML;
+      const printWindow = window.open(
+        '',
+        '_blank',
+      );
       printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8">
-             <title></title>
-            <style>
-              * { margin: 0; padding: 0; }
-              @page {
-                size: A4;
-                margin: 0; /* 去除默认边距 */
-              }
-              body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-                background: #fff;
-              }
-              img {
-                max-width: 100%;
-                height: auto;
-              }
-              @media print {
-                body { min-height: auto; }
-                img {
-                  max-width: 100%;
-                  page-break-inside: avoid;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            <img src="${this.printImage}" />
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title></title>
+      <style>
+        @page {
+          size: A4;
+          margin: 10mm;
+        }
+        * {
+          box-sizing: border-box;
+        }
+        body {
+          margin:0;
+          background:#fff;
+          font-family:
+          "Microsoft YaHei",
+          Arial,
+          sans-serif;
 
-      // 等待图片加载完成后打印
+        }
+        .dialogVisible-wrap {
+          padding: 40px 40px 0 40px;
+
+          /* ========== 对话框标题样式 ========== */
+          .dialog-title {
+            font-size: 30px;
+            text-align: center;
+            letter-spacing: 4px;
+            color: red;
+          }
+
+          .doc-header {
+            padding: 5px;
+            display: flex;
+            justify-content: space-between;
+          }
+
+          .header-top {
+            display: flex;
+          }
+
+          .security-level {
+            color: red;
+          }
+
+          .docSignWord-table {
+            width: 100%;
+            border: 1px solid #000;
+            margin-bottom: 0;
+            display: flex;
+            text-align: center;
+            flex-wrap: wrap;
+            border-left: none;
+            border-right: none;
+          }
+
+          .docSignWord-table1 {
+            width: 100%;
+            border: 1px solid #000;
+            margin-bottom: 0;
+            display: flex;
+            text-align: center;
+            flex-wrap: wrap;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+          }
+
+          .docSignWord-table-item {
+            display: flex;
+            width: 50%;
+            height: 40px;
+          }
+
+          .docSignWord-table-item-unit {
+            display: flex;
+            width: 100%;
+            height: 40px;
+          }
+
+          .docSignWord-label-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+            width: 80px;
+            padding: 5px 0;
+          }
+
+          .label-cell-unit {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+            width: 80px;
+            padding: 5px 0;
+          }
+
+          .docSignWord-input-cell {
+            white-space: nowrap;
+            text-align: left;
+            padding: 5px 0;
+            flex: 1;
+          }
+
+          .input-cell-unit {
+            white-space: nowrap;
+            text-align: left;
+            padding: 5px 0;
+            flex: 1;
+          }
+
+          .docSignWord-div {
+            padding: 5px 0;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-div-wrap {
+            padding: 5px 0;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+          }
+
+          .docSignWord-div-handle {
+            display: flex;
+            justify-content: space-between;
+          }
+
+          .docSignWord-title-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-title-input {
+            white-space: nowrap;
+            text-align: left;
+            min-height: 60px;
+          }
+
+          .docSignWord-title-input1 {
+            white-space: nowrap;
+            text-align: left;
+            min-height: 40px;
+          }
+
+          .docSignWord-title-input2 {
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-zhu {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-zhu-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-zhu-input {
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-ban {
+            display: flex;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-ban-item1 {
+            display: flex;
+            width: 100%;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-item1 .handler-info {
+            flex-shrink: 0;
+          }
+
+          .docSignWord-ban-item {
+            display: flex;
+            width: 50%;
+            border-right: 1px dashed #ccc;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-item2 {
+            display: flex;
+            width: 50%;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+
+            padding: 5px 0;
+            border-bottom: 1px dashed #ccc;
+          }
+
+          .docSignWord-ban-item .docSignWord-ban-cell {
+            padding: 5px;
+          }
+
+          .docSignWord-ban-input {
+            text-align: left;
+            min-height: 80px;
+            padding: 5px 0;
+            flex-wrap: wrap;
+            display: flex;
+            word-break: break-word;
+          }
+
+          .docSignWord-ban-item .docSignWord-ban-input {
+            padding: 5px;
+          }
+
+          .record-text {
+            margin-right: 10px;
+          }
+
+          .docSignWord-time {
+            display: flex;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-time-item1 {
+            flex: 1;
+            display: flex;
+            padding: 5px 0;
+            gap: 5px;
+            border-right: 1px solid #000;
+          }
+
+          .docSignWord-time-item2 {
+            flex: 1;
+            display: flex;
+            padding: 5px 5px 0 5px;
+            gap: 5px;
+            border-right: 1px solid #000;
+          }
+
+          .docSignWord-time-item3 {
+            flex: 1;
+            display: flex;
+            padding: 5px 5px 0 5px;
+            gap: 5px;
+          }
+
+          .docSignWord-time-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-time-input {
+            text-align: left;
+          }
+        }
+
+        #printArea {
+
+          width:794px;
+
+          margin:0 auto;
+
+          background:#fff;
+
+        }
+        .dialog-title {
+          text-align:center;
+          font-size:20px;
+          font-weight:bold;
+          margin-bottom:20px;
+        }
+        /* 保留你的原打印样式 */
+      </style>
+    </head>
+    <body>
+      ${printContent}
+    </body>
+    </html>
+  `);
+
+      printWindow.document.close();
       printWindow.onload = function () {
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 300);
+        printWindow.print();
+        printWindow.close();
       };
+
     },
 
     closePreview() {
@@ -2622,24 +2830,36 @@ export default {
   justify-content: flex-end;
 }
 
-::v-deep .doc-sign-dialog {
-  .el-dialog {
-    border-radius: 4px;
-  }
 
-  .el-dialog__header {
-    padding: 0;
-  }
-
-  .el-dialog__footer {
-    padding: 20px 40px;
-  }
-}
 
 .print-area {
-  position: absolute;
-  left: -9999px;
+  position: fixed;
+  left: -99999px;
   top: 0;
-  width: 780px;
+  width: 794px;
+}
+
+/* 打印时 */
+@media print {
+
+  body * {
+    visibility: hidden;
+  }
+
+  #printArea,
+  #printArea * {
+    visibility: visible;
+  }
+
+  #printArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 794px !important;
+    background: #fff;
+
+  }
+
+
 }
 </style>
