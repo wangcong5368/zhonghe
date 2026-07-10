@@ -2899,11 +2899,14 @@ export default {
           }
         });
       }
-      if (this.form.entryChannel && (this.form.entryChannel === DM_ENTRY_CHANNEL.C || this.form.entryChannel === DM_ENTRY_CHANNEL.G)) {
-        this.form.channelType = '0';
-      } else {
-        this.form.channelType = '1';
+      if (this.form.entryChannel) {
+        if (this.form.entryChannel && (this.form.entryChannel === DM_ENTRY_CHANNEL.C || this.form.entryChannel === DM_ENTRY_CHANNEL.G)) {
+          this.form.channelType = '0';
+        } else {
+          this.form.channelType = '1';
+        }
       }
+
       this.visible = true;
       this.$nextTick(() => {
         this.initCertTypeOptions();

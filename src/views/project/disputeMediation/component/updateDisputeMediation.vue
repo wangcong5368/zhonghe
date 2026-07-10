@@ -50,7 +50,7 @@
               :rules="disabled ? [] : [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }]">
               <el-radio-group v-model="form.isSelf" :disabled="disabled">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                  }}</el-radio>
+                }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -1641,6 +1641,20 @@ export default {
         this.filteredDeptTypeOptions;
       }
 
+      // isRepeatedly  isBlackIndustry  isThirdPartyAgent  isHighRisk
+      if (!this.form.isRepeatedly && (this.DEPT_TYPE.insuranceList.includes(this.form.deptType)) || this.DEPT_TYPE.nonBankList.includes(this.form.deptType) || this.DEPT_TYPE.bankList.includes(this.form.deptType)) {
+        this.form.isRepeatedly = SYS_YES_NO.sys_no;
+      }
+      if (!this.form.isBlackIndustry && (this.DEPT_TYPE.insuranceList.includes(this.form.deptType) || this.DEPT_TYPE.nonBankList.includes(this.form.deptType) || this.DEPT_TYPE.bankList.includes(this.form.deptType))) {
+        this.form.isBlackIndustry = SYS_YES_NO.sys_no;
+      }
+      if (!this.form.isThirdPartyAgent && (this.DEPT_TYPE.nonBankList.includes(this.form.deptType) || this.DEPT_TYPE.bankList.includes(this.form.deptType))) {
+        this.form.isThirdPartyAgent = SYS_YES_NO.sys_no;
+      }
+      if (!this.form.isHighRisk && (this.DEPT_TYPE.nonBankList.includes(this.form.deptType) || this.DEPT_TYPE.bankList.includes(this.form.deptType))) {
+        this.form.isHighRisk = SYS_YES_NO.sys_no;
+      }
+
       // 工单进入审核状态或办结
       this.disabled =
         (DM_STATUS.DM_STATUS4 === this.form.status && this.form.agreementStep != null && DM_AGREEMENT_STEP.AR !== this.form.agreementStep) ||
@@ -1660,6 +1674,8 @@ export default {
           }
           if (res.data != null && res.data.mediationNumber != null && res.data.mediationNumber !== '') {
             this.$set(this.form, 'mediationNumber', String(res.data.mediationNumber));
+          } else {
+            this.$set(this.form, 'mediationNumber', '1');
           }
           if (res.data != null && res.data.remark != null && res.data.remark !== '') {
             this.$set(this.form, 'remark', String(res.data.remark));
