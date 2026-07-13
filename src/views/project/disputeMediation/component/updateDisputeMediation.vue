@@ -33,8 +33,7 @@
           <el-col :span="12">
             <el-form-item label="渠道类型" prop="channelType"
               :rules="disabled ? [] : [{ required: true, message: '渠道类型为必填项', trigger: 'change' }]">
-              <el-select v-model="form.channelType" :disabled="disabled" placeholder="请选择渠道类型" clearable
-                style="width: 100%">
+              <el-select v-model="form.channelType" disabled placeholder="请选择渠道类型" clearable style="width: 100%">
                 <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
@@ -50,7 +49,7 @@
               :rules="disabled ? [] : [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }]">
               <el-radio-group v-model="form.isSelf" :disabled="disabled">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                }}</el-radio>
+                  }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -111,7 +110,7 @@
             <el-form-item label="消费者身份类型" prop="consumerIdentityType"
               :rules="disabled ? [] : [{ required: true, message: '消费者身份类型为必填项', trigger: 'blur' }]">
               <el-select v-model="form.consumerIdentityType" :placeholder="disabled ? '' : '请选择消费者身份类型'"
-                :disabled="disabled">
+                :disabled="disabled" @change="form.certType = null">
                 <el-option v-for="dict in dict.type.dm_consumer_identity_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
@@ -147,8 +146,8 @@
               :rules="disabled ? [] : [{ required: true, message: '消费者证件类型为必填项', trigger: 'change' }]">
               <el-select v-model="form.certType" :placeholder="disabled ? '' : '请选择证件类型'" clearable style="width: 100%"
                 :disabled="disabled">
-                <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
-                  :value="dict.value"></el-option>
+                <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"
+                  :disabled="form.consumerIdentityType ? form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? dict.label !== '统一社会信用代码' : dict.label === '统一社会信用代码' : false"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -208,7 +207,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="12" v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
-            <el-form-item label="身份类型" prop="identityType">
+            <el-form-item label="身份类型" prop="identityType"
+              :rules="disabled ? [] : [{ required: true, message: '消费者身份类型为必填项', trigger: 'change' }]">
               <el-select v-model="form.identityType" :placeholder="disabled ? '' : '请选择身份类型'" clearable
                 style="width: 100%" :disabled="disabled">
                 <el-option v-for="dict in dict.type.dm_identity_type" :key="dict.value" :label="dict.label"
@@ -302,7 +302,7 @@
                     </el-col> -->
           <el-col :span="12">
             <el-form-item label="机构类型" prop="institutionType">
-              <el-cascader v-model="form.institutionType" :disabled="disabled"
+              <el-cascader v-model="form.institutionType" disabled
                 :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
                 :props="{ expandTrigger: 'hover', emitPath: false }" :placeholder="disabled ? '' : '请选择机构类型'" clearable
                 style="width: 100%" />
@@ -496,7 +496,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="保险消费投诉事由分类" prop="insuranceComplaintType" label-width="165px">
+            <el-form-item label="保险消费投诉事由分类" prop="insuranceComplaintType" label-width="165px"
+              :rules="disabled ? [] : [{ required: true, message: '保险消费投诉事由分类为必填项', trigger: 'change' }]">
               <el-select v-model="form.insuranceComplaintType" :placeholder="disabled ? '' : '请选择保险消费投诉事由分类'" clearable
                 style="width: 100%" :disabled="disabled">
                 <el-option v-for="dict in dict.type.dm_insurance_complaint_type" :key="dict.value" :label="dict.label"
@@ -819,7 +820,6 @@
             : [
               {
                 required:
-                  !this.isMediator &&
                   (DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)),
                 message: '案件类型为必填项',
                 trigger: 'change'
@@ -843,7 +843,6 @@
           <el-form-item label="争议事由" prop="controversyCause" :rules="[
             {
               required:
-                !this.isMediator &&
                 (DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) &&
                 isControversyCaseType(form.selfCollectionCaseType),
               message: '争议事由为必填项',
@@ -1311,7 +1310,7 @@ export default {
         'bank_10', // 信用卡-息费、分期
         'bank_11', // 信用卡-调整额度、协商还款
         'bank_12' // 信用卡-催收、盗刷
-      ]
+      ],
     };
   },
   watch: {

@@ -168,7 +168,7 @@
                   <el-col :span="12">
                     <el-form-item label="消费者身份类型" prop="consumerIdentityType">
                       <el-select v-model="form.consumerIdentityType" placeholder="请选择消费者身份类型" clearable
-                        style="width: 100%">
+                        style="width: 100%" @change="form.certType = null">
                         <el-option v-for="dict in dict.type.dm_consumer_identity_type" :key="dict.value"
                           :label="dict.label" :value="dict.value"></el-option>
                       </el-select>
@@ -197,10 +197,9 @@
                   <el-col :span="12">
                     <el-form-item label="证件类型" prop="certType">
                       <el-select v-model="form.certType" placeholder="请选择证件类型" clearable style="width: 100%">
-                        <!-- <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
-                      :value="dict.value"></el-option> -->
-                        <el-option v-for="item in filteredCertTypeOptions" :key="item.value" :label="item.label"
-                          :value="item.value" />
+                        <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
+                          :value="dict.value"
+                          :disabled="form.consumerIdentityType ? form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? dict.label !== '统一社会信用代码' : dict.label === '统一社会信用代码' : false"></el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
@@ -1200,8 +1199,9 @@
                     <div class="cert-column-fields">
                       <el-form-item label="证件类型" prop="certType">
                         <el-select v-model="diaputeForm.certType" placeholder="请选择证件类型" clearable>
-                          <el-option v-for="item in filteredCertTypeOptions" :key="item.value" :label="item.label"
-                            :value="item.value" />
+                          <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
+                            :value="dict.value"
+                            :disabled="form.consumerIdentityType ? form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? dict.label !== '统一社会信用代码' : dict.label === '统一社会信用代码' : false"></el-option>
                         </el-select>
                       </el-form-item>
                       <el-form-item label="证件号码" prop="certNum">
@@ -1664,15 +1664,7 @@ export default {
       smartScriptTimer: null,
       smartScriptSessionEnded: false,
       smartScriptData: null,
-      filteredCertTypeOptions: [], // 动态证件类型选项
       // 消费者身份类型与证件类型的映射关系
-      certTypeMapping: {
-        // 个人 -> 身份证、护照、军警证、外国人永久居留证
-        0: ['0', '1', '2', '3'],
-        // 企业/机构 -> 统一社会信用代码
-        1: ['4']
-        // 其他身份类型可根据需要配置
-      },
       areaOptions: [], // 省市数据源
       controversyCaseTypes: [
         'bank_3', // 贷款-房屋抵押贷款（商业/公积金）
@@ -1774,17 +1766,8 @@ export default {
         this.trackCallAttemptFromPhoneState(data);
       },
       deep: true
-    },
-    // 监听字典加载完成
-    'dict.type.cert_type'(newVal) {
-      this.filterCertTypeOptions(this.form.consumerIdentityType);
-    },
-    'form.consumerIdentityType': {
-      handler(newVal) {
-        this.filterCertTypeOptions(newVal);
-      },
-      immediate: true // 立即执行一次
     }
+
   },
   computed: {
     filteredDeptTypeOptions() {
@@ -3167,7 +3150,7 @@ export default {
       if (!this.smartScriptVisible || !this.isCallAnswered() || this.smartScriptSessionEnded) return;
       this.smartScriptTimer = setInterval(() => {
         this.fetchSmartScriptAnalysis({ silent: true });
-      }, 10000);
+      }, 5000);
     },
     stopSmartScriptPolling() {
       if (this.smartScriptTimer) {
@@ -3500,24 +3483,6 @@ export default {
         this.callTranscriptDetailSaved = false;
         console.error('保存通话转写详情失败:', e);
       }
-    },
-
-    filterCertTypeOptions(identityType) {
-      const allCertTypes = this.dict.type.cert_type || [];
-
-      if (!identityType || !this.certTypeMapping[identityType]) {
-        this.filteredCertTypeOptions = allCertTypes;
-        return;
-      }
-
-      const allowedValues = this.certTypeMapping[identityType];
-
-      this.filteredCertTypeOptions = allCertTypes.filter(item => allowedValues.includes(item.value));
-    },
-
-    // 初始化证件类型选项（在 open 或字典加载完成后调用）
-    initCertTypeOptions() {
-      this.filterCertTypeOptions(this.form.consumerIdentityType);
     },
 
     async loadProvinces(node, resolve) {

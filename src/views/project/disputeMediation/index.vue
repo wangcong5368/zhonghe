@@ -465,9 +465,9 @@
       <el-table-column label="操作" align="center" width="130">
         <template v-slot="{ row }">
           <el-button size="mini" type="text" icon="el-icon-info" @click="handleDetail(row)">详情</el-button>
-
+          <!--
           <el-button size="mini" type="text" icon="el-icon-s-data"
-            @click="handleEvidenceComparison(row)">证据比对</el-button>
+            @click="handleEvidenceComparison(row)">证据比对</el-button> -->
 
           <el-button size="mini" type="text" icon="el-icon-s-custom" @click="handleMediatorAudit(row)"
             v-if="$store.getters.userInfo.isDMMediatorAuditor && DM_STATUS.DM_STATUS5 === row.status">
@@ -671,7 +671,7 @@
 
           <div v-if="
             [DM_STATUS.DM_STATUS10, DM_STATUS.DM_STATUS20].includes(row.status) &&
-            SYS_YES_NO.sys_yes === row.needReturnVisit &&
+            // SYS_YES_NO.sys_yes === row.needReturnVisit &&
             !$store.getters.userInfo.isDMInstitution &&
             DM_ACCEPT_STATUS.accept === row.acceptStatus &&
             SYS_YES_NO.sys_yes === row.deptAcceptMediate &&
