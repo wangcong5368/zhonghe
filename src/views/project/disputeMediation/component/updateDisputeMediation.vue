@@ -474,7 +474,7 @@
               ]
               ">
               <el-cascader v-model="form.insuranceType1" :options="dict.type.dm_insurance_type.options2"
-                :props="{ emitPath: false, checkStrictly: false }" :placeholder="disabled ? '' : '请选择业务类别'" clearable
+                :props="{ emitPath: false, checkStrictly: false }" :placeholder="disabled ? '' : '请选择险种类别'" clearable
                 style="width: 100%" :disabled="disabled" ref="insuranceType1Ref" />
             </el-form-item>
           </el-col>
@@ -510,34 +510,15 @@
           <el-col :span="12">
             <el-form-item label="金融服务发生地" prop="financialServiceArea" :rules="disabled
               ? []
-              : [
-                {
-                  required: true,
-                  message: '金融服务发生地为必填项',
-                  trigger: 'change'
-                }
-              ]">
-              <el-cascader :disabled="disabled" ref="financialServiceAreaRef" v-model="form.financialServiceArea"
-                :options="areaOptions" :props="{
-                  lazy: true,
-                  lazyLoad: (node, resolve) => {
-                    if (!node) {
-                      resolve([]);
-                      return;
-                    }
-                    if (node.level === 0) {
-                      this.loadProvinces(node, resolve);
-                    } else {
-                      this.loadCities(node, resolve);
-                    }
-                  },
-                  value: 'value',
-                  label: 'label',
-                  children: 'children',
-                  emitPath: true,
-                  checkStrictly: true,
-                  multiple: false
-                }" :placeholder="disabled ? '' : '请选择金融服务发生地'" clearable style="width: 100%" />
+              : [{
+                required: true,
+                trigger: 'change',
+                message: '金融服务发生地为必填项'
+              }]">
+              <el-cascader :disabled="disabled" ref="financialServiceAreaRef"
+                :props="{ expandTrigger: 'hover', emitPath: false }" v-model="form.financialServiceArea"
+                :options="areaOptions" :placeholder="disabled ? '' : '请选择金融服务发生地'" clearable style=" width: 100%"
+                @change="handleAreaChange" @clear="resetAreaData" />
             </el-form-item>
           </el-col>
           <el-col :span="12"
@@ -1068,7 +1049,7 @@
 </template>
 
 <script>
-import { updateDisputeMediation, updateDisputeMediationAttachment, getDisputeMediationExpandInfo, saveOrUpdateDisputeMediationExpand, getProvinces, getCities, getByDeptId } from '@/api/project/disputeMediation';
+import { updateDisputeMediation, updateDisputeMediationAttachment, getDisputeMediationExpandInfo, saveOrUpdateDisputeMediationExpand, getProvinces, getCities, getByDeptId, getProvinceCityTree } from '@/api/project/disputeMediation';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import {
@@ -1640,6 +1621,9 @@ export default {
         this.filteredDeptTypeOptions;
       }
 
+      await this.loadProvinces();
+
+
       // isRepeatedly  isBlackIndustry  isThirdPartyAgent  isHighRisk
       if (!this.form.isRepeatedly && (this.DEPT_TYPE.insuranceList.includes(this.form.deptType)) || this.DEPT_TYPE.nonBankList.includes(this.form.deptType) || this.DEPT_TYPE.bankList.includes(this.form.deptType)) {
         this.form.isRepeatedly = SYS_YES_NO.sys_no;
@@ -1706,24 +1690,16 @@ export default {
           if (res.data != null && res.data.provinceCode != null && res.data.provinceCode) {
             // 1. 动态构建级联选择器的回显数组
             // 基础数据一定有省份编码
-            const areaValue = [res.data.provinceCode];
+            this.form.financialServiceArea = res.data.provinceCode;
 
             // 判断是否有城市编码（兼容只选省份的情况）
             if (res.data.cityCode) {
-              areaValue.push(res.data.cityCode);
+              this.form.financialServiceArea = res.data.cityCode;
             }
 
-            // 给级联选择器赋值
-            this.form.financialServiceArea = areaValue;
-
-            // 2. 给隐藏字段赋值
-            this.form.provinceCode = res.data.provinceCode;
-            this.form.provinceName = res.data.provinceName || '';
-            this.form.cityCode = res.data.cityCode || '';
-            this.form.cityName = res.data.cityName || '';
           } else {
             // 3. 没有返回省份数据，清空级联选择器和相关字段
-            this.form.financialServiceArea = [];
+            this.form.financialServiceArea = null;
             this.resetAreaData();
           }
         })
@@ -1739,6 +1715,9 @@ export default {
             this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
           }
         }
+      }
+      if (this.$refs && this.$refs.form) {
+        this.$refs.form.clearValidate('institutionType');
       }
 
       this.visible = true;
@@ -1762,21 +1741,6 @@ export default {
           const markCaseType = this.form.markCaseType;
           const payload = { ...this.form };
           delete payload.markCaseType;
-          delete payload.identityType;
-          delete payload.email;
-          delete payload.mediationNumber;
-          delete payload.remark;
-          delete payload.consumerIdentityType;
-          delete payload.disputedProductType;
-          delete payload.channelType;
-          delete payload.financialServiceArea;
-          delete payload.provinceCode;
-          delete payload.provinceName;
-          delete payload.cityCode;
-          delete payload.cityName;
-          delete payload.selfCollectionCaseType;
-          delete payload.controversyCause;
-          delete payload.institutionType;
           const {
             email,
             mediationNumber,
@@ -1792,11 +1756,12 @@ export default {
             selfCollectionCaseType,
             controversyCause,
             remark,
-            institutionType
+            institutionType,
+            ...restForm
           } = this.form;
 
           if (this.disabled) {
-            updateDisputeMediationAttachment(payload)
+            updateDisputeMediationAttachment(restForm)
               .then(() => this.syncExpandMarkCaseType(markCaseType))
               .then(async () => {
                 await saveOrUpdateDisputeMediationExpand({
@@ -1825,7 +1790,7 @@ export default {
                 this.loading = false;
               });
           } else {
-            updateDisputeMediation(payload)
+            updateDisputeMediation(restForm)
               .then(() => this.syncExpandMarkCaseType(markCaseType))
               .then(async () => {
                 await saveOrUpdateDisputeMediationExpand({
@@ -1905,49 +1870,81 @@ export default {
       }
     },
 
-    async loadProvinces(node, resolve) {
+    async loadProvinces() {
       try {
-        const res = await getProvinces();
-        if (res.code === 200 && Array.isArray(res.data)) {
-          const provinces = res.data.map(item => ({
-            value: item.provinceCode,
+        const res = await getProvinceCityTree();
+        if (res.code === 200) {
+          this.areaOptions = res.data.map(item => ({
             label: item.provinceName,
-            provinceCode: item.provinceCode,
-            provinceName: item.provinceName,
-            leaf: false // 表示还有子级（市），虽然接口没说有区，但为了保险或未来扩展）
+            value: item.provinceCode,
+            children: item.children && item.children.length > 0
+              ? item.children.map(child => ({
+                label: child.cityName,
+                value: child.cityCode
+              }))
+              : undefined // 没有子节点时设为 undefined，这样就不会显示展开箭头
           }));
-          resolve(provinces); // 异步回调，返回数据
-        } else {
-          resolve([]);
         }
       } catch (error) {
         console.error('获取省份失败:', error);
-        resolve([]);
       }
     },
 
-    // 2. 加载城市数据（根据选中的省份加载市级）
-    async loadCities(node, resolve) {
-      const { value } = node; // 父节点的 value，即 provinceCode
-      try {
-        const res = await getCities(value);
-        if (res.code === 200 && Array.isArray(res.data)) {
-          const cities = res.data.map(item => ({
-            value: item.cityCode,
-            label: item.cityName,
-            provinceCode: item.provinceCode,
-            cityCode: item.cityCode,
-            cityName: item.cityName,
-            leaf: true // 假设只到市级，没有区级
-          }));
-          resolve(cities);
-        } else {
-          resolve([]);
-        }
-      } catch (error) {
-        console.error('获取城市失败:', error);
-        resolve([]);
+    handleAreaChange(value) {
+      this.financialServiceArea = value;
+      const selectedNode = this.findAreaInfo(value);
+      if (selectedNode) {
+        this.form.provinceCode = selectedNode.provinceCode;
+        this.form.provinceName = selectedNode.provinceName;
+        this.form.cityCode = selectedNode.cityCode || '';
+        this.form.cityName = selectedNode.cityName || '';
       }
+    },
+    findAreaInfo(code) {
+      // 如果code为空，返回null
+      if (!code) {
+        return null;
+      }
+
+      // 遍历所有省份
+      for (const province of this.areaOptions) {
+        // 检查是否匹配省份code
+        if (province.value === code) {
+          return {
+            type: 'province',
+            provinceCode: province.value,
+            provinceName: province.label,
+            cityCode: null,
+            cityName: null
+          };
+        }
+
+        // 检查该省份下是否有匹配的城市
+        if (province.children && province.children.length > 0) {
+          for (const city of province.children) {
+            if (city.value === code) {
+              // 找到城市，补齐provinceName并返回完整信息
+              return {
+                type: 'city',
+                provinceCode: city.value,
+                provinceName: province.label, // 从父级获取省份名称
+                cityCode: city.value,
+                cityName: city.label
+              };
+            }
+          }
+        }
+      }
+
+      // 未找到匹配项
+      return null;
+    },
+    // 4. 重置选择器数据（比如在 open 或 reset 方法里调用）
+    resetAreaData() {
+      this.form.provinceCode = null;
+      this.form.provinceName = null;
+      this.form.cityCode = null;
+      this.form.cityName = null;
     },
     isControversyCaseType(caseType) {
       if (!caseType) return false;

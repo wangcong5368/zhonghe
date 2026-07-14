@@ -802,3 +802,9 @@ export function getCompare(deptId) {
     method: "get",
   });
 }
+export function getProvinceCityTree() {
+  return request({
+    url: expandServiceUrl(`/project/area/getProvinceCityTree`),
+    method: "post",
+  });
+}
