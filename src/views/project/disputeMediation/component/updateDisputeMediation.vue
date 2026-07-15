@@ -49,7 +49,7 @@
               :rules="disabled ? [] : [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }]">
               <el-radio-group v-model="form.isSelf" :disabled="disabled">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                  }}</el-radio>
+                }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -156,7 +156,7 @@
               prop="certNum" :rules="disabled
                 ? []
                 : [
-                  { required: true, message: '消费者证件号码为必填项', trigger: 'blur' },
+                  { required: true, message: '证件号码为必填项', trigger: 'blur' },
                   { validator: this.validCertNum(this.form.certType), trigger: 'blur' }
                 ]
                 " :label-width="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '140px' : '120px'">
@@ -497,7 +497,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="保险消费投诉事由分类" prop="insuranceComplaintType" label-width="165px"
-              :rules="disabled ? [] : [{ required: true, message: '保险消费投诉事由分类为必填项', trigger: 'change' }]">
+              :rules="disabled ? [] : [{ required: form.deptAcceptMediate, message: '保险消费投诉事由分类为必填项', trigger: 'change' }]">
               <el-select v-model="form.insuranceComplaintType" :placeholder="disabled ? '' : '请选择保险消费投诉事由分类'" clearable
                 style="width: 100%" :disabled="disabled">
                 <el-option v-for="dict in dict.type.dm_insurance_complaint_type" :key="dict.value" :label="dict.label"
@@ -638,8 +638,8 @@
             ">
             <el-select v-model="form.deptContactCertType" :placeholder="disabled ? '' : '请选择证件类型'" clearable
               style="width: 100%" :disabled="disabled">
-              <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
-                :value="dict.value"></el-option>
+              <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"
+                v-if="dict.label !== '统一社会信用代码'"></el-option>
             </el-select>
           </el-form-item>
         </el-col>
@@ -801,7 +801,7 @@
             : [
               {
                 required:
-                  (DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)),
+                  (DEPT_TYPE.insuranceList.includes(form.deptType) || DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) && form.deptAcceptMediate,
                 message: '案件类型为必填项',
                 trigger: 'change'
               }
@@ -820,12 +820,12 @@
           </el-form-item>
         </el-col>
         <el-col :span="12"
-          v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) && isControversyCaseType(form.selfCollectionCaseType)">
+          v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) && isControversyCaseType(form.selfCollectionCaseType) && form.deptAcceptMediate">
           <el-form-item label="争议事由" prop="controversyCause" :rules="[
             {
               required:
                 (DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) &&
-                isControversyCaseType(form.selfCollectionCaseType),
+                isControversyCaseType(form.selfCollectionCaseType) && form.deptAcceptMediate,
               message: '争议事由为必填项',
               trigger: 'change'
             }

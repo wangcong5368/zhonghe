@@ -512,8 +512,8 @@
             :rules="[{ required: SYS_YES_NO.sys_no !== form.deptAcceptMediate, message: '证件类型为必填项', trigger: 'change' }]">
             <el-select v-model="form.deptContactCertType" :placeholder="disabled ? '' : '请选择证件类型'" clearable
               style="width: 100%" :disabled="disabled">
-              <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
-                :value="dict.value"></el-option>
+              <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"
+                v-if="dict.label !== '统一社会信用代码'"></el-option>
             </el-select>
           </el-form-item>
         </el-col>

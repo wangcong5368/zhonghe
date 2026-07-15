@@ -56,13 +56,13 @@
                 </el-row>
                 <el-row v-if="form.entryChannel && form.entryChannel !== DM_ENTRY_CHANNEL.E">
                   <el-col :span="24">
-                    <el-form-item label="图片/pdf信息识别">
-                      <el-upload ref="ocrUpload" action="" accept="image/*,.pdf,application/pdf" multiple
-                        :show-file-list="false" :limit="5" :http-request="handleOcrUpload"
-                        :before-upload="beforeOcrUpload" :on-exceed="handleOcrExceed" :auto-upload="true">
-                        <el-button size="mini" type="primary">上传图片/PDF</el-button>
-                        <span slot="tip" class="el-upload__tip" style="margin-left: 12px">支持一次选择多张图片或
-                          PDF，批量识别工单相关信息</span>
+                    <el-form-item label="Word文件信息识别">
+                      <el-upload ref="ocrUpload" action="" accept=".docx,.xlsx" multiple :show-file-list="false"
+                        :limit="5" :http-request="handleOcrUpload" :before-upload="beforeOcrUpload"
+                        :on-exceed="handleOcrExceed" :auto-upload="true">
+                        <el-button size="mini" type="primary">上传Word文件</el-button>
+                        <span slot="tip" class="el-upload__tip"
+                          style="margin-left: 12px">支持一次选择多个Word文件，批量识别工单相关信息</span>
                       </el-upload>
                       <ul v-if="ocrRecognizeRecords.length" class="recognize-records-list">
                         <li v-for="(record, index) in ocrRecognizeRecords" :key="record.id"
@@ -303,8 +303,8 @@
                     </el-form-item>
                   </el-col>
                 </el-row>
-                <!-- <el-row
-                  v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType) || DEPT_TYPE.insuranceList.includes(form.deptType)">
+                <el-row
+                  v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType) || DEPT_TYPE.insuranceList.includes(form.deptType)) && !$store.getters.userInfo.isDMEntryClerk">
                   <el-col :span="12">
                     <el-form-item label="是否屡投" prop="isRepeatedly">
                       <el-select v-model="form.isRepeatedly" placeholder="请选择是否屡投" clearable style="width: 100%">
@@ -323,7 +323,7 @@
                   </el-col>
                 </el-row>
                 <el-row
-                  v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+                  v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) && !$store.getters.userInfo.isDMEntryClerk">
                   <el-col :span="12">
                     <el-form-item label="是否涉及第三方代理" prop="isThirdPartyAgent" label-width="150px">
                       <el-select v-model="form.isThirdPartyAgent" placeholder="请选择是否涉及第三方代理" clearable
@@ -341,7 +341,7 @@
                       </el-select>
                     </el-form-item>
                   </el-col>
-                </el-row> -->
+                </el-row>
               </div>
               <div>
                 <div class="min_title">机构信息</div>
@@ -659,7 +659,7 @@
                   ]">
                     <el-select v-model="form.deptContactCertType" placeholder="请选择证件类型" clearable style="width: 100%">
                       <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
-                        :value="dict.value"></el-option>
+                        :value="dict.value" v-if="dict.label !== '统一社会信用代码'"></el-option>
                     </el-select>
                   </el-form-item>
                 </el-col>
@@ -1925,17 +1925,19 @@ export default {
       }
       const name = (file.name || '').toLowerCase();
       const type = file.type || '';
-      return (type && type.startsWith('image/')) || type === 'application/pdf' || name.endsWith('.pdf');
+      // return (type && type.startsWith('image/')) || type === 'application/pdf' || name.endsWith('.pdf');
+      return type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || name.endsWith('.docx') || name.endsWith('.xlsx') || type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     },
     beforeOcrUpload(file) {
       if (!this.isOcrRecognizeFile(file)) {
-        this.$modal.msgError('请上传图片或 PDF 文件');
+        this.$modal.msgError('请上传Word文件');
         return false;
       }
-      const isPdf = file.type === 'application/pdf' || (file.name || '').toLowerCase().endsWith('.pdf');
-      const maxMb = isPdf ? 20 : 10;
+      // const isPdf = file.type === 'application/pdf' || (file.name || '').toLowerCase().endsWith('.pdf');
+      // const maxMb = isPdf ? 20 : 10;
+      const maxMb = 20;
       if (file.size / 1024 / 1024 >= maxMb) {
-        this.$modal.msgError(`${isPdf ? 'PDF' : '图片'}大小不能超过 ${maxMb} MB`);
+        this.$modal.msgError(`文件大小不能超过 ${maxMb} MB`);
         return false;
       }
       return true;
@@ -2873,9 +2875,6 @@ export default {
       }
 
       this.visible = true;
-      this.$nextTick(() => {
-        this.initCertTypeOptions();
-      });
     },
     // 更新调解员禁用状态
     refreshMediator() {

@@ -102,7 +102,8 @@
             </el-input>
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <el-col :span="12"
+          v-if="DEPT_TYPE.nonBankList.includes(formInfo.deptType) || DEPT_TYPE.bankList.includes(formInfo.deptType)">
           <el-form-item label="协议减免金额（元）" prop="agreedReductionAmount" label-width="150px">
             <el-input v-model="formInfo.agreedReductionAmount"
               :placeholder="DM_STATUS.DM_STATUS10 === this.row.status || isEdit ? '' : '请输入协议减免金额（元）'" maxlength="12"
@@ -398,7 +399,9 @@ export default {
         // 最终达成的其他调解事项
         otherAgreedMediationTerms: null,
         // 案件标签
-        caseLable: null
+        caseLable: null,
+        // 机构类型
+        deptType: null
       },
       dialogImgVisible: false,
       dialogImageUrl: null,

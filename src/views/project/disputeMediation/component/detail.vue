@@ -58,7 +58,7 @@
               <el-form-item label="是否消费者本人" prop="isSelf">
                 <el-radio-group v-model="form.isSelf" disabled>
                   <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                    }}</el-radio>
+                  }}</el-radio>
                 </el-radio-group>
               </el-form-item>
             </el-col>
@@ -182,7 +182,7 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="12">
+            <el-col :span="12" v-if="!$store.getters.userInfo.isDMEntryClerk">
               <el-form-item label="调解次数" prop="mediationNumber">
                 <el-input v-model="form.mediationNumber" readonly />
               </el-form-item>
@@ -203,7 +203,7 @@
             </el-col>
           </el-row>
           <el-row
-            v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType) || DEPT_TYPE.insuranceList.includes(form.deptType)">
+            v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType) || DEPT_TYPE.insuranceList.includes(form.deptType)) && !$store.getters.userInfo.isDMEntryClerk">
             <el-col :span="12">
               <el-form-item label="是否屡投" prop="isRepeatedly">
                 <el-select v-model="form.isRepeatedly" disabled style="width: 100%" placeholder="">
@@ -221,7 +221,8 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+          <el-row
+            v-if="(DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)) && !$store.getters.userInfo.isDMEntryClerk">
             <el-col :span="12">
               <el-form-item label="是否涉及第三方代理" prop="isThirdPartyAgent" label-width="150px">
                 <el-select v-model="form.isThirdPartyAgent" disabled style="width: 100%" placeholder="">
@@ -479,8 +480,8 @@
           <el-col :span="12">
             <el-form-item label="证件类型" prop="deptContactCertType">
               <el-select v-model="form.deptContactCertType" disabled style="width: 100%" placeholder="">
-                <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
-                  :value="dict.value"></el-option>
+                <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label" :value="dict.value"
+                  v-if="dict.label !== '统一社会信用代码'"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
