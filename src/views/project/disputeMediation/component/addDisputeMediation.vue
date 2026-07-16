@@ -2735,6 +2735,7 @@ export default {
         institutionType: null,
         disputedProductType: null,
         selfCollectionCaseType: null,
+        controversyCause: null,
         channelType: null,
         provinceCode: null,
         provinceName: null,
@@ -2925,6 +2926,7 @@ export default {
           cityName,
           remark,
           selfCollectionCaseType,
+          controversyCause,
           mediationNumber,
           institutionType,
           ...restForm
@@ -2940,6 +2942,7 @@ export default {
             consumerIdentityType,
             disputedProductType,
             selfCollectionCaseType,
+            controversyCause,
             channelType,
             provinceCode,
             provinceName,
@@ -3487,7 +3490,7 @@ export default {
 
     // 3. 处理级联选择器的 change 事件
     handleAreaChange(value) {
-      this.financialServiceArea = value;
+      this.form.financialServiceArea = value;
       const selectedNode = this.findAreaInfo(value);
       if (selectedNode) {
         this.form.provinceCode = selectedNode.provinceCode;

@@ -47,7 +47,7 @@
             <el-form-item label="是否消费者本人" prop="isSelf">
               <el-radio-group v-model="form.isSelf">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                }}</el-radio>
+                  }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -257,7 +257,7 @@
           <el-form-item label="机构类型" prop="institutionType">
             <el-cascader v-model="form.institutionType" disabled
               :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
-              :props="{ expandTrigger: 'hover', emitPath: false }" :placeholder="disabled ? '' : '请选择机构类型'" clearable
+              :props="{ expandTrigger: 'hover', emitPath: false }" placeholder="请选择机构类型" clearable
               style="width: 100%" />
           </el-form-item>
         </el-col>
@@ -1012,7 +1012,7 @@ export default {
           if (res.data != null && res.data.mediationNumber != null && res.data.mediationNumber !== '') {
             this.$set(this.form, 'mediationNumber', String(res.data.mediationNumber));
           }
-          if (res.data != null && res.data.provinceCode != null && res.data.provinceCode) {
+          if (res.data != null && res.data.provinceCode != null && res.data.provinceCode !== '') {
             // 1. 动态构建级联选择器的回显数组
             // 基础数据一定有省份编码
             this.form.financialServiceArea = res.data.provinceCode;
@@ -1152,13 +1152,16 @@ export default {
     },
     // 3. 处理级联选择器的 change 事件
     handleAreaChange(value) {
-      this.financialServiceArea = value;
+      this.form.financialServiceArea = value;
       const selectedNode = this.findAreaInfo(value);
       if (selectedNode) {
         this.form.provinceCode = selectedNode.provinceCode;
         this.form.provinceName = selectedNode.provinceName;
         this.form.cityCode = selectedNode.cityCode || '';
         this.form.cityName = selectedNode.cityName || '';
+      }
+      if (this.$refs && this.$refs.form) {
+        this.$refs.form.clearValidate('financialServiceArea');
       }
     },
     findAreaInfo(code) {

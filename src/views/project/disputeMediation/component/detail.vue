@@ -992,7 +992,7 @@ export default {
           if (res.data != null && res.data.controversyCause != null && res.data.controversyCause !== '') {
             this.$set(this.form, 'controversyCause', String(res.data.controversyCause));
           }
-          if (res.data != null && res.data.provinceCode != null && res.data.provinceCode) {
+          if (res.data != null && res.data.provinceCode != null && res.data.provinceCode !== '') {
             // 1. 动态构建级联选择器的回显数组
             // 基础数据一定有省份编码
             this.form.financialServiceArea = res.data.provinceCode;

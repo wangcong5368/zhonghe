@@ -49,7 +49,7 @@
               :rules="disabled ? [] : [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }]">
               <el-radio-group v-model="form.isSelf" :disabled="disabled">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                }}</el-radio>
+                  }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -512,7 +512,7 @@
               ? []
               : [{
                 required: true,
-                trigger: 'change',
+                trigger: 'blur',
                 message: '金融服务发生地为必填项'
               }]">
               <el-cascader :disabled="disabled" ref="financialServiceAreaRef"
@@ -1687,7 +1687,7 @@ export default {
               this.form.channelType = '1';
             }
           }
-          if (res.data != null && res.data.provinceCode != null && res.data.provinceCode) {
+          if (res.data != null && res.data.provinceCode != null && res.data.provinceCode !== '') {
             // 1. 动态构建级联选择器的回显数组
             // 基础数据一定有省份编码
             this.form.financialServiceArea = res.data.provinceCode;
@@ -1894,13 +1894,17 @@ export default {
     },
 
     handleAreaChange(value) {
-      this.financialServiceArea = value;
+      this.form.financialServiceArea = value;
       const selectedNode = this.findAreaInfo(value);
       if (selectedNode) {
         this.form.provinceCode = selectedNode.provinceCode;
         this.form.provinceName = selectedNode.provinceName;
         this.form.cityCode = selectedNode.cityCode || '';
         this.form.cityName = selectedNode.cityName || '';
+      }
+      if (this.$refs && this.$refs.form) {
+        console.log('🚀 ~ 22 ~ :', 22)
+        this.$refs.form.clearValidate('financialServiceArea');
       }
     },
     findAreaInfo(code) {

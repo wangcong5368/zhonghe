@@ -1211,7 +1211,7 @@ export default {
           if (res.data != null && res.data.channelType != null && res.data.channelType !== '') {
             this.$set(this.form, 'channelType', String(res.data.channelType));
           }
-          if (res.data != null && res.data.provinceCode != null && res.data.provinceCode) {
+          if (res.data != null && res.data.provinceCode != null && res.data.provinceCode !== '') {
             // 1. 动态构建级联选择器的回显数组
             // 基础数据一定有省份编码
             this.form.financialServiceArea = res.data.provinceCode;
@@ -1346,7 +1346,7 @@ export default {
     },
     // 3. 处理级联选择器的 change 事件
     handleAreaChange(value) {
-      this.financialServiceArea = value;
+      this.form.financialServiceArea = value;
       const selectedNode = this.findAreaInfo(value);
       if (selectedNode) {
         this.form.provinceCode = selectedNode.provinceCode;
