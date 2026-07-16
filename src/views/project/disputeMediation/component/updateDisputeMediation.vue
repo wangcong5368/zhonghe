@@ -1696,7 +1696,10 @@ export default {
             if (res.data.cityCode) {
               this.form.financialServiceArea = res.data.cityCode;
             }
-
+            this.form.provinceCode = res.data.provinceCode;
+            this.form.provinceName = res.data.provinceName || '';
+            this.form.cityCode = res.data.cityCode || '';
+            this.form.cityName = res.data.cityName || '';
           } else {
             // 3. 没有返回省份数据，清空级联选择器和相关字段
             this.form.financialServiceArea = null;

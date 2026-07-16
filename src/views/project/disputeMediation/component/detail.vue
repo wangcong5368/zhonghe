@@ -397,22 +397,8 @@
           <el-row>
             <el-col :span="12">
               <el-form-item label="金融服务发生地" prop="financialServiceArea">
-                <el-cascader v-model="form.financialServiceArea" :options="areaOptions" :props="{
-                  lazy: true,
-                  lazyLoad: (node, resolve) => {
-                    if (node.level === 0) {
-                      this.loadProvinces(node, resolve);
-                    } else {
-                      this.loadCities(node, resolve);
-                    }
-                  },
-                  value: 'value',
-                  label: 'label',
-                  children: 'children',
-                  emitPath: true,
-                  checkStrictly: true,
-                  multiple: false
-                }" disabled style="width: 100%" placeholder="" />
+                <el-cascader v-model="form.financialServiceArea" :options="areaOptions"
+                  :props="{ expandTrigger: 'hover', emitPath: false }" disabled style="width: 100%" placeholder="" />
               </el-form-item>
             </el-col>
             <el-col :span="12"
@@ -823,7 +809,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { DEPT_TYPE, SYS_YES_NO, SYS_SEX, DM_ACCEPT_STATUS, DM_ENTRY_CHANNEL, CERT_TYPE, DM_FINISH_TYPE, formatMarkCaseTypeLabel, DM_IDENTITY_TYPE } from '@/views/constant/CommonConstant.js';
 import FileList from '@/components/FileList/index.vue';
-import { getDisputeMediationExpandInfo, getProvinces, getCities, getByDeptId } from '@/api/project/disputeMediation';
+import { getDisputeMediationExpandInfo, getProvinces, getCities, getByDeptId, getProvinceCityTree } from '@/api/project/disputeMediation';
 
 export default {
   name: 'Detail',
@@ -968,7 +954,7 @@ export default {
       if (this.DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
         this.filteredDeptTypeOptions;
       }
-
+      await this.loadProvinces();
       getDisputeMediationExpandInfo(row.workOrderId)
         .then(res => {
           if (res.data != null && res.data.markCaseType != null && res.data.markCaseType !== '') {
@@ -1009,24 +995,19 @@ export default {
           if (res.data != null && res.data.provinceCode != null && res.data.provinceCode) {
             // 1. 动态构建级联选择器的回显数组
             // 基础数据一定有省份编码
-            const areaValue = [res.data.provinceCode];
-
+            this.form.financialServiceArea = res.data.provinceCode;
             // 判断是否有城市编码（兼容只选省份的情况）
             if (res.data.cityCode) {
-              areaValue.push(res.data.cityCode);
+              this.form.financialServiceArea = res.data.cityCode;
             }
-
-            // 给级联选择器赋值
-            this.form.financialServiceArea = areaValue;
-
-            // 2. 给隐藏字段赋值
             this.form.provinceCode = res.data.provinceCode;
             this.form.provinceName = res.data.provinceName || '';
             this.form.cityCode = res.data.cityCode || '';
             this.form.cityName = res.data.cityName || '';
+
           } else {
             // 3. 没有返回省份数据，清空级联选择器和相关字段
-            this.form.financialServiceArea = [];
+            this.form.financialServiceArea = null;
             this.resetAreaData();
           }
         })
@@ -1076,48 +1057,23 @@ export default {
       }
     },
 
-    async loadProvinces(node, resolve) {
+    async loadProvinces() {
       try {
-        const res = await getProvinces();
-        if (res.code === 200 && Array.isArray(res.data)) {
-          const provinces = res.data.map(item => ({
-            value: item.provinceCode,
+        const res = await getProvinceCityTree();
+        if (res.code === 200) {
+          this.areaOptions = res.data.map(item => ({
             label: item.provinceName,
-            provinceCode: item.provinceCode,
-            provinceName: item.provinceName,
-            leaf: false // 表示还有子级（市），虽然接口没说有区，但为了保险或未来扩展）
+            value: item.provinceCode,
+            children: item.children && item.children.length > 0
+              ? item.children.map(child => ({
+                label: child.cityName,
+                value: child.cityCode
+              }))
+              : undefined // 没有子节点时设为 undefined，这样就不会显示展开箭头
           }));
-          resolve(provinces); // 异步回调，返回数据
-        } else {
-          resolve([]);
         }
       } catch (error) {
         console.error('获取省份失败:', error);
-        resolve([]);
-      }
-    },
-
-    // 2. 加载城市数据（根据选中的省份加载市级）
-    async loadCities(node, resolve) {
-      const { value } = node; // 父节点的 value，即 provinceCode
-      try {
-        const res = await getCities(value);
-        if (res.code === 200 && Array.isArray(res.data)) {
-          const cities = res.data.map(item => ({
-            value: item.cityCode,
-            label: item.cityName,
-            provinceCode: item.provinceCode,
-            cityCode: item.cityCode,
-            cityName: item.cityName,
-            leaf: true // 假设只到市级，没有区级
-          }));
-          resolve(cities);
-        } else {
-          resolve([]);
-        }
-      } catch (error) {
-        console.error('获取城市失败:', error);
-        resolve([]);
       }
     },
     isControversyCaseType(caseType) {

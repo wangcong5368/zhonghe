@@ -76,7 +76,7 @@
             <el-form-item label="是否消费者本人" prop="isSelf">
               <el-radio-group v-model="form.isSelf" disabled>
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                }}</el-radio>
+                  }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -1175,11 +1175,17 @@ export default {
       });
       getDisputeMediationExpandInfo(row.workOrderId)
         .then(async res => {
+          if (res.data != null && res.data.markCaseType != null && res.data.markCaseType !== '') {
+            this.$set(this.form, 'markCaseType', String(res.data.markCaseType));
+          }
           if (res.data != null && res.data.email != null && res.data.email !== '') {
             this.$set(this.form, 'email', String(res.data.email));
           }
           if (res.data != null && res.data.mediationNumber != null && res.data.mediationNumber !== '') {
             this.$set(this.form, 'mediationNumber', String(res.data.mediationNumber));
+          }
+          if (res.data != null && res.data.remark != null && res.data.remark !== '') {
+            this.$set(this.form, 'remark', String(res.data.remark));
           }
           if (res.data != null && res.data.identityType != null && res.data.identityType !== '') {
             this.$set(this.form, 'identityType', String(res.data.identityType));
@@ -1195,6 +1201,9 @@ export default {
           }
           if (res.data != null && res.data.selfCollectionCaseType != null && res.data.selfCollectionCaseType !== '') {
             this.$set(this.form, 'selfCollectionCaseType', String(res.data.selfCollectionCaseType));
+          }
+          if (res.data != null && res.data.consumerIdentityType != null && res.data.consumerIdentityType !== '') {
+            this.$set(this.form, 'consumerIdentityType', String(res.data.consumerIdentityType));
           }
           if (res.data != null && res.data.controversyCause != null && res.data.controversyCause !== '') {
             this.$set(this.form, 'controversyCause', String(res.data.controversyCause));
@@ -1276,8 +1285,9 @@ export default {
             cityName,
             mediationNumber,
             selfCollectionCaseType,
-            controversyCause,
             institutionType,
+            remark,
+            controversyCause,
             ...restForm
           } = this.form;
           feedback2(restForm)
@@ -1294,6 +1304,7 @@ export default {
                 provinceName,
                 cityCode,
                 cityName,
+                remark,
                 selfCollectionCaseType,
                 controversyCause,
                 institutionType

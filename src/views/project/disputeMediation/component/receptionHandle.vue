@@ -24,6 +24,20 @@
               <!--              </el-select>-->
             </el-form-item>
           </el-col>
+          <el-col :span="12" v-if="
+            $store.getters.userInfo.isDMEntryClerk ||
+            DEPT_TYPE.insuranceList.includes(form.deptType) ||
+            DEPT_TYPE.bankList.includes(form.deptType) ||
+            DEPT_TYPE.nonBankList.includes(form.deptType)
+          ">
+            <el-form-item label="渠道类型" prop="channelType"
+              :rules="[{ required: true, message: '渠道类型为必填项', trigger: 'change' }]">
+              <el-select disabled v-model="form.channelType" placeholder="请选择渠道类型" clearable style="width: 100%">
+                <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label"
+                  :value="dict.value"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-row>
       </div>
       <div>
@@ -161,12 +175,29 @@
               <el-input v-model="form.email" show-word-limit clearable placeholder="请输入邮箱" />
             </el-form-item>
           </el-col>
+          <el-col :span="12" v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
+            <el-form-item label="身份类型" prop="identityType"
+              :rules="[{ required: DEPT_TYPE.insuranceList.includes(form.deptType), message: '消费者身份类型为必填项', trigger: 'change' }]">
+              <el-select v-model="form.identityType" placeholder="请选择身份类型" clearable style="width: 100%">
+                <el-option v-for="dict in dict.type.dm_identity_type" :key="dict.value" :label="dict.label"
+                  :value="dict.value"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
           <el-col :span="24">
             <el-form-item label="单位或住址" prop="address">
               <el-input v-model="form.address" type="textarea" placeholder="请输入单位或住址" maxlength="50" show-word-limit
                 clearable :autosize="{ minRows: 1 }" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="其他当事人信息" prop="remark">
+              <el-input v-model="form.remark" type="textarea" placeholder="请输入其他当事人信息" clearable maxlength="50"
+                show-word-limit :autosize="{ minRows: 1 }" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -216,10 +247,18 @@
             <treeselect v-model="form.deptId" :options="deptOptions" :normalizer="normalizer" disabled />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <!-- <el-col :span="12">
           <el-form-item label="机构类型" prop="type">
             <el-cascader v-model="form.deptType" :options="dict.type.dept_type.options"
               :props="{ expandTrigger: 'hover', emitPath: false }" disabled style="width: 100%" />
+          </el-form-item>
+        </el-col> -->
+        <el-col :span="12">
+          <el-form-item label="机构类型" prop="institutionType">
+            <el-cascader v-model="form.institutionType" disabled
+              :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
+              :props="{ expandTrigger: 'hover', emitPath: false }" :placeholder="disabled ? '' : '请选择机构类型'" clearable
+              style="width: 100%" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -411,6 +450,36 @@
         </el-col>
       </el-row>
       <el-row>
+        <el-col :span="12">
+          <el-form-item label="金融服务发生地" prop="financialServiceArea" :rules="[
+            {
+              required: true,
+              message: '金融服务发生地为必填项',
+              trigger: 'change'
+            }
+          ]">
+            <el-cascader ref="financialServiceAreaRef" v-model="form.financialServiceArea" :options="areaOptions"
+              :props="{ expandTrigger: 'hover', emitPath: false }" placeholder="请选择金融服务发生地" clearable
+              style="width: 100%" @change="handleAreaChange" @clear="resetAreaData" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12"
+          v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
+          <el-form-item label="产品/服务" prop="disputedProductType" :rules="[
+            {
+              required: DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType),
+              message: '产品/服务为必填项',
+              trigger: 'change'
+            }
+          ]">
+            <el-select v-model="form.disputedProductType" placeholder="请选择产品/服务" clearable style="width: 100%">
+              <el-option v-for="dict in dict.type.dm_disputed_product_type" :key="dict.value" :label="dict.label"
+                :value="dict.value"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
         <el-col :span="24">
           <el-form-item label="投诉内容" prop="complaintContent">
             <el-input v-model="form.complaintContent" type="textarea" placeholder="请输入内容" maxlength="5000"
@@ -527,7 +596,9 @@
 </template>
 
 <script>
-import { handle, handleReject, saveOrUpdateDisputeMediationExpand, getDisputeMediationExpandInfo } from '@/api/project/disputeMediation';
+import {
+  handle, handleReject, saveOrUpdateDisputeMediationExpand, getDisputeMediationExpandInfo, getProvinceCityTree, getByDeptId
+} from '@/api/project/disputeMediation';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { DEPT_TYPE, SYS_YES_NO, SYS_SEX, DM_ACCEPT_STATUS, DM_ENTRY_CHANNEL, CERT_TYPE, DM_IDENTITY_TYPE } from '@/views/constant/CommonConstant.js';
@@ -553,6 +624,10 @@ export default {
     'dm_entry_channel',
     'dm_insurance_type',
     'dm_consumer_identity_type',
+    'dm_channel_type',
+    'dm_identity_type',
+    'dm_institution_type',
+    'dm_disputed_product_type',
   ],
   props: ['title', 'deptOptions', 'deptMap'],
   data() {
@@ -564,6 +639,7 @@ export default {
       rules: {
         entryChannel: [{ required: true, message: '进件渠道为必填项', trigger: 'change' }],
         isSelf: [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }],
+        institutionType: [{ required: true, message: '机构类型为必填项', trigger: 'change' }],
         // agentCertNum: [
         //   { validator: , trigger: "blur" },
         // ],
@@ -615,6 +691,19 @@ export default {
       DM_ENTRY_CHANNEL: DM_ENTRY_CHANNEL, // 纠纷业务进件渠道
       CERT_TYPE: CERT_TYPE,// 身份证类型
       DM_IDENTITY_TYPE: DM_IDENTITY_TYPE, // 消费者身份类型,
+      areaOptions: [], // 省市数据源
+      controversyCaseTypes: [
+        'bank_3', // 贷款-房屋抵押贷款（商业/公积金）
+        'bank_4', // 贷款-汽车抵押贷款
+        'bank_5', // 贷款-质押贷款(大额存单/知识产权)
+        'bank_6', // 贷款-个人消费贷款
+        'bank_7', // 贷款-个人经营贷款
+        'bank_8', // 贷款-固定资产贷款
+        'bank_9', // 贷款-流动资金贷款
+        'bank_10', // 信用卡-息费、分期
+        'bank_11', // 信用卡-调整额度、协商还款
+        'bank_12' // 信用卡-催收、盗刷
+      ]
     };
   },
   watch: {
@@ -646,6 +735,31 @@ export default {
   },
   created() {
     // console.log(this.$store.getters.userInfo);
+  },
+  computed: {
+    filteredDeptTypeOptions() {
+      if (!this.dict.type.dept_type?.options) {
+        return [];
+      }
+      const options = this.dict.type.dept_type.options;
+      const deptType = this.form.deptType;
+
+      if (DEPT_TYPE.insuranceList.includes(deptType)) {
+        // 查找保险机构
+        const insuranceNode = options.find(item => {
+          return item.label === '保险机构' || item.dictLabel === '保险机构' || (Array.isArray(item.value) && item.value.some(v => String(v).startsWith('insurance')));
+        });
+
+        if (insuranceNode) {
+          const result = [insuranceNode];
+          return result;
+        }
+
+        return [];
+      }
+
+      return [];
+    }
   },
   methods: {
     // 根据身份证号自动填充年龄性别
@@ -835,22 +949,105 @@ export default {
         updateTime: null,
         consumerIdentityType: null,
         email: null,
+        remark: null,
+        channelType: null,
+        identityType: null,
+        financialServiceArea: null,
+        institutionType: null,
+        provinceCode: null,
+        provinceName: null,
+        cityCode: null,
+        cityName: null,
+        disputedProductType: null,
+
       };
       this.resetForm('form');
     },
-    open(row) {
+    async open(row) {
       this.reset();
       this.form = { ...row };
+      this.loadProvinces();
       getDisputeMediationExpandInfo(row.workOrderId)
         .then(res => {
+          if (res.data != null && res.data.markCaseType != null && res.data.markCaseType !== '') {
+            this.$set(this.form, 'markCaseType', String(res.data.markCaseType));
+          }
           if (res.data != null && res.data.email != null && res.data.email !== '') {
             this.$set(this.form, 'email', String(res.data.email));
           }
           if (res.data != null && res.data.consumerIdentityType != null && res.data.consumerIdentityType !== '') {
             this.$set(this.form, 'consumerIdentityType', String(res.data.consumerIdentityType));
           }
+          if (res.data != null && res.data.channelType != null && res.data.channelType !== '') {
+            this.$set(this.form, 'channelType', String(res.data.channelType));
+          } else {
+            if (this.form.entryChannel && (this.form.entryChannel === DM_ENTRY_CHANNEL.C || this.form.entryChannel === DM_ENTRY_CHANNEL.G)) {
+              this.form.channelType = '0';
+            } else {
+              this.form.channelType = '1';
+            }
+          }
+          if (res.data != null && res.data.institutionType != null && res.data.institutionType !== '') {
+            this.$set(this.form, 'institutionType', String(res.data.institutionType));
+          }
+          if (res.data != null && res.data.identityType != null && res.data.identityType !== '') {
+            this.$set(this.form, 'identityType', String(res.data.identityType));
+          }
+          if (res.data != null && res.data.disputedProductType != null && res.data.disputedProductType !== '') {
+            this.$set(this.form, 'disputedProductType', String(res.data.disputedProductType));
+          }
+          if (res.data != null && res.data.consumerIdentityType != null && res.data.consumerIdentityType !== '') {
+            this.$set(this.form, 'consumerIdentityType', String(res.data.consumerIdentityType));
+          }
+          if (res.data != null && res.data.remark != null && res.data.remark !== '') {
+            this.$set(this.form, 'remark', String(res.data.remark));
+          }
+          if (res.data != null && res.data.selfCollectionCaseType != null && res.data.selfCollectionCaseType !== '') {
+            this.$set(this.form, 'selfCollectionCaseType', String(res.data.selfCollectionCaseType));
+          }
+          if (res.data != null && res.data.controversyCause != null && res.data.controversyCause !== '') {
+            this.$set(this.form, 'controversyCause', String(res.data.controversyCause));
+          }
+
+          if (res.data != null && res.data.mediationNumber != null && res.data.mediationNumber !== '') {
+            this.$set(this.form, 'mediationNumber', String(res.data.mediationNumber));
+          }
+          if (res.data != null && res.data.provinceCode != null && res.data.provinceCode) {
+            // 1. 动态构建级联选择器的回显数组
+            // 基础数据一定有省份编码
+            this.form.financialServiceArea = res.data.provinceCode;
+
+            // 判断是否有城市编码（兼容只选省份的情况）
+            if (res.data.cityCode) {
+              this.form.financialServiceArea = res.data.cityCode;
+            }
+            this.form.provinceCode = res.data.provinceCode;
+            this.form.provinceName = res.data.provinceName || '';
+            this.form.cityCode = res.data.cityCode || '';
+            this.form.cityName = res.data.cityName || '';
+
+          } else {
+            // 3. 没有返回省份数据，清空级联选择器和相关字段
+            this.form.financialServiceArea = null;
+            this.resetAreaData();
+          }
+
+
+
         })
         .catch(() => { });
+
+      if (!this.form.institutionType) {
+        if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
+          this.form.institutionType = this.form.deptType;
+        }
+        if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
+          const res = await getByDeptId(this.form.deptId);
+          if (res.code === 200) {
+            this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
+          }
+        }
+      }
       this.visible = true;
     },
     /** 提交按钮 */
@@ -861,6 +1058,19 @@ export default {
           const {
             email,
             consumerIdentityType,
+            channelType,
+            identityType,
+            financialServiceArea,
+            provinceCode,
+            provinceName,
+            cityCode,
+            cityName,
+            disputedProductType,
+            remark,
+            institutionType,
+            mediationNumber,
+            selfCollectionCaseType,
+            controversyCause,
             ...restForm
           } = this.form;
           handle(restForm)
@@ -869,6 +1079,18 @@ export default {
                 workOrderId: this.form.workOrderId,
                 email,
                 consumerIdentityType,
+                channelType,
+                identityType,
+                provinceCode,
+                provinceName,
+                cityCode,
+                cityName,
+                remark,
+                disputedProductType,
+                institutionType,
+                controversyCause,
+                mediationNumber,
+                selfCollectionCaseType,
               });
               this.loading = false;
               this.$modal.msgSuccess('前台处理成功');
@@ -908,6 +1130,87 @@ export default {
         label: node.deptName,
         children: node.children
       };
+    },
+    async loadProvinces() {
+      try {
+        const res = await getProvinceCityTree();
+        if (res.code === 200) {
+          this.areaOptions = res.data.map(item => ({
+            label: item.provinceName,
+            value: item.provinceCode,
+            children: item.children && item.children.length > 0
+              ? item.children.map(child => ({
+                label: child.cityName,
+                value: child.cityCode
+              }))
+              : undefined // 没有子节点时设为 undefined，这样就不会显示展开箭头
+          }));
+        }
+      } catch (error) {
+        console.error('获取省份失败:', error);
+      }
+    },
+    // 3. 处理级联选择器的 change 事件
+    handleAreaChange(value) {
+      this.financialServiceArea = value;
+      const selectedNode = this.findAreaInfo(value);
+      if (selectedNode) {
+        this.form.provinceCode = selectedNode.provinceCode;
+        this.form.provinceName = selectedNode.provinceName;
+        this.form.cityCode = selectedNode.cityCode || '';
+        this.form.cityName = selectedNode.cityName || '';
+      }
+    },
+    findAreaInfo(code) {
+      // 如果code为空，返回null
+      if (!code) {
+        return null;
+      }
+
+      // 遍历所有省份
+      for (const province of this.areaOptions) {
+        // 检查是否匹配省份code
+        if (province.value === code) {
+          return {
+            type: 'province',
+            provinceCode: province.value,
+            provinceName: province.label,
+            cityCode: null,
+            cityName: null
+          };
+        }
+
+        // 检查该省份下是否有匹配的城市
+        if (province.children && province.children.length > 0) {
+          for (const city of province.children) {
+            if (city.value === code) {
+              // 找到城市，补齐provinceName并返回完整信息
+              return {
+                type: 'city',
+                provinceCode: city.value,
+                provinceName: province.label, // 从父级获取省份名称
+                cityCode: city.value,
+                cityName: city.label
+              };
+            }
+          }
+        }
+      }
+
+      // 未找到匹配项
+      return null;
+    },
+    // 4. 重置选择器数据（比如在 open 或 reset 方法里调用）
+    resetAreaData() {
+      this.form.provinceCode = null;
+      this.form.provinceName = null;
+      this.form.cityCode = null;
+      this.form.cityName = null;
+    },
+    // 5. 检查是否为争议案件
+    isControversyCaseType(caseType) {
+      if (!caseType) return false;
+      return this.controversyCaseTypes.includes(caseType);
     }
   }
 };

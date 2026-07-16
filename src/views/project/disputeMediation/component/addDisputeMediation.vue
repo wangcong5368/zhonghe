@@ -264,7 +264,8 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12" v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
-                    <el-form-item label="身份类型" prop="identityType">
+                    <el-form-item label="身份类型" prop="identityType"
+                      :rules="[{ required: DEPT_TYPE.insuranceList.includes(form.deptType), message: '消费者身份类型为必填项', trigger: 'change' }]">
                       <el-select v-model="form.identityType" placeholder="请选择身份类型" clearable style="width: 100%">
                         <el-option v-for="dict in dict.type.dm_identity_type" :key="dict.value" :label="dict.label"
                           :value="dict.value"></el-option>
@@ -1531,8 +1532,6 @@ export default {
             trigger: 'blur'
           }
         ],
-        // mediationNumber: [{ required: true, message: '调解次数为必填项', trigger: 'change' }],
-        identityType: [{ required: true, message: '消费者身份类型为必填项', trigger: 'change' }],
         // age: [{ required: this.form.consumerIdentityType !== DM_IDENTITY_TYPE.LEGAL, message: '消费者年龄为必填项', trigger: 'blur' }],
         // isRepeatedly: [{ required: true, message: '是否屡投为必填项', trigger: 'change' }],
         // isBlackIndustry: [{ required: this.$store.getters.userInfo.isDMEntryClerk || this.$store.getters.userInfo.isDMMediator, message: '是否涉及黑产为必填项', trigger: 'change' }],
