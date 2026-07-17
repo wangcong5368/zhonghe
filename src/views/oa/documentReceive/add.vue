@@ -190,16 +190,22 @@
             </td>
           </tr>
         </table>
-
-        <!-- 其他部门意见表格 -->
+        {{ this.userInfo.user }}
         <table class="word-table">
           <tr>
+            <!-- 综合管理部门意见表格 -->
             <td class="label-cell">综合管理部门意见</td>
             <td class="input-cell" colspan="3">
               <div class="processing-record">
                 <div class="record-label">处理记录:</div>
                 <div class="record-list">
-                  <div v-for="(record, index) in filteredProcessingRecords" :key="index" class="record-item">
+                  <div v-for="(record, index) in filteredManagerRecords" :key="record.id" class="record-item"
+                    v-if="index < 1">
+                    <span class="record-text">{{ record.text }}</span>
+                    <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
+                  </div>
+                  <div v-for="(record, index) in filteredEmployeeRecords" :key="record.id" class="record-item"
+                    v-if="index < 1">
                     <span class="record-text">{{ record.text }}</span>
                     <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
                   </div>
@@ -236,12 +242,19 @@
                 </el-form-item>
               </div>
             </td>
+            <!-- 其他部门意见表格 -->
             <td class="label-cell">其他部门意见</td>
             <td class="input-cell" colspan="3">
               <div class="processing-record">
                 <div class="record-label">处理记录:</div>
                 <div class="record-list">
-                  <div v-for="(record, index) in filteredProcessingRecords" :key="index" class="record-item">
+                  <div v-for="(record, index) in filteredManagerRecords" :key="record.id" class="record-item"
+                    v-if="index >= 1">
+                    <span class="record-text">{{ record.text }}</span>
+                    <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
+                  </div>
+                  <div v-for="(record, index) in filteredEmployeeRecords" :key="record.id" class="record-item"
+                    v-if="index >= 1">
                     <span class="record-text">{{ record.text }}</span>
                     <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
                   </div>
@@ -317,7 +330,7 @@
             <el-button type="danger" :disabled="!canClickReject" @click="handleReject">退回</el-button>
             <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
             <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText
-              }}</el-button>
+            }}</el-button>
             <el-button @click="handleExit">退出</el-button>
           </div>
         </el-form-item>
@@ -425,8 +438,8 @@ export default {
         managerAttachment: '', // 分发给部门经理的附件
         deptOpinion: '', // 部门经理处理意见
         processingRecords: [],
-        otherRecords: [],// 其他部门处理意见
-        comprehensiveRecords: [],// 综合管理部门处理意见
+        employeeRecords: [],// 部门员工处理意见
+        managerRecords: [],// 部门经理处理意见
         readOpinion: '',
         completionTime: '',
         issuingAgency: '',
@@ -515,11 +528,28 @@ export default {
         return !excludePatterns.some(pattern => text.includes(pattern));
       });
     },
-    filteredComprehensiveRecords() {
-      // console.log(this.form.processingRecords, 'this.form.processingRecords');
+    // 部门员工审批记录
+    filteredEmployeeRecords() {
+      // console.log(this.form.employeeRecords, 'this.form.employeeRecords');
 
       // 显示除了主任批示、综合管理部经理意见、综合管理部意见之外的所有记录
-      return this.form.processingRecords.filter(record => {
+      return this.form.employeeRecords.filter(record => {
+        if (!record.text) return false;
+        const text = record.text;
+
+        // 排除这三种类型的记录
+        const excludePatterns = ['主任岗审核通过', '综合部经理审核通过', '收文综合部文秘岗分发'];
+
+        // 如果包含排除模式中的任何一个，则不显示
+        return !excludePatterns.some(pattern => text.includes(pattern));
+      });
+    },
+    // 部门经理审批记录
+    filteredManagerRecords() {
+      // console.log(this.form.managerRecords, 'this.form.managerRecords');
+
+      // 显示除了主任批示、综合管理部经理意见、综合管理部意见之外的所有记录
+      return this.form.managerRecords.filter(record => {
         if (!record.text) return false;
         const text = record.text;
 
@@ -951,9 +981,23 @@ export default {
                 date: p.processTime ? p.processTime.split(' ')[0] : '',
                 time: p.processTime ? p.processTime.split(' ')[1] : ''
               });
+              this.form.managerRecords.push({
+                id: p.id,
+                text: p.remark ? `${p.remark}` : p.returnRemark,
+                handler: p.nickName || '未知',
+                date: p.processTime ? p.processTime.split(' ')[0] : '',
+                time: p.processTime ? p.processTime.split(' ')[1] : ''
+              });
 
             } else if (p.returnRemark.includes('收文部门人员阅读完成')) {
               records.push({
+                id: p.id,
+                text: p.remark ? `${p.remark}` : p.returnRemark,
+                handler: p.nickName || '未知',
+                date: p.processTime ? p.processTime.split(' ')[0] : '',
+                time: p.processTime ? p.processTime.split(' ')[1] : ''
+              });
+              this.form.employeeRecords.push({
                 id: p.id,
                 text: p.remark ? `${p.remark}` : p.returnRemark,
                 handler: p.nickName || '未知',
