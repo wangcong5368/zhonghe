@@ -69,14 +69,14 @@
           </el-col>
         </el-row>
       </div>
-      <div v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
+      <div>
         <div class="min_title">委托人信息</div>
         <el-row>
           <el-col :span="12">
             <el-form-item label="是否消费者本人" prop="isSelf">
               <el-radio-group v-model="form.isSelf" disabled>
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                  }}</el-radio>
+                }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
