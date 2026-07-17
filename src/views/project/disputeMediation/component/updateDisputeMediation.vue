@@ -49,7 +49,7 @@
               :rules="disabled ? [] : [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }]">
               <el-radio-group v-model="form.isSelf" :disabled="disabled">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                  }}</el-radio>
+                }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -130,7 +130,7 @@
             <el-form-item label="联系方式" prop="phone" :rules="disabled
               ? []
               : [
-                { required: true, message: '消费者联系方式为必填项', trigger: 'blur' },
+                { required: form.consumerIdentityType !== DM_IDENTITY_TYPE.LEGAL, message: '消费者联系方式为必填项', trigger: 'blur' },
                 { validator: this.phoneRule, trigger: 'blur' }
               ]
               ">
