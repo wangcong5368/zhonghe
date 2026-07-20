@@ -273,10 +273,10 @@ export default {
     },
     loadReport() {
       this.loading = true;
-      getCompare('YE2026000529').then(res => {
-        if (res.code == 200) {
+      getCompare(this.row.workOrderId).then(res => {
+        if (res.code == 200 && res.data) {
           this.reportData = res.data;
-
+          this.$message.success('报告已生成');
         }
       }).finally(() => {
         this.loading = false;
@@ -284,11 +284,10 @@ export default {
     },
     handleRegenerate() {
       this.regenerating = true;
-      getCompare('YE2026000529').then(res => {
-        if (res.code == 200) {
+      getCompare(this.row.workOrderId).then(res => {
+        if (res.code == 200 && res.data) {
           this.reportData = res.data;
           this.$message.success('报告已重新生成');
-
         }
       }).finally(() => {
         this.regenerating = false;

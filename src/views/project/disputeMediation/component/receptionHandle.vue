@@ -47,7 +47,7 @@
             <el-form-item label="是否消费者本人" prop="isSelf">
               <el-radio-group v-model="form.isSelf">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                  }}</el-radio>
+                }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -112,7 +112,10 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="联系方式" prop="phone">
+            <el-form-item label="联系方式" prop="phone" :rules="[
+              { required: form.consumerIdentityType !== DM_IDENTITY_TYPE.LEGAL, message: '消费者联系方式为必填项', trigger: 'blur' },
+              { validator: this.phoneRule, trigger: 'blur' }
+            ]">
               <el-input v-model="form.phone" placeholder="请输入联系方式" oninput="value=value.replace(/[^\d]/g,'')"
                 maxlength="11" show-word-limit clearable />
             </el-form-item>
@@ -645,10 +648,10 @@ export default {
         // ],
         agentPhone: [{ validator: this.phoneRule, trigger: 'blur' }],
         name: [{ required: true, message: '消费者姓名为必填项', trigger: 'blur' }],
-        phone: [
-          { required: true, message: '消费者联系方式为必填项', trigger: 'blur' },
-          { validator: this.phoneRule, trigger: 'blur' }
-        ],
+        // phone: [
+        //   { required: true, message: '消费者联系方式为必填项', trigger: 'blur' },
+        //   { validator: this.phoneRule, trigger: 'blur' }
+        // ],
         certType: [{ required: true, message: '消费者证件类型为必填项', trigger: 'change' }],
         // certNum: [
         //   { required: true, message: "消费者证件号码为必填项", trigger: "blur" },
