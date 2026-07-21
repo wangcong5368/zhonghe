@@ -168,7 +168,7 @@
                   <el-col :span="12">
                     <el-form-item label="消费者身份类型" prop="consumerIdentityType">
                       <el-select v-model="form.consumerIdentityType" placeholder="请选择消费者身份类型" clearable
-                        style="width: 100%" @change="form.certType = null">
+                        style="width: 100%" @change="changeConsumerIdentityType">
                         <el-option v-for="dict in dict.type.dm_consumer_identity_type" :key="dict.value"
                           :label="dict.label" :value="dict.value"></el-option>
                       </el-select>
@@ -555,7 +555,7 @@
                       {
                         required: true,
                         message: '金融服务发生地为必填项',
-                        trigger: 'change'
+                        trigger: 'blur'
                       }
                     ]">
                       <el-cascader ref="financialServiceAreaRef" v-model="form.financialServiceArea"
@@ -1780,6 +1780,15 @@ export default {
   created() { },
 
   methods: {
+    /** 消费者身份类型改变时，清空证件类型和修改是否消费者 */
+    changeConsumerIdentityType() {
+      this.form.certType = null
+      if (this.form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL) {
+        this.form.isSelf = SYS_YES_NO.sys_no
+      } else {
+        this.form.isSelf = SYS_YES_NO.sys_yes
+      }
+    },
     // 选择器禁用今天之后的日期或时间
     disabledDate(time) {
       return time.getTime() < Date.now();

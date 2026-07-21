@@ -47,7 +47,7 @@
             <el-form-item label="是否消费者本人" prop="isSelf">
               <el-radio-group v-model="form.isSelf">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                }}</el-radio>
+                  }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -97,7 +97,8 @@
           <el-col :span="12">
             <el-form-item label="消费者身份类型" prop="consumerIdentityType"
               :rules="[{ required: true, message: '消费者身份类型为必填项', trigger: 'blur' }]">
-              <el-select v-model="form.consumerIdentityType" placeholder="请选择消费者身份类型" @change="form.certType = null">
+              <el-select v-model="form.consumerIdentityType" placeholder="请选择消费者身份类型"
+                @change="changeConsumerIdentityType">
                 <el-option v-for="dict in dict.type.dm_consumer_identity_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
@@ -458,7 +459,7 @@
             {
               required: true,
               message: '金融服务发生地为必填项',
-              trigger: 'change'
+              trigger: 'blur'
             }
           ]">
             <el-cascader ref="financialServiceAreaRef" v-model="form.financialServiceArea" :options="areaOptions"
@@ -765,6 +766,15 @@ export default {
     }
   },
   methods: {
+    /** 消费者身份类型改变时，清空证件类型和修改是否消费者 */
+    changeConsumerIdentityType() {
+      this.form.certType = null
+      if (this.form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL) {
+        this.form.isSelf = SYS_YES_NO.sys_no
+      } else {
+        this.form.isSelf = SYS_YES_NO.sys_yes
+      }
+    },
     // 根据身份证号自动填充年龄性别
     cardNumChange(val) {
       if (this.form.certType === CERT_TYPE.CERT_TYPE0) {

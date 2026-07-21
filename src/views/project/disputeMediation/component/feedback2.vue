@@ -382,7 +382,7 @@
             {
               required: true,
               message: '金融服务发生地为必填项',
-              trigger: 'change'
+              trigger: 'blur'
             }
           ]">
             <el-cascader ref="financialServiceAreaRef" v-model="form.financialServiceArea" :options="areaOptions"
