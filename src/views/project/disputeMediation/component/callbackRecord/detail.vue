@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-dialog :title="title" :visible.sync="dialogVisible" :close-on-click-modal="false" @close="cancel" width="800px">
+        <el-dialog :title="title" :visible.sync="dialogVisible" :close-on-click-modal="false" @close="cancel" width="1200px" append-to-body>
             <div v-if="tabHeaderList.length > 0">
                 <el-tabs v-model="activate" @tab-click="handleTab" tab-position="left" style="height: 550px" :closable="row.status === DM_STATUS.DM_STATUS10 && isDMMediator()" @edit="handleTabsEdit">
                     <el-tab-pane v-for="(item, index) in tabHeaderList" :key="item.id" :label="item.time" :name="item.id">

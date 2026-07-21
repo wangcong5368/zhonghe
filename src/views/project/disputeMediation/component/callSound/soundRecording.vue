@@ -27,19 +27,27 @@
       </el-timeline>
       <div style="display: flex; justify-content: center; align-items: center; padding-left: 40px">
         <el-tooltip class="item" effect="dark" content="手动关联" placement="left" v-if="time">
-          <el-button type="primary" icon="el-icon-plus" circle @click="select" v-if="isDMMediator() && !isEditing"/>
+          <el-button type="primary" icon="el-icon-plus" :circle="!showTextButtons" @click="select" v-if="isDMMediator() && !isEditing">
+            <span v-if="showTextButtons">手动绑定录音</span>
+          </el-button>
         </el-tooltip>
         <el-tooltip class="item" effect="dark" content="自动关联" placement="right" v-if="time">
-          <el-button type="primary" icon="el-icon-s-operation" circle @click="handleAutoRelate" v-if="isDMMediator() && !isEditing"/>
+          <el-button type="primary" icon="el-icon-s-operation" :circle="!showTextButtons" @click="handleAutoRelate" v-if="isDMMediator() && !isEditing">
+            <span v-if="showTextButtons">自动匹配录音</span>
+          </el-button>
         </el-tooltip>
       </div>
     </template>
     <el-empty description="暂无关联通话记录" :image-size="100" v-else>
       <el-tooltip class="item" effect="dark" content="手动关联" placement="left" v-if="time">
-        <el-button type="primary" icon="el-icon-plus" circle @click="select" v-if="isDMMediator() && !isEditing"/>
+        <el-button type="primary" icon="el-icon-plus" :circle="!showTextButtons" @click="select" v-if="isDMMediator() && !isEditing">
+          <span v-if="showTextButtons">手动绑定录音</span>
+        </el-button>
       </el-tooltip>
       <el-tooltip class="item" effect="dark" content="自动关联" placement="right" v-if="time">
-        <el-button type="primary" icon="el-icon-s-operation" circle @click="handleAutoRelate" v-if="isDMMediator() && !isEditing"/>
+        <el-button type="primary" icon="el-icon-s-operation" :circle="!showTextButtons" @click="handleAutoRelate" v-if="isDMMediator() && !isEditing">
+          <span v-if="showTextButtons">自动匹配录音</span>
+        </el-button>
       </el-tooltip>
     </el-empty>
 
@@ -53,7 +61,16 @@ import SelectSound from '@/views/project/disputeMediation/component/callSound/se
 
 export default {
   name: '',
-  props: ['isEditing'],
+  props: {
+    isEditing: {
+      type: Boolean,
+      default: false
+    },
+    showTextButtons: {
+      type: Boolean,
+      default: false
+    }
+  },
   components: { SelectSound },
   data() {
     return {

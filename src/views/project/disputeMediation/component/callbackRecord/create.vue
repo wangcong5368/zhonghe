@@ -1,12 +1,22 @@
 <template>
     <div>
-        <el-dialog :title="title" :visible.sync="dialogVisible" :close-on-click-modal="false" @close="cancel" width="600px">
-            <div style="padding: 0 20px">
-                <record-form ref="callBackRecordForm" :initial-data="formData" :row="row" />
+        <el-dialog :title="title" :visible.sync="dialogVisible" :close-on-click-modal="false" @close="cancel" width="960px" class="callback-create-dialog">
+            <div class="callback-create-content">
+                <div class="callback-quick-actions">
+                    <el-button type="text" icon="el-icon-time" @click="openHistory">查看回访记录历史</el-button>
+                </div>
+                <PartyInfo :row="row" />
+
+                <div class="form-section-title">
+                    <i class="el-icon-edit-outline" />
+                    <span>回访信息</span>
+                </div>
+                <record-form ref="callBackRecordForm" :initial-data="formData" :row="row" :show-party-field="false" />
             </div>
 
             <div slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="submitForm" :loading="btnLoading">提 交</el-button>
+                <el-button type="primary" icon="el-icon-microphone" @click="submitForm(true)" :loading="btnLoading">提交并绑定录音</el-button>
+                <el-button @click="submitForm(false)" :loading="btnLoading">仅提交</el-button>
                 <el-button @click="cancel">取 消</el-button>
             </div>
         </el-dialog>
@@ -17,12 +27,14 @@
 import { addReturnVisit, saveOrUpdateReturnVisitExpand, getFulfillmentExpandListByWorkOrderId } from '@/api/project/disputeMediation';
 import { parseTime } from '@/utils/ruoyi';
 import recordForm from './formInfo.vue';
+import PartyInfo from './partyInfo.vue';
 
 export default {
     name: '',
     props: ['title'],
     components: {
-        recordForm
+        recordForm,
+        PartyInfo
     },
     data() {
         return {
@@ -61,7 +73,7 @@ export default {
         },
 
         // 提交
-        async submitForm() {
+        async submitForm(openRecording = false) {
             try {
                 const isValid = await this.$refs.callBackRecordForm.validateForm();
                 if (!isValid) {
@@ -87,17 +99,53 @@ export default {
                     });
                 }
                 this.$modal.msgSuccess(res.msg);
-                this.$emit('callback', 'b', this.row);
+                this.$emit('saved');
                 this.cancel();
-                this.$refs.callBackRecordForm.resetForm();
+                if (openRecording) {
+                    this.$nextTick(() => {
+                        this.$emit('callback', 'b', this.row);
+                    });
+                }
             } catch (error) {
                 console.error('提交失败:', error);
             } finally {
                 this.btnLoading = false;
             }
+        },
+
+        openHistory() {
+            this.$emit('callback', 'b', this.row);
         }
     }
 };
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.callback-create-content {
+    max-height: 68vh;
+    overflow-y: auto;
+    padding: 2px 20px 0;
+}
+
+.callback-quick-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: -8px 0 8px;
+}
+
+.form-section-title {
+    margin-bottom: 14px;
+    color: #303133;
+    font-size: 16px;
+    font-weight: 600;
+
+    i {
+        margin-right: 7px;
+        color: #409eff;
+    }
+}
+
+.callback-create-dialog ::v-deep .el-dialog__body {
+    padding-bottom: 8px;
+}
+</style>
