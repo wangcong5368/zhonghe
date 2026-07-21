@@ -5,18 +5,13 @@
                 <div class="callback-quick-actions">
                     <el-button type="text" icon="el-icon-time" @click="openHistory">查看回访记录历史</el-button>
                 </div>
-                <PartyInfo :row="row" />
-
-                <div class="form-section-title">
-                    <i class="el-icon-edit-outline" />
-                    <span>回访信息</span>
-                </div>
                 <record-form ref="callBackRecordForm" :initial-data="formData" :row="row" :show-party-field="false" />
+
+                <PartyInfo :row="row" />
             </div>
 
             <div slot="footer" class="dialog-footer">
-                <el-button type="primary" icon="el-icon-microphone" @click="submitForm(true)" :loading="btnLoading">提交并绑定录音</el-button>
-                <el-button @click="submitForm(false)" :loading="btnLoading">仅提交</el-button>
+                <el-button type="primary" @click="submitForm(true)" :loading="btnLoading">提 交</el-button>
                 <el-button @click="cancel">取 消</el-button>
             </div>
         </el-dialog>
@@ -131,18 +126,6 @@ export default {
     display: flex;
     justify-content: flex-end;
     margin: -8px 0 8px;
-}
-
-.form-section-title {
-    margin-bottom: 14px;
-    color: #303133;
-    font-size: 16px;
-    font-weight: 600;
-
-    i {
-        margin-right: 7px;
-        color: #409eff;
-    }
 }
 
 .callback-create-dialog ::v-deep .el-dialog__body {

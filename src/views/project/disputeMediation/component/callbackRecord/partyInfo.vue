@@ -87,7 +87,9 @@ export default {
 
 <style scoped lang="scss">
 .party-info {
-  margin-bottom: 22px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #ebeef5;
 }
 
 .party-info__header {
