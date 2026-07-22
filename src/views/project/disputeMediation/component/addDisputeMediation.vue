@@ -2430,7 +2430,10 @@ export default {
         'updateTime',
         'entryChannel', // 用户手动选择，OCR 不覆盖
         'deptType', // 由 deptId 变化自动联动，OCR 不覆盖
-        'deptId' // 树形选择，OCR 不覆盖
+        'deptId', // 树形选择，OCR 不覆盖
+        // ...(this.$store.getters.userInfo.isDMInstitution ? ['deptId'] : []),
+        // ...(this.$store.getters.userInfo.isDMInstitution ? ['deptType'] : []),
+        ...(this.$store.getters.userInfo.isDMEntryClerk ? ['selfCollectionCaseType'] : [])
       ]);
       const numericInputKeys = new Set(['age', 'involveAmount', 'appealAmount', 'solutionAmount', 'cashValue', 'lossAssessmentAmount', 'claimAmount']);
       const contactPhoneKeys = new Set(['phone', 'agentPhone', 'deptHandlerPhone', 'deptContactPhone']);
@@ -2455,7 +2458,10 @@ export default {
         acceptStatus: 'dm_accept_status',
         rejectReason: 'dm_reject_reason',
         deptContactSex: 'sys_user_sex',
-        deptContactCertType: 'cert_type'
+        deptContactCertType: 'cert_type',
+        consumerIdentityType: 'dm_consumer_identity_type',
+        ...(this.$store.getters.userInfo.isDMEntryClerk ? {} : { selfCollectionCaseType: DEPT_TYPE.insuranceList.includes(data['deptType']) ? 'dm_insurance_self_collection_case_type' : 'dm_bank_self_collection_case_type', }),
+        ...(DEPT_TYPE.insuranceList.includes(data['deptType']) ? { identityType: 'dm_identity_type' } : {})
       };
       // Cascader 枚举字段：字段名 → 字典 options2 路径
       const cascaderFieldDictMap = {
@@ -2471,6 +2477,22 @@ export default {
         if (this.isOcrFieldNoneValue(raw)) {
           return;
         }
+
+        if (key === 'cityName' && raw) {
+          const selectedNode = this.findAreaInfo(raw);
+          if (selectedNode) {
+            this.form.provinceCode = selectedNode.provinceCode;
+            this.form.provinceName = selectedNode.provinceName;
+            this.form.cityCode = selectedNode.cityCode || '';
+            this.form.cityName = selectedNode.cityName || '';
+            if (selectedNode.cityCode) {
+              this.form.financialServiceArea = selectedNode.cityCode;
+            } else {
+              this.form.financialServiceArea = selectedNode.provinceCode;
+            }
+          }
+        }
+
         // --- Select / Radio 枚举字段：根据 label 或 value 匹配枚举项 ---
         if (enumFieldDictMap[key]) {
           const dictName = enumFieldDictMap[key];
@@ -3520,7 +3542,7 @@ export default {
       // 遍历所有省份
       for (const province of this.areaOptions) {
         // 检查是否匹配省份code
-        if (province.value === code) {
+        if (province.value === code || province.label === code) {
           return {
             type: 'province',
             provinceCode: province.value,
@@ -3533,7 +3555,7 @@ export default {
         // 检查该省份下是否有匹配的城市
         if (province.children && province.children.length > 0) {
           for (const city of province.children) {
-            if (city.value === code) {
+            if (city.value === code || city.label === code) {
               // 找到城市，补齐provinceName并返回完整信息
               return {
                 type: 'city',
