@@ -1413,6 +1413,7 @@ import {
   mediatorList,
   SSEGetFromData,
   getExcelAnalysisInfo,
+  getExcelOrcInfo,
   getAsrStreamUrl,
   saveCallQualityWorkOrder,
   saveCallTranscriptDetail,
@@ -2193,56 +2194,109 @@ export default {
       fd.append('file', raw, raw.name);
       const fileLabel = raw.name || 'Excel';
       this.$modal.loading('正在上传并识别 Excel，请稍候...');
-      getExcelAnalysisInfo(fd, 120000)
-        .then(res => {
-          const body = res.data;
-          const code = body && typeof body.code !== 'undefined' ? body.code : null;
-          if (res.status < 200 || res.status >= 300) {
-            const msg = (body && body.msg) || `上传失败 (${res.status})`;
+      if (this.form.entryChannel && DM_ENTRY_CHANNEL.COURT.includes(this.form.entryChannel)) {
+        getExcelOrcInfo(fd, 120000)
+          .then(res => {
+            const body = res.data;
+            const code = body && typeof body.code !== 'undefined' ? body.code : null;
+            if (res.status < 200 || res.status >= 300) {
+              const msg = (body && body.msg) || `上传失败 (${res.status})`;
+              this.$modal.closeLoading();
+              this.$modal.msgError(msg);
+              option.onError(new Error(msg));
+              return;
+            }
+            if (body.status != null && body.status !== 'success') {
+              const msg = (body && body.msg) || '识别失败';
+              this.$modal.closeLoading();
+              this.$modal.msgError(msg);
+              option.onError(new Error(msg));
+              return;
+            }
+            if (code !== null && code !== 200) {
+              const msg = (body && body.msg) || '识别失败';
+              this.$modal.closeLoading();
+              this.$modal.msgError(msg);
+              option.onError(new Error(msg));
+              return;
+            }
+            const data = body.data;
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+              const msg = (body && body.msg) || '识别结果中缺少 data 表单字段对象（需与接口约定字段名一致）';
+              this.$modal.closeLoading();
+              this.$modal.msgError(msg);
+              option.onError(new Error(msg));
+              return;
+            }
+            const mapped = this.applyExcelDataToForm(body);
+            this.removeExcelRecognizeAttachments();
+            const record = this.addExcelRecognizeRecord(data, fileLabel);
+            this.uploadRecognizeFilesToAttachment([raw], record.id, this.excelRecognizeRecords);
             this.$modal.closeLoading();
-            this.$modal.msgError(msg);
-            option.onError(new Error(msg));
-            return;
-          }
-          if (body.status != null && body.status !== 'success') {
-            const msg = (body && body.msg) || '识别失败';
+            option.onSuccess(body, option.file);
+            if (this.$refs.excelUpload) {
+              this.$refs.excelUpload.clearFiles();
+            }
+            this.$modal.msgSuccess(mapped > 0 ? 'Excel 识别完成，已根据识别结果填入左侧表单' : 'Excel 识别完成，未识别到可自动填入的文本项（或均为「无」）');
+          })
+          .catch(err => {
             this.$modal.closeLoading();
+            const msg = (err.response && err.response.data && err.response.data.msg) || err.message || '上传失败';
             this.$modal.msgError(msg);
-            option.onError(new Error(msg));
-            return;
-          }
-          if (code !== null && code !== 200) {
-            const msg = (body && body.msg) || '识别失败';
+            option.onError(err);
+          });
+      } else {
+        getExcelAnalysisInfo(fd, 120000)
+          .then(res => {
+            const body = res.data;
+            const code = body && typeof body.code !== 'undefined' ? body.code : null;
+            if (res.status < 200 || res.status >= 300) {
+              const msg = (body && body.msg) || `上传失败 (${res.status})`;
+              this.$modal.closeLoading();
+              this.$modal.msgError(msg);
+              option.onError(new Error(msg));
+              return;
+            }
+            if (body.status != null && body.status !== 'success') {
+              const msg = (body && body.msg) || '识别失败';
+              this.$modal.closeLoading();
+              this.$modal.msgError(msg);
+              option.onError(new Error(msg));
+              return;
+            }
+            if (code !== null && code !== 200) {
+              const msg = (body && body.msg) || '识别失败';
+              this.$modal.closeLoading();
+              this.$modal.msgError(msg);
+              option.onError(new Error(msg));
+              return;
+            }
+            const data = body.data;
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+              const msg = (body && body.msg) || '识别结果中缺少 data 表单字段对象（需与接口约定字段名一致）';
+              this.$modal.closeLoading();
+              this.$modal.msgError(msg);
+              option.onError(new Error(msg));
+              return;
+            }
+            const mapped = this.applyExcelDataToForm(body);
+            this.removeExcelRecognizeAttachments();
+            const record = this.addExcelRecognizeRecord(data, fileLabel);
+            this.uploadRecognizeFilesToAttachment([raw], record.id, this.excelRecognizeRecords);
             this.$modal.closeLoading();
-            this.$modal.msgError(msg);
-            option.onError(new Error(msg));
-            return;
-          }
-          const data = body.data;
-          if (!data || typeof data !== 'object' || Array.isArray(data)) {
-            const msg = (body && body.msg) || '识别结果中缺少 data 表单字段对象（需与接口约定字段名一致）';
+            option.onSuccess(body, option.file);
+            if (this.$refs.excelUpload) {
+              this.$refs.excelUpload.clearFiles();
+            }
+            this.$modal.msgSuccess(mapped > 0 ? 'Excel 识别完成，已根据识别结果填入左侧表单' : 'Excel 识别完成，未识别到可自动填入的文本项（或均为「无」）');
+          })
+          .catch(err => {
             this.$modal.closeLoading();
+            const msg = (err.response && err.response.data && err.response.data.msg) || err.message || '上传失败';
             this.$modal.msgError(msg);
-            option.onError(new Error(msg));
-            return;
-          }
-          const mapped = this.applyExcelDataToForm(body);
-          this.removeExcelRecognizeAttachments();
-          const record = this.addExcelRecognizeRecord(data, fileLabel);
-          this.uploadRecognizeFilesToAttachment([raw], record.id, this.excelRecognizeRecords);
-          this.$modal.closeLoading();
-          option.onSuccess(body, option.file);
-          if (this.$refs.excelUpload) {
-            this.$refs.excelUpload.clearFiles();
-          }
-          this.$modal.msgSuccess(mapped > 0 ? 'Excel 识别完成，已根据识别结果填入左侧表单' : 'Excel 识别完成，未识别到可自动填入的文本项（或均为「无」）');
-        })
-        .catch(err => {
-          this.$modal.closeLoading();
-          const msg = (err.response && err.response.data && err.response.data.msg) || err.message || '上传失败';
-          this.$modal.msgError(msg);
-          option.onError(err);
-        });
+            option.onError(err);
+          });
+      }
     },
     addExcelRecognizeRecord(data, label) {
       const record = {

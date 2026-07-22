@@ -10,15 +10,21 @@ function expandServiceUrl(path) {
 }
 
 export function ocrServiceUrl(path) {
-    const base = String(conf.server.ocrBaseUrl || '')
-        .trim()
-        .replace(/\/$/, '');
-    const p = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${p}`;
+  const base = String(conf.server.ocrBaseUrl || '')
+    .trim()
+    .replace(/\/$/, '');
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${p}`;
 }
 
 function assertExpandBaseUrl() {
   const base = String(conf.server.expandBaseUrl || '').trim();
+  if (!base || !/^https?:\/\//i.test(base)) {
+    throw new Error('扩展服务地址未配置或无效，请检查 conf.server.expandBaseUrl');
+  }
+}
+function assertOcrServiceUrl() {
+  const base = String(conf.server.ocrBaseUrl || '').trim();
   if (!base || !/^https?:\/\//i.test(base)) {
     throw new Error('扩展服务地址未配置或无效，请检查 conf.server.expandBaseUrl');
   }
@@ -55,28 +61,48 @@ export function expandFormDataPost(path, formData, timeout = 120000) {
     ],
   });
 }
+export function ocrFormDataPost(path, formData, timeout = 120000) {
+  assertOcrServiceUrl();
+  const url = ocrServiceUrl(path);
+  const token = getToken();
+  const headers = token ? { Authorization: 'Bearer ' + token } : {};
+  return axios.post(url, formData, {
+    headers,
+    timeout,
+    transformRequest: [
+      (data, headerConfig) => {
+        delete headerConfig['Content-Type'];
+        return data;
+      },
+    ],
+  });
+}
 
 /** Excel 表格信息识别 */
 export function getExcelAnalysisInfo(formData, timeout = 120000) {
   return expandFormDataPost('/project/excelAnalysis/getExcelAnalysisInfo', formData, timeout);
 }
+// 法院端识别Excel表格信息
+export function getExcelOrcInfo(formData, timeout = 120000) {
+  return ocrFormDataPost('/ocr/excel', formData, timeout);
+}
 
 // 查询纠纷业务工单列表
 export function listDisputeMediation(query) {
-    return request({
-        url: '/project/disputeMediation/list',
-        method: 'get',
-        params: query
-    });
+  return request({
+    url: '/project/disputeMediation/list',
+    method: 'get',
+    params: query
+  });
 }
 
 // 纠纷业务查询预约记录
 export function reservationList(query) {
-    return request({
-        url: '/project/disputeMediation/reservationList/' + query.workOrderId,
-        method: 'get',
-        params: query
-    });
+  return request({
+    url: '/project/disputeMediation/reservationList/' + query.workOrderId,
+    method: 'get',
+    params: query
+  });
 }
 
 // 纠纷业务查询调解室录像记录
@@ -90,37 +116,37 @@ export function mediationRoomVideoList(query) {
 
 // 查询纠纷业务工单详细
 export function getDisputeMediation(workOrderId) {
-    return request({
-        url: '/project/disputeMediation/' + workOrderId,
-        method: 'get'
-    });
+  return request({
+    url: '/project/disputeMediation/' + workOrderId,
+    method: 'get'
+  });
 }
 
 // 新增纠纷业务工单
 export function addDisputeMediation(data) {
-    return request({
-        url: '/project/disputeMediation',
-        method: 'post',
-        data: data
-    });
+  return request({
+    url: '/project/disputeMediation',
+    method: 'post',
+    data: data
+  });
 }
 
 // 纠纷业务预约调解室
 export function addReservation(data) {
-    return request({
-        url: '/project/disputeMediation/addReservation',
-        method: 'post',
-        data: data
-    });
+  return request({
+    url: '/project/disputeMediation/addReservation',
+    method: 'post',
+    data: data
+  });
 }
 
 // 修改纠纷业务工单
 export function updateDisputeMediation(data) {
-    return request({
-        url: '/project/disputeMediation',
-        method: 'put',
-        data: data
-    });
+  return request({
+    url: '/project/disputeMediation',
+    method: 'put',
+    data: data
+  });
 }
 
 // 修改纠纷业务工单附件
@@ -134,19 +160,19 @@ export function updateDisputeMediationAttachment(data) {
 
 // 纠纷业务--取消预约
 export function dmCancelReservation(data) {
-    return request({
-        url: '/project/disputeMediation/cancelReservation',
-        method: 'put',
-        data: data
-    });
+  return request({
+    url: '/project/disputeMediation/cancelReservation',
+    method: 'put',
+    data: data
+  });
 }
 
 // 删除纠纷业务工单
 export function delDisputeMediation(workOrderId) {
-    return request({
-        url: '/project/disputeMediation/' + workOrderId,
-        method: 'delete'
-    });
+  return request({
+    url: '/project/disputeMediation/' + workOrderId,
+    method: 'delete'
+  });
 }
 
 // 新增调查记录
@@ -316,7 +342,7 @@ export function getAgreement(data) {
   return request({
     url: "/project/disputeMediation/getAgreement",
     method: "post",
-    responseType:'blob',
+    responseType: 'blob',
     params: data,
   });
 }
