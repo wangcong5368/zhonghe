@@ -56,13 +56,13 @@
                 </el-row>
                 <el-row v-if="form.entryChannel && form.entryChannel !== DM_ENTRY_CHANNEL.E">
                   <el-col :span="24">
-                    <el-form-item label="图片/文件信息识别">
-                      <el-upload ref="ocrUpload" action="" accept=".docx,.xlsx,image/*,.pdf,application/pdf" multiple
+                    <el-form-item label="图片/pdf信息识别">
+                      <el-upload ref="ocrUpload" action="" accept="image/*,.pdf,application/pdf" multiple
                         :show-file-list="false" :limit="5" :http-request="handleOcrUpload"
                         :before-upload="beforeOcrUpload" :on-exceed="handleOcrExceed" :auto-upload="true">
-                        <el-button size="mini" type="primary">上传图片/文件</el-button>
-                        <span slot="tip" class="el-upload__tip"
-                          style="margin-left: 12px">支持一次选择多个图片/文件（Word、Excel、PDF），批量识别工单相关信息</span>
+                        <el-button size="mini" type="primary">上传图片/PDF</el-button>
+                        <span slot="tip" class="el-upload__tip" style="margin-left: 12px">支持一次选择多张图片或
+                          PDF，批量识别工单相关信息</span>
                       </el-upload>
                       <ul v-if="ocrRecognizeRecords.length" class="recognize-records-list">
                         <li v-for="(record, index) in ocrRecognizeRecords" :key="record.id"
@@ -77,7 +77,8 @@
                     </el-form-item>
                   </el-col>
                 </el-row>
-                <el-row v-if="form.entryChannel && form.entryChannel === DM_ENTRY_CHANNEL.D">
+                <el-row
+                  v-if="form.entryChannel && (DM_ENTRY_CHANNEL.COURT.includes(form.entryChannel) || form.entryChannel === DM_ENTRY_CHANNEL.D)">
                   <el-col :span="24">
                     <el-form-item label="表格信息识别">
                       <el-upload ref="excelUpload" action=""
@@ -1936,19 +1937,17 @@ export default {
       }
       const name = (file.name || '').toLowerCase();
       const type = file.type || '';
-      return (type && type.startsWith('image/')) || type === 'application/pdf' || name.endsWith('.pdf') || type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || name.endsWith('.docx') || name.endsWith('.xlsx') || type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      return;
+      return (type && type.startsWith('image/')) || type === 'application/pdf' || name.endsWith('.pdf');
     },
     beforeOcrUpload(file) {
       if (!this.isOcrRecognizeFile(file)) {
-        this.$modal.msgError('请上传图片/文件（Word、Excel、PDF）');
+        this.$modal.msgError('请上传图片或 PDF 文件');
         return false;
       }
       const isPdf = file.type === 'application/pdf' || (file.name || '').toLowerCase().endsWith('.pdf');
       const maxMb = isPdf ? 20 : 10;
-      // const maxMb = 20;
       if (file.size / 1024 / 1024 >= maxMb) {
-        this.$modal.msgError(`图片/文件大小不能超过 ${maxMb} MB`);
+        this.$modal.msgError(`${isPdf ? 'PDF' : '图片'}大小不能超过 ${maxMb} MB`);
         return false;
       }
       return true;
@@ -1983,7 +1982,7 @@ export default {
     handleOcrUpload(option) {
       const raw = this.resolveUploadRawFile(option);
       if (!raw) {
-        this.$modal.msgError('无法读取图片/文件，请重新选择');
+        this.$modal.msgError('无法读取文件，请重新选择');
         option.onError(new Error('invalid upload file'));
         return;
       }
