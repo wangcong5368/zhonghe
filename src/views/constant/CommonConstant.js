@@ -243,6 +243,7 @@ export const RECORD_RELATION_TYPE = {
   investigationRecordSound: "1", // 调查记录和通话录音记录关联
   mediationRecordSound: "2", // 调解记录和通话录音记录关联
   mediationRecordVideo: "3", // 调解记录和调解室录像记录关联
+  returnVisitRecordSound: "4", // 回访记录和通话录音记录关联
 };
 
 // 纠纷业务派单审核记录状态

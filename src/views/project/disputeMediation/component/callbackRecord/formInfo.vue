@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-form :model="formInfo" :rules="rules" ref="callbackRuleForm" label-width="110px" label-position="top">
-      <el-form-item label="当事人" prop="dsr">
+      <el-form-item v-if="showPartyField" label="当事人" prop="dsr">
         <el-input v-model="dsr" disabled />
       </el-form-item>
 
@@ -71,6 +71,10 @@ export default {
     row: {
       type: Object,
       default: () => { }
+    },
+    showPartyField: {
+      type: Boolean,
+      default: true
     }
   },
   dicts: ['sys_yes_no', 'dm_return_visit_type'],

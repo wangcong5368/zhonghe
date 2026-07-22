@@ -1,32 +1,48 @@
 <template>
-    <div>
-        <div style="height: 500px; overflow-y: auto; padding: 0 20px 60px">
-            <record-form ref="callBackRecordForm" :initial-data="formData" :isEdit="!isEditing" :row="row" />
-        </div>
+    <el-row>
+        <el-col :span="14">
+            <div style="height: 500px; overflow-y: auto; padding: 0 20px 60px">
+                <record-form ref="callBackRecordForm" :initial-data="formData" :isEdit="!isEditing" :row="row" />
+            </div>
 
-        <!-- 按钮区域 -->
-        <div class="btn">
-            <template v-if="!isEditing">
-                <el-button type="primary" @click="startEdit" style="margin-right: 10px" v-if="isDMMediator() && DM_STATUS.DM_STATUS10 === row.status">修 改</el-button>
-            </template>
+            <!-- 按钮区域 -->
+            <div class="btn">
+                <template v-if="!isEditing">
+                    <el-button type="primary" @click="startEdit" style="margin-right: 10px" v-if="isDMMediator() && DM_STATUS.DM_STATUS10 === row.status">修 改</el-button>
+                </template>
 
-            <template v-else>
-                <el-button type="primary" style="margin: 0 10px" @click="submitForm" :loading="btnLoading">保 存</el-button>
-                <el-button @click="cancelEdit">取 消</el-button>
-            </template>
-        </div>
-    </div>
+                <template v-else>
+                    <el-button type="primary" style="margin: 0 10px" @click="submitForm" :loading="btnLoading">保 存</el-button>
+                    <el-button @click="cancelEdit">取 消</el-button>
+                </template>
+            </div>
+        </el-col>
+
+        <el-col :span="10">
+            <div class="recording-panel">
+                <div class="recording-panel__header">
+                    <div>
+                        <i class="el-icon-headset" />
+                        <span>关联通话录音</span>
+                    </div>
+                    <span>可手动选择或按回访时间自动匹配</span>
+                </div>
+                <SoundRecording ref="soundRecordingRef" :isEditing="isEditing" :show-text-buttons="true" @refresh="refresh" />
+            </div>
+        </el-col>
+    </el-row>
 </template>
 
 <script>
 /** api */
 import { updateReturnVisit, saveOrUpdateReturnVisitExpand } from '@/api/project/disputeMediation';
 import recordForm from './formInfo.vue';
-import { DM_STATUS } from '@/views/constant/CommonConstant';
+import SoundRecording from '@/views/project/disputeMediation/component/callSound/soundRecording.vue';
+import { DM_STATUS, RECORD_RELATION_TYPE } from '@/views/constant/CommonConstant';
 
 export default {
     name: '',
-    components: { recordForm },
+    components: { recordForm, SoundRecording },
     dicts: ['dm_investigation_place', 'dm_mediation_result', 'sys_yes_no'],
     data() {
         return {
@@ -54,6 +70,15 @@ export default {
                 financialCauseFailureFlag: data.financialCauseFailureFlag || null,
                 returnVisitType: data.returnVisitType || null
             };
+            this.$nextTick(() => {
+                this.$refs.soundRecordingRef.open(
+                    row,
+                    data.callLogList || [],
+                    RECORD_RELATION_TYPE.returnVisitRecordSound,
+                    data.returnVisitId,
+                    data.time
+                );
+            });
         },
 
         startEdit() {
@@ -111,6 +136,10 @@ export default {
         // 校验工单调解员
         isDMMediator() {
             return this.$store.getters.userInfo.isDMMediator && (this.$store.getters.userInfo.userId === this.row.mediatorUserId || this.$store.getters.userInfo.userId === this.row.assistantUserId);
+        },
+
+        refresh() {
+            this.$emit('success');
         }
     }
 };
@@ -121,5 +150,34 @@ export default {
     display: flex;
     align-items: center;
     padding-top: 10px;
+}
+
+.recording-panel {
+    height: 500px;
+    overflow-y: auto;
+    padding: 0 12px;
+    border-left: 1px solid #ebeef5;
+}
+
+.recording-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ebeef5;
+    color: #303133;
+    font-weight: 600;
+
+    i {
+        margin-right: 6px;
+        color: #409eff;
+    }
+
+    > span {
+        color: #909399;
+        font-size: 12px;
+        font-weight: 400;
+    }
 }
 </style>

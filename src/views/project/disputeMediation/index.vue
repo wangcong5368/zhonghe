@@ -870,7 +870,7 @@
     <AgreementRecordDetail ref="agreementDetailRef" :title="agreementRecordDetailTitle" />
 
     <!-- 新增回访记录 -->
-    <CallbackRecordCreate ref="callbackCreateRef" :title="callbackRecordCreateTitle" @callback="handleCallback" />
+    <CallbackRecordCreate ref="callbackCreateRef" :title="callbackRecordCreateTitle" @callback="handleCallback" @saved="getList" />
 
     <!-- 回访记录详情 -->
     <CallbackRecordDetail ref="callbackDetailRef" :title="callbackRecordDetailTitle" />
