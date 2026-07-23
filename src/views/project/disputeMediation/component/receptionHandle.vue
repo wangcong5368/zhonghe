@@ -355,7 +355,8 @@
       </el-row>
       <el-row v-if="DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType)">
         <el-col :span="12">
-          <el-form-item label="业务类别" prop="businessType1">
+          <el-form-item label="业务类别" prop="businessType1"
+            :rules="[{ required: DEPT_TYPE.bankList.includes(form.deptType) || DEPT_TYPE.nonBankList.includes(form.deptType), message: '业务类别为必填项', trigger: 'change' }]">
             <el-cascader v-model="form.businessType1" :options="dict.type.dm_business_type.options2"
               :props="{ emitPath: false, checkStrictly: false }" placeholder="请选择业务类别" style="width: 100%" clearable
               ref="businessType1Ref" />
@@ -425,7 +426,7 @@
           <el-form-item label="险种类别" prop="insuranceType1"
             :rules="[{ required: this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '险种类别为必填项', trigger: 'change' }]">
             <el-cascader v-model="form.insuranceType1" :options="dict.type.dm_insurance_type.options2"
-              :props="{ emitPath: false, checkStrictly: false }" placeholder="请选择业务类别" clearable style="width: 100%"
+              :props="{ emitPath: false, checkStrictly: false }" placeholder="请选择险种类别" clearable style="width: 100%"
               ref="insuranceType1Ref" />
           </el-form-item>
         </el-col>

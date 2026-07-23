@@ -76,7 +76,7 @@
             <el-form-item label="是否消费者本人" prop="isSelf">
               <el-radio-group v-model="form.isSelf" disabled>
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                }}</el-radio>
+                  }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -340,7 +340,7 @@
           <el-form-item label="险种类别" prop="insuranceType1"
             :rules="[{ required: SYS_YES_NO.sys_no !== form.deptAcceptMediate, message: '险种类别为必填项', trigger: 'change' }]">
             <el-cascader v-model="form.insuranceType1" :options="dict.type.dm_insurance_type.options2"
-              :props="{ emitPath: false, checkStrictly: false }" placeholder="请选择业务类别" clearable style="width: 100%"
+              :props="{ emitPath: false, checkStrictly: false }" placeholder="请选择险种类别" clearable style="width: 100%"
               ref="insuranceType1Ref" :disabled="disabled" />
           </el-form-item>
         </el-col>
