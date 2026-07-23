@@ -221,7 +221,7 @@
                   @collected="handleCollected" />
                 <div class="handler-info" v-if="directorHandler">
                   <span class="handler-time">处理人: {{ directorHandler }} 日期: {{ directorDate }} 时间: {{ directorTime
-                    }}</span>
+                  }}</span>
                 </div>
               </div>
             </td>
@@ -268,7 +268,7 @@
                   @collected="handleCollected" />
                 <div class="handler-info" v-if="managerHandler">
                   <span class="handler-time">处理人: {{ managerHandler }} 日期: {{ managerDate }} 时间: {{ managerTime
-                    }}</span>
+                  }}</span>
                 </div>
               </div>
             </td>
@@ -344,7 +344,7 @@
       <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
       <el-button type="primary" :disabled="editStatus === null" @click="confirmPrint">打印</el-button>
       <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText
-        }}</el-button>
+      }}</el-button>
       <el-button v-if="canClickConfirmRead" type="info" @click="handleConfirmRead">已阅</el-button>
       <el-button @click="handleExit">退出</el-button>
     </div>
@@ -564,6 +564,7 @@ export default {
       return callback();
     };
     return {
+      printImage: '',
       DM_DOCUMENT_SENDING_TYPE: DM_DOCUMENT_SENDING_TYPE,
       editStatus: null,
       needsWrittenDate: false,

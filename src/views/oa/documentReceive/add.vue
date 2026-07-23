@@ -137,6 +137,7 @@
               </div>
             </td>
           </tr>
+
           <tr>
             <td class="label-cell">综合管理部意见</td>
             <td class="input-cell" colspan="3">
@@ -170,14 +171,25 @@
                   <span v-else>无附件</span>
                 </el-form-item>
                 <div class="dept-distribution" v-if="!isSectionDisabled(3)">
-                  <div class="dept-distribution-content">
-                    <span class="dept-distribution-label">部门分发:</span>
-                    <el-select v-model="form.deptDistribution" multiple placeholder="请选择部门经理分发" style="width: 100%"
-                      :disabled="isSectionDisabled(3)">
-                      <el-option v-for="item in departmentManagers" :key="item.id" :label="item.label"
-                        :value="item.id"></el-option>
-                    </el-select>
+                  <div class="dept-distribution-wrap">
+                    <div class="dept-distribution-content">
+                      <span class="dept-distribution-label">综合管理部部门分发:</span>
+                      <el-select v-model="form.deptDistribution" placeholder="请选择综合管理部部门经理分发" style="width: 100%"
+                        :disabled="isSectionDisabled(3)">
+                        <el-option v-for="item in departmentManagers" :key="item.id" :label="item.label"
+                          :value="item.id"></el-option>
+                      </el-select>
+                    </div>
+                    <div class="dept-distribution-content">
+                      <span class="dept-distribution-label">其他部门分发:</span>
+                      <el-select v-model="form.deptDistribution1" multiple placeholder="请选择其他部门经理分发" style="width: 100%"
+                        :disabled="isSectionDisabled(3)">
+                        <el-option v-for="item in departmentManagers" :key="item.id" :label="item.label"
+                          :value="item.id"></el-option>
+                      </el-select>
+                    </div>
                   </div>
+
                   <el-form-item label="附件" prop="managerAttachment" style="margin-top: 10px">
                     <FileUpload v-if="!isView && !isSectionDisabled(3)" v-model="form.managerAttachment" />
                   </el-form-item>
@@ -190,12 +202,11 @@
             </td>
           </tr>
         </table>
-        {{ this.userInfo.user }}
         <table class="word-table">
           <tr>
             <!-- 综合管理部门意见表格 -->
-            <td class="label-cell">综合管理部门意见</td>
-            <td class="input-cell" colspan="3">
+            <td class="label-cell" style="width: 10%;">综合管理部门意见</td>
+            <td class="input-cell" style="width: 40%;">
               <div class="processing-record">
                 <div class="record-label">处理记录:</div>
                 <div class="record-list">
@@ -212,7 +223,7 @@
                 </div>
               </div>
               <!-- 处理内容输入和按钮 -->
-              <div class="read-section" v-if="showReadButton()">
+              <div class="read-section" v-if="showReadButton() && this.userInfo.dept.deptName == '综合管理部'">
                 <el-form-item label="处理内容" prop="readOpinion">
                   <el-input v-model="form.readOpinion" type="textarea" :rows="3" placeholder="填写处理内容"
                     class="table-textarea"></el-input>
@@ -225,7 +236,7 @@
                 </div>
               </div>
               <!-- 部门人员分发 -->
-              <div class="dept-distribution" v-if="!isSectionDisabled(4)">
+              <div class="dept-distribution" v-if="!isSectionDisabled(4) && this.userInfo.dept.deptName == '综合管理部'">
                 <el-form-item label="部门人员分发" prop="staffDistribution">
                   <el-select v-model="form.staffDistribution" multiple placeholder="请选择分发人员" style="width: 100%">
                     <el-option v-for="item in currentDeptUsers" :key="item.userId" :label="item.nickName"
@@ -243,8 +254,8 @@
               </div>
             </td>
             <!-- 其他部门意见表格 -->
-            <td class="label-cell">其他部门意见</td>
-            <td class="input-cell" colspan="3">
+            <td class="label-cell" style="width: 10%;">其他部门意见</td>
+            <td class="input-cell" style="width: 40%;">
               <div class="processing-record">
                 <div class="record-label">处理记录:</div>
                 <div class="record-list">
@@ -261,7 +272,7 @@
                 </div>
               </div>
               <!-- 处理内容输入和按钮 -->
-              <div class="read-section" v-if="showReadButton()">
+              <div class="read-section" v-if="showReadButton() && this.userInfo.dept.deptName != '综合管理部'">
                 <el-form-item label="处理内容" prop="readOpinion">
                   <el-input v-model="form.readOpinion" type="textarea" :rows="3" placeholder="填写处理内容"
                     class="table-textarea"></el-input>
@@ -274,7 +285,7 @@
                 </div>
               </div>
               <!-- 部门人员分发 -->
-              <div class="dept-distribution" v-if="!isSectionDisabled(4)">
+              <div class="dept-distribution" v-if="!isSectionDisabled(4) && this.userInfo.dept.deptName != '综合管理部'">
                 <el-form-item label="部门人员分发" prop="staffDistribution">
                   <el-select v-model="form.staffDistribution" multiple placeholder="请选择分发人员" style="width: 100%">
                     <el-option v-for="item in currentDeptUsers" :key="item.userId" :label="item.nickName"
@@ -1153,6 +1164,7 @@ export default {
       });
     },
     handleProcess() {
+      console.log('🚀 ~ this.form.deptDistribution ~ :', this.form.deptDistribution)
       this.$refs.documentForm.validate(valid => {
         if (valid) {
           const docId = this.$route.query.id;
@@ -1185,7 +1197,8 @@ export default {
               }
               promise = documentReceivingLeaderDistribute({
                 docId: docId,
-                userIds: this.form.deptDistribution.join(','),
+                // userIds: this.form.deptDistribution && this.form.deptDistribution.join(','),
+                userIds: `${this.form.deptDistribution},${this.form.deptDistribution1.join(',')}`,
                 remark: this.form.leadDeptOpinion,
                 attachment: this.form.managerAttachment || '',
                 documentRemark: this.form.remarks
@@ -1694,8 +1707,15 @@ export default {
   margin-top: 8px;
 }
 
+.dept-distribution-wrap {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
 .dept-distribution-content {
   display: flex;
+  width: 50%;
   align-items: center;
   gap: 8px;
 }
@@ -1758,6 +1778,7 @@ export default {
   border-bottom: 1px solid #ddd;
   font-size: 14px;
   font-family: 'Microsoft YaHei', 'SimSun', serif;
+  gap: 5px;
 }
 
 .record-item:last-child {
