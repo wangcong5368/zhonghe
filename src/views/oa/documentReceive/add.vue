@@ -210,13 +210,7 @@
               <div class="processing-record">
                 <div class="record-label">处理记录:</div>
                 <div class="record-list">
-                  <div v-for="(record, index) in filteredManagerRecords" :key="record.id" class="record-item"
-                    v-if="index < 1">
-                    <span class="record-text">{{ record.text }}</span>
-                    <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
-                  </div>
-                  <div v-for="(record, index) in filteredEmployeeRecords" :key="record.id" class="record-item"
-                    v-if="index < 1">
+                  <div v-for="(record, index) in filteredComprehensiveRecords" :key="record.id" class="record-item">
                     <span class="record-text">{{ record.text }}</span>
                     <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
                   </div>
@@ -259,13 +253,7 @@
               <div class="processing-record">
                 <div class="record-label">处理记录:</div>
                 <div class="record-list">
-                  <div v-for="(record, index) in filteredManagerRecords" :key="record.id" class="record-item"
-                    v-if="index >= 1">
-                    <span class="record-text">{{ record.text }}</span>
-                    <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
-                  </div>
-                  <div v-for="(record, index) in filteredEmployeeRecords" :key="record.id" class="record-item"
-                    v-if="index >= 1">
+                  <div v-for="(record, index) in filteredOtherRecords" :key="record.id" class="record-item">
                     <span class="record-text">{{ record.text }}</span>
                     <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
                   </div>
@@ -341,7 +329,7 @@
             <el-button type="danger" :disabled="!canClickReject" @click="handleReject">退回</el-button>
             <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
             <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText
-            }}</el-button>
+              }}</el-button>
             <el-button @click="handleExit">退出</el-button>
           </div>
         </el-form-item>
@@ -449,8 +437,8 @@ export default {
         managerAttachment: '', // 分发给部门经理的附件
         deptOpinion: '', // 部门经理处理意见
         processingRecords: [],
-        employeeRecords: [],// 部门员工处理意见
-        managerRecords: [],// 部门经理处理意见
+        comprehensiveRecords: [],// 综合管理部部门员工处理意见
+        otherRecords: [],// 其他部门处理意见
         readOpinion: '',
         completionTime: '',
         issuingAgency: '',
@@ -539,12 +527,11 @@ export default {
         return !excludePatterns.some(pattern => text.includes(pattern));
       });
     },
-    // 部门员工审批记录
-    filteredEmployeeRecords() {
-      // console.log(this.form.employeeRecords, 'this.form.employeeRecords');
-
+    // 综合管理部门审批记录
+    filteredComprehensiveRecords() {
+      // console.log(this.form.comprehensiveRecords, 'this.form.comprehensiveRecords');
       // 显示除了主任批示、综合管理部经理意见、综合管理部意见之外的所有记录
-      return this.form.employeeRecords.filter(record => {
+      return this.form.comprehensiveRecords.filter(record => {
         if (!record.text) return false;
         const text = record.text;
 
@@ -556,11 +543,11 @@ export default {
       });
     },
     // 部门经理审批记录
-    filteredManagerRecords() {
-      // console.log(this.form.managerRecords, 'this.form.managerRecords');
+    filteredOtherRecords() {
+      // console.log(this.form.otherRecords, 'this.form.otherRecords');
 
       // 显示除了主任批示、综合管理部经理意见、综合管理部意见之外的所有记录
-      return this.form.managerRecords.filter(record => {
+      return this.form.otherRecords.filter(record => {
         if (!record.text) return false;
         const text = record.text;
 
@@ -984,7 +971,7 @@ export default {
               this.form.leadDeptTime = p.processTime ? p.processTime.split(' ')[1] : '';
               // 反显附件
               this.form.managerAttachment = p.attachment || '';
-            } else if (p.returnRemark.includes('收文部门经理分发部门人员完成')) {
+            } else if (p.returnRemark.includes('收文部门经理分发部门人员完成') || p.returnRemark.includes('收文部门人员阅读完成')) {
               records.push({
                 id: p.id,
                 text: p.remark ? `${p.remark}` : p.returnRemark,
@@ -992,29 +979,23 @@ export default {
                 date: p.processTime ? p.processTime.split(' ')[0] : '',
                 time: p.processTime ? p.processTime.split(' ')[1] : ''
               });
-              this.form.managerRecords.push({
-                id: p.id,
-                text: p.remark ? `${p.remark}` : p.returnRemark,
-                handler: p.nickName || '未知',
-                date: p.processTime ? p.processTime.split(' ')[0] : '',
-                time: p.processTime ? p.processTime.split(' ')[1] : ''
-              });
-
-            } else if (p.returnRemark.includes('收文部门人员阅读完成')) {
-              records.push({
-                id: p.id,
-                text: p.remark ? `${p.remark}` : p.returnRemark,
-                handler: p.nickName || '未知',
-                date: p.processTime ? p.processTime.split(' ')[0] : '',
-                time: p.processTime ? p.processTime.split(' ')[1] : ''
-              });
-              this.form.employeeRecords.push({
-                id: p.id,
-                text: p.remark ? `${p.remark}` : p.returnRemark,
-                handler: p.nickName || '未知',
-                date: p.processTime ? p.processTime.split(' ')[0] : '',
-                time: p.processTime ? p.processTime.split(' ')[1] : ''
-              });
+              if (p.deptId == '103') {
+                this.form.comprehensiveRecords.push({
+                  id: p.id,
+                  text: p.remark ? `${p.remark}` : p.returnRemark,
+                  handler: p.nickName || '未知',
+                  date: p.processTime ? p.processTime.split(' ')[0] : '',
+                  time: p.processTime ? p.processTime.split(' ')[1] : ''
+                });
+              } else {
+                this.form.otherRecords.push({
+                  id: p.id,
+                  text: p.remark ? `${p.remark}` : p.returnRemark,
+                  handler: p.nickName || '未知',
+                  date: p.processTime ? p.processTime.split(' ')[0] : '',
+                  time: p.processTime ? p.processTime.split(' ')[1] : ''
+                });
+              }
             }
           });
           this.form.processingRecords = records;
