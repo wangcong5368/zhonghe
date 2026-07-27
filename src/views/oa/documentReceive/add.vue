@@ -323,17 +323,156 @@
         <!-- 操作按钮 -->
         <el-form-item>
           <div class="action-buttons">
-            <el-button type="primary" :disabled="putEditStatus === null" @click="openDocSignDialog">查看文签</el-button>
             <el-button type="primary" :disabled="!canClickNextHandler" @click="openNextHandlerDialog">下一处理人</el-button>
             <el-button type="success" :disabled="!canClickApprove" @click="handleApprove">通过</el-button>
             <el-button type="danger" :disabled="!canClickReject" @click="handleReject">退回</el-button>
             <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
+            <el-button type="primary" :disabled="putEditStatus === null" @click="confirmPrint">打印</el-button>
             <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText
-              }}</el-button>
+            }}</el-button>
             <el-button @click="handleExit">退出</el-button>
           </div>
         </el-form-item>
       </el-form>
+    </div>
+    <div class="print-area">
+      <div class="dialogVisible-wrap" id="printArea">
+        <div slot="title" class="dialog-title">
+          <span>天津众和收文处理单</span>
+        </div>
+
+        <!-- 1. 公文头部：密级、缓急 -->
+        <div class="doc-header">
+          <!-- <div class="header-top">
+                    <span class="security-level">密级</span>
+                    <span class="urgency-level">〔非密〕</span>
+                </div> -->
+          <!-- <div class="header-top" v-if="shouldShowField('urgencyLevel')">
+            <span class="security-level">紧急程度</span>
+            <span class="urgency-level">〔{{ form.urgencyLevel === 'routine' ? '普通' : form.urgencyLevel === 'emergency' ?
+              '一般' : '加急' }}〕</span>
+          </div> -->
+        </div>
+
+        <!-- 2. 信息表格 -->
+        <div class="docSignWord-table">
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">上级文件编号</div>
+            <div class="docSignWord-input-cell">{{ form.superiorDocNumber || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">来文字号</div>
+            <div class="docSignWord-input-cell">{{ form.incomingDocNumber || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">收文类型</div>
+            <div class="docSignWord-input-cell">{{ DM_DOCUMENT_SENDING_TYPE2[form.type] || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">收文编号</div>
+            <div class="docSignWord-input-cell">{{ form.originalDocDate || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">收文日期</div>
+            <div class="docSignWord-input-cell">{{ form.receivedDate || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item-unit">
+            <div class="label-cell-unit">来文单位</div>
+            <div class="input-cell-unit">{{ form.originatingUnit || '' }}</div>
+          </div>
+        </div>
+
+        <!-- 3. 标题 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">标题</div>
+          <div class="docSignWord-title-input1">{{ form.title || '' }}</div>
+        </div>
+
+        <!-- 4. 主任批示 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">主任批示</div>
+          <div class="docSignWord-div-handle">
+            <div class="docSignWord-title-input">
+              {{ form.directorInstruction || '' }}
+            </div>
+            <div class="handler-info" v-if="form.directorHandler">
+              <span class="handler-time">处理人: {{ form.directorHandler }} 日期: {{ form.directorDate }} 时间: {{
+                form.directorTime }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. 综合管理部经理意见 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">综合管理部经理意见</div>
+          <div class="docSignWord-div-handle">
+            <div class="docSignWord-title-input">{{ form.comprehensiveOpinion || '' }}</div>
+            <div class="handler-info" v-if="form.comprehensiveHandler">
+              <span class="handler-time">处理人: {{ form.comprehensiveHandler }} 日期: {{ form.comprehensiveDate }} 时间: {{
+                form.comprehensiveTime }}</span>
+            </div>
+          </div>
+        </div>
+        <!-- 5. 综合管理部意见 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">综合管理部意见</div>
+          <div class="docSignWord-div-handle">
+            <div class="docSignWord-title-input">{{ form.leadDeptOpinion || '' }}</div>
+            <div class="handler-info" v-if="form.leadDeptHandler">
+              <span class="handler-time">处理人: {{ form.leadDeptHandler }} 日期: {{ form.leadDeptDate }} 时间: {{
+                form.leadDeptTime }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. 主办处室意见表格 -->
+        <div class="docSignWord-ban">
+          <div class="docSignWord-ban-item">
+            <div class="docSignWord-ban-cell">综合管理部部门意见</div>
+            <div class="record-list">
+              <div v-for="(record, index) in filteredComprehensiveRecords" :key="record.id" class="record-item">
+                <span class="record-text">{{ record.text }}</span>
+                <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="docSignWord-ban-item2">
+            <div class="docSignWord-ban-cell">其他部门意见</div>
+            <div class="record-list">
+              <div v-for="(record, index) in filteredOtherRecords" :key="index" class="record-item">
+                <span class="record-text">{{ record.text }}</span>
+                <span class="record-info">处理人:{{ record.handler }}; {{ record.date }}:{{ record.time }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="docSignWord-time">
+          <div class="docSignWord-time-item1">
+            <div class="docSignWord-time-cell">创建人</div>
+            <div class="docSignWord-time-input">{{ form.creator || '' }}</div>
+          </div>
+          <div class="docSignWord-time-item2">
+            <div class="docSignWord-time-cell">完成时间</div>
+            <div class="docSignWord-time-input">{{ form.completionTime || '' }}</div>
+          </div>
+          <div class="docSignWord-time-item3">
+            <div class="docSignWord-time-cell">复印分送情况</div>
+            <div class="docSignWord-time-input">{{ form.issuingAgency || '' }}</div>
+          </div>
+        </div>
+
+        <!-- 7. 备注 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">备注</div>
+          <div class="docSignWord-title-input">{{ form.remarks || '' }}</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div v-if="printImage" style="display: none">
+      <img :src="printImage" id="printImage" style="width:794px;height:auto;" />
     </div>
 
     <!-- 分隔线 -->
@@ -367,9 +506,6 @@
         <el-button type="primary" @click="handleNextHandlerConfirm">确 定</el-button>
       </span>
     </el-dialog>
-
-    <!-- 文签弹窗 -->
-    <doc-sign-dialog :visible.sync="dialogVisible" :form="form" @close="handleClose" />
   </div>
 </template>
 
@@ -396,6 +532,7 @@ import { mapGetters } from 'vuex';
 import DocSignDialog from '../components/DocSignDialog.vue';
 import { getToken } from '@/utils/auth';
 import RichEditor from '../components/RichEditor.vue';
+import { DM_DOCUMENT_SENDING_TYPE2 } from '@/views/constant/CommonConstant.js';
 
 export default {
   name: 'DocumentReceiveAdd',
@@ -403,7 +540,8 @@ export default {
   dicts: ['document_receive_type'],
   data() {
     return {
-      dialogVisible: false,
+      printImage: '',
+      DM_DOCUMENT_SENDING_TYPE2: DM_DOCUMENT_SENDING_TYPE2,
       isView: false,
       isNew: false,
       putEditStatus: null,
@@ -609,13 +747,6 @@ export default {
     // 上传文件列表
     handleFileChange(files) {
       this.uploadFiles = files;
-    },
-    //文签弹框
-    handleClose() {
-      this.dialogVisible = false;
-    },
-    openDocSignDialog() {
-      this.dialogVisible = true;
     },
     isSectionDisabled(sectionStatus) {
       if (this.isView) {
@@ -1338,6 +1469,315 @@ export default {
         this.form.directorStatus = '2';
       }
       this.handleProcess();
+    },
+    confirmPrint() {
+
+      const printContent = document.getElementById('printArea').outerHTML;
+      const printWindow = window.open(
+        '',
+        '_blank',
+      );
+      printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title></title>
+      <style>
+        @page {
+          size: A4;
+          margin: 10mm;
+        }
+        * {
+          box-sizing: border-box;
+        }
+        body {
+          margin:0;
+          background:#fff;
+          font-family:
+          "Microsoft YaHei",
+          Arial,
+          sans-serif;
+
+        }
+        .dialogVisible-wrap {
+          padding: 40px 40px 0 40px;
+
+          /* ========== 对话框标题样式 ========== */
+          .record-list{
+            padding: 5px;
+          }
+          .dialog-title {
+            font-size: 30px;
+            text-align: center;
+            letter-spacing: 4px;
+            color: red;
+          }
+
+          .doc-header {
+            padding: 5px;
+            display: flex;
+            justify-content: space-between;
+          }
+
+          .header-top {
+            display: flex;
+          }
+
+          .security-level {
+            color: red;
+          }
+
+          .docSignWord-table {
+            width: 100%;
+            border: 1px solid #000;
+            margin-bottom: 0;
+            display: flex;
+            text-align: center;
+            flex-wrap: wrap;
+            border-left: none;
+            border-right: none;
+          }
+
+          .docSignWord-table1 {
+            width: 100%;
+            border: 1px solid #000;
+            margin-bottom: 0;
+            display: flex;
+            text-align: center;
+            flex-wrap: wrap;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+          }
+
+          .docSignWord-table-item {
+            display: flex;
+            width: 50%;
+            height: 40px;
+          }
+
+          .docSignWord-table-item-unit {
+            display: flex;
+            width: 100%;
+            height: 40px;
+          }
+
+          .docSignWord-label-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+            width: 110px;
+            padding: 5px 0;
+          }
+
+          .label-cell-unit {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+            width: 110px;
+            padding: 5px 0;
+          }
+
+          .docSignWord-input-cell {
+            white-space: nowrap;
+            text-align: left;
+            padding: 5px 0;
+            flex: 1;
+          }
+
+          .input-cell-unit {
+            white-space: nowrap;
+            text-align: left;
+            padding: 5px 0;
+            flex: 1;
+          }
+
+          .docSignWord-div {
+            padding: 5px 0;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-div-wrap {
+            padding: 5px 0;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+          }
+
+          .docSignWord-div-handle {
+            display: flex;
+            justify-content: space-between;
+          }
+
+          .docSignWord-title-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-title-input {
+            white-space: nowrap;
+            text-align: left;
+            min-height: 60px;
+          }
+
+          .docSignWord-title-input1 {
+            white-space: nowrap;
+            text-align: left;
+            min-height: 40px;
+          }
+
+          .docSignWord-title-input2 {
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-zhu {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-zhu-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-zhu-input {
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-ban {
+            display: flex;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-ban-item1 {
+            display: flex;
+            width: 100%;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-item1 .handler-info {
+            flex-shrink: 0;
+          }
+
+          .docSignWord-ban-item {
+            display: flex;
+            width: 50%;
+            border-right: 1px dashed #ccc;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-item2 {
+            display: flex;
+            width: 50%;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+
+            padding: 5px;
+            border-bottom: 1px dashed #ccc;
+          }
+
+          .docSignWord-ban-input {
+            text-align: left;
+            min-height: 80px;
+            padding: 5px 0;
+            flex-wrap: wrap;
+            display: flex;
+            word-break: break-word;
+          }
+
+          .docSignWord-ban-item .docSignWord-ban-input {
+            padding: 5px;
+          }
+
+          .record-text {
+            margin-right: 10px;
+          }
+
+          .docSignWord-time {
+            display: flex;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-time-item1 {
+            flex: 1;
+            display: flex;
+            padding: 5px 0;
+            gap: 5px;
+            border-right: 1px solid #000;
+          }
+
+          .docSignWord-time-item2 {
+            flex: 1;
+            display: flex;
+            padding: 5px 5px 0 5px;
+            gap: 5px;
+            border-right: 1px solid #000;
+          }
+
+          .docSignWord-time-item3 {
+            flex: 1;
+            display: flex;
+            padding: 5px 5px 0 5px;
+            gap: 5px;
+          }
+
+          .docSignWord-time-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-time-input {
+            text-align: left;
+          }
+        }
+
+        #printArea {
+
+          width:794px;
+
+          margin:0 auto;
+
+          background:#fff;
+
+        }
+        .dialog-title {
+          text-align:center;
+          font-size:20px;
+          font-weight:bold;
+          margin-bottom:20px;
+        }
+        /* 保留你的原打印样式 */
+      </style>
+    </head>
+    <body>
+      ${printContent}
+    </body>
+    </html>
+  `);
+
+      printWindow.document.close();
+      printWindow.onload = function () {
+        printWindow.print();
+        printWindow.close();
+      };
+
+    },
+
+    closePreview() {
+      // 清理资源
+      this.printImage = null;
     }
   }
 };
@@ -1907,5 +2347,305 @@ export default {
 ::v-deep .el-input__inner {
   background-color: #ffffff !important;
   border: none !important;
+}
+
+
+
+.dialogVisible-wrap {
+  padding: 40px 40px 0 40px;
+
+  /* ========== 对话框标题样式 ========== */
+  .dialog-title {
+    font-size: 30px;
+    text-align: center;
+    letter-spacing: 4px;
+    color: red;
+  }
+
+  .doc-header {
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .header-top {
+    display: flex;
+  }
+
+  .security-level {
+    color: red;
+  }
+
+  .docSignWord-table {
+    width: 100%;
+    border: 1px solid #000;
+    margin-bottom: 0;
+    display: flex;
+    text-align: center;
+    flex-wrap: wrap;
+    border-left: none;
+    border-right: none;
+  }
+
+  .docSignWord-table1 {
+    width: 100%;
+    border: 1px solid #000;
+    margin-bottom: 0;
+    display: flex;
+    text-align: center;
+    flex-wrap: wrap;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+
+  .docSignWord-table-item {
+    display: flex;
+    width: 50%;
+    height: 40px;
+  }
+
+  .docSignWord-table-item-unit {
+    display: flex;
+    width: 100%;
+    height: 40px;
+  }
+
+  .docSignWord-label-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+    width: 110px;
+    padding: 5px 0;
+  }
+
+  .label-cell-unit {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+    width: 110px;
+    padding: 5px 0;
+  }
+
+  .docSignWord-input-cell {
+    white-space: nowrap;
+    text-align: left;
+    padding: 5px 0;
+    flex: 1;
+  }
+
+  .input-cell-unit {
+    white-space: nowrap;
+    text-align: left;
+    padding: 5px 0;
+    flex: 1;
+  }
+
+  .docSignWord-div {
+    padding: 5px 0;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-div-wrap {
+    padding: 5px 0;
+    border-bottom: 1px solid #000;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .docSignWord-div-handle {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .docSignWord-title-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-title-input {
+    white-space: nowrap;
+    text-align: left;
+    min-height: 60px;
+  }
+
+  .docSignWord-title-input1 {
+    white-space: nowrap;
+    text-align: left;
+    min-height: 40px;
+  }
+
+  .docSignWord-title-input2 {
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-zhu {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-zhu-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-zhu-input {
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-ban {
+    display: flex;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-ban-item1 {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .docSignWord-ban-item1 .handler-info {
+    flex-shrink: 0;
+  }
+
+  .docSignWord-ban-item {
+    display: flex;
+    width: 50%;
+    border-right: 1px dashed #ccc;
+    flex-direction: column;
+  }
+
+  .docSignWord-ban-item2 {
+    display: flex;
+    width: 50%;
+    flex-direction: column;
+  }
+
+  .docSignWord-ban-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+
+    padding: 5px;
+    border-bottom: 1px dashed #ccc;
+  }
+
+  .docSignWord-ban-input {
+    text-align: left;
+    min-height: 80px;
+    padding: 5px 0;
+    flex-wrap: wrap;
+    display: flex;
+    word-break: break-word;
+  }
+
+  .docSignWord-ban-item .docSignWord-ban-input {
+    padding: 5px;
+  }
+
+  .record-text {
+    margin-right: 10px;
+  }
+
+  .docSignWord-time {
+    display: flex;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-time-item1 {
+    flex: 1;
+    display: flex;
+    padding: 5px 0;
+    gap: 5px;
+    border-right: 1px solid #000;
+  }
+
+  .docSignWord-time-item2 {
+    flex: 1;
+    display: flex;
+    padding: 5px 5px 0 5px;
+    gap: 5px;
+    border-right: 1px solid #000;
+  }
+
+  .docSignWord-time-item3 {
+    flex: 1;
+    display: flex;
+    padding: 5px 5px 0 5px;
+    gap: 5px;
+  }
+
+  .docSignWord-time-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-time-input {
+    text-align: left;
+  }
+}
+
+.docSignWord-fu {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.docSignWord-fu-cell {
+  color: red;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.docSignWord-fu-input {
+  white-space: nowrap;
+  text-align: left;
+  min-height: 30px;
+}
+
+.docSignWord-btn {
+  margin-top: 10px;
+  padding: 0px 50px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+
+.print-area {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  width: 794px;
+}
+
+/* 打印时 */
+@media print {
+
+  body * {
+    visibility: hidden;
+  }
+
+  #printArea,
+  #printArea * {
+    visibility: visible;
+  }
+
+  #printArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 794px !important;
+    background: #fff;
+
+  }
+
 }
 </style>
