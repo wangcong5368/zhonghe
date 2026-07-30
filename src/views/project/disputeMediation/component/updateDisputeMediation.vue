@@ -49,12 +49,13 @@
               :rules="disabled ? [] : [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }]">
               <el-radio-group v-model="form.isSelf" :disabled="disabled">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                  }}</el-radio>
+                }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
           <el-col :span="12" v-if="SYS_YES_NO.sys_no === form.isSelf">
-            <el-form-item label="代理人姓名" prop="agentName">
+            <el-form-item label="代理人姓名" prop="agentName"
+              :rules="disabled ? [] : [{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人姓名为必填项', trigger: 'blur' }]">
               <el-input v-model="form.agentName" :placeholder="disabled ? '' : '请输入代理人姓名'" clearable maxlength="10"
                 show-word-limit :disabled="disabled" />
             </el-form-item>
@@ -62,7 +63,8 @@
         </el-row>
         <el-row v-if="SYS_YES_NO.sys_no === form.isSelf">
           <el-col :span="12">
-            <el-form-item label="代理人证件类型" prop="agentCertType">
+            <el-form-item label="代理人证件类型" prop="agentCertType"
+              :rules="disabled ? [] : [{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人证件类型为必填项', trigger: 'change' }]">
               <el-select v-model="form.agentCertType" :placeholder="disabled ? '' : '请选择代理人证件类型'" style="width: 100%"
                 clearable :disabled="disabled">
                 <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
@@ -74,7 +76,7 @@
             <el-form-item label="代理人证件号码" prop="agentCertNum" :rules="disabled
               ? []
               : [
-                { required: this.form.agentCertType, message: '代理人证件号码为必填项', trigger: 'blur' },
+                { required: this.form.agentCertType || form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人证件号码为必填项', trigger: 'blur' },
                 { validator: this.validCertNum(this.form.agentCertType), trigger: 'blur' }
               ]
               ">
@@ -87,13 +89,14 @@
         <el-row v-if="SYS_YES_NO.sys_no === form.isSelf">
           <el-col :span="12">
             <el-form-item label="代理人联系方式" prop="agentPhone"
-              :rules="disabled ? [] : [{ validator: this.phoneRule, trigger: 'blur' }]">
+              :rules="disabled ? [] : [{ validator: this.phoneRule, required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人联系方式为必填项', trigger: 'blur' }]">
               <el-input v-model="form.agentPhone" :placeholder="disabled ? '' : '请输入代理人联系方式'" :disabled="disabled"
                 maxlength="11" show-word-limit clearable oninput="value=value.replace(/[^\d]/g,'')" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="代理人性别" prop="agentSex">
+            <el-form-item label="代理人性别" prop="agentSex"
+              :rules="disabled ? [] : [{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人性别为必填项', trigger: 'change' }]">
               <el-select v-model="form.agentSex" :placeholder="disabled ? '' : '请选择代理人性别'" clearable style="width: 100%"
                 :disabled="disabled">
                 <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label"

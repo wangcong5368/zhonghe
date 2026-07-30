@@ -52,14 +52,16 @@
             </el-form-item>
           </el-col>
           <el-col :span="12" v-if="SYS_YES_NO.sys_no === form.isSelf">
-            <el-form-item label="代理人姓名" prop="agentName">
+            <el-form-item label="代理人姓名" prop="agentName"
+              :rules="[{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人姓名为必填项', trigger: 'blur' }]">
               <el-input v-model="form.agentName" placeholder="请输入代理人姓名" maxlength="10" show-word-limit clearable />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row v-if="SYS_YES_NO.sys_no === form.isSelf">
           <el-col :span="12">
-            <el-form-item label="代理人证件类型" prop="agentCertType">
+            <el-form-item label="代理人证件类型" prop="agentCertType"
+              :rules="[{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人证件类型为必填项', trigger: 'change' }]">
               <el-select v-model="form.agentCertType" placeholder="请选择代理人证件类型" style="width: 100%" clearable>
                 <el-option v-for="dict in dict.type.cert_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
@@ -68,7 +70,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="代理人证件号码" prop="agentCertNum"
-              :rules="[{ validator: this.validCertNum(this.form.agentCertType), trigger: 'blur' }]">
+              :rules="[{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人证件号码为必填项', trigger: 'blur' }, { validator: this.validCertNum(this.form.agentCertType), trigger: 'blur' }]">
               <el-input v-model="form.agentCertNum" placeholder="请输入代理人证件号码"
                 :maxlength="this.validCertNumLength(this.form.agentCertType)" show-word-limit clearable />
             </el-form-item>
@@ -76,13 +78,15 @@
         </el-row>
         <el-row v-if="SYS_YES_NO.sys_no === form.isSelf">
           <el-col :span="12">
-            <el-form-item label="代理人联系方式" prop="agentPhone">
+            <el-form-item label="代理人联系方式" prop="agentPhone"
+              :rules="[{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人联系方式为必填项', trigger: 'blur' }]">
               <el-input v-model="form.agentPhone" placeholder="请输入代理人联系方式" maxlength="11" show-word-limit
                 oninput="value=value.replace(/[^\d]/g,'')" clearable />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="代理人性别" prop="agentSex">
+            <el-form-item label="代理人性别" prop="agentSex"
+              :rules="[{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人性别为必填项', trigger: 'change' }]">
               <el-select v-model="form.agentSex" placeholder="请选择代理人性别" style="width: 100%" clearable>
                 <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
