@@ -49,7 +49,7 @@
               :rules="disabled ? [] : [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }]">
               <el-radio-group v-model="form.isSelf" :disabled="disabled">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                }}</el-radio>
+                  }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -921,7 +921,9 @@
       <el-row>
         <el-col :span="24">
           <el-form-item label="当事人资料" prop="consumerAttachment" v-if="!$store.getters.userInfo.isDMInstitution">
-            <file-upload v-model="form.consumerAttachment" :fileType="['bmp', 'jpg', 'jpeg', 'png', 'tif', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'mp4', 'avi', 'rmvb', 'flv', 'm4v', 'mov', '3gp', '3g2', 'wmv', 'mpg', 'mpeg','cd', 'wave', 'aiff', 'mp3', 'wav', 'm4a',]" :limit="5"/>
+            <file-upload v-model="form.consumerAttachment"
+              :fileType="['bmp', 'jpg', 'jpeg', 'png', 'tif', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'mp4', 'avi', 'rmvb', 'flv', 'm4v', 'mov', '3gp', '3g2', 'wmv', 'mpg', 'mpeg', 'cd', 'wave', 'aiff', 'mp3', 'wav', 'm4a',]"
+              :limit="5" />
           </el-form-item>
         </el-col>
       </el-row>

@@ -57,6 +57,7 @@
     "file-saver": "2.0.5",
     "fuse.js": "6.4.3",
     "highlight.js": "9.18.5",
+    "html2canvas": "^1.4.1",
     "js-beautify": "1.13.0",
     "js-cookie": "3.0.1",
     "jsencrypt": "3.0.0-rc.1",
@@ -75,7 +76,8 @@
     "vue-router": "3.4.9",
     "vue-sticky-directive": "^0.0.10",
     "vuedraggable": "2.24.3",
-    "vuex": "3.6.0"
+    "vuex": "3.6.0",
+    "wangeditor": "^4.7.15"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "4.4.6",

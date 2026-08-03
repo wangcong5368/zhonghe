@@ -18,26 +18,31 @@
             <el-button size="mini" type="primary" v-if="isShowBtn">选取文件</el-button>
             <!-- 上传提示 -->
             <div style="display: inline-block" class="el-upload__tip" slot="tip" v-if="showTip">
-                <el-tooltip class="item" effect="light" :content="`请上传 ` + (fileSize ? '大小不超过 ' + fileSize + 'MB ':'') + (fileType ? `格式为 ` + fileType.join('/') : '') + ' 的文件'" placement="right">
-                  <i style="margin-left: 10px;display: inline-block" class="el-icon-info"/>
+                <el-tooltip
+                    class="item"
+                    effect="light"
+                    :content="`请上传 ` + (fileSize ? '大小不超过 ' + fileSize + 'MB ' : '') + (fileType ? `格式为 ` + fileType.join('/') : '') + ' 的文件'"
+                    placement="right"
+                >
+                    <i style="margin-left: 10px; display: inline-block" class="el-icon-info" />
                 </el-tooltip>
-<!--                请上传-->
-<!--                <template v-if="fileSize">-->
-<!--                    大小不超过-->
-<!--                    <b style="color: #f56c6c">{{ fileSize }}MB</b>-->
-<!--                </template>-->
-<!--                <template v-if="fileType">-->
-<!--                    格式为-->
-<!--                    <b style="color: #f56c6c">{{ fileType.join('/') }}</b>-->
-<!--                </template>-->
-<!--                的文件-->
+                <!--                请上传-->
+                <!--                <template v-if="fileSize">-->
+                <!--                    大小不超过-->
+                <!--                    <b style="color: #f56c6c">{{ fileSize }}MB</b>-->
+                <!--                </template>-->
+                <!--                <template v-if="fileType">-->
+                <!--                    格式为-->
+                <!--                    <b style="color: #f56c6c">{{ fileType.join('/') }}</b>-->
+                <!--                </template>-->
+                <!--                的文件-->
             </div>
         </el-upload>
 
         <!-- 文件列表 -->
         <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear" tag="ul">
             <li :key="file.url" class="el-upload-list__item ele-upload-list__item-content" v-for="(file, index) in fileList">
-                <el-link :href="`${baseUrl}${file.url}`" :underline="false" target="_blank">
+                <el-link :underline="false" target="_blank">
                     <span class="el-icon-document">{{ getFileName(file.name) }}</span>
                 </el-link>
                 <div class="ele-upload-list__item-content-action" v-if="!oldList.includes(file.url) && isShowDele">
@@ -101,8 +106,9 @@ export default {
             headers: {
                 Authorization: 'Bearer ' + getToken()
             },
-            fileList: []
-            // showBtn: this.isShowBtn
+            fileList: [],
+            uploadFiles: []
+            // showBtn: this.isShowBtn,
         };
     },
     watch: {
@@ -172,7 +178,13 @@ export default {
         // 上传成功回调
         handleUploadSuccess(res, file) {
             if (res.code === 200) {
-                this.uploadList.push({ name: res.fileName, url: res.fileName });
+                const fileObj = {
+                    name: res.fileName,
+                    url: res.fileName,
+                    urlBack: res.url
+                };
+                this.uploadList.push(fileObj);
+                this.uploadFiles.push(fileObj);
                 this.uploadedSuccessfully();
             } else {
                 this.number--;
@@ -198,6 +210,7 @@ export default {
         uploadedSuccessfully() {
             if (this.number > 0 && this.uploadList.length === this.number) {
                 this.fileList = this.fileList.concat(this.uploadList);
+                this.$emit('upload-success', [...this.uploadFiles]);
                 this.uploadList = [];
                 this.number = 0;
                 this.$emit('input', this.listToString(this.fileList));

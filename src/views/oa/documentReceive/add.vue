@@ -66,14 +66,6 @@
                 :disabled="isView || (putEditStatus !== null && putEditStatus !== 7)" class="table-input"></el-input>
             </td>
           </tr>
-          <tr>
-            <td class="label-cell">内容</td>
-            <td class="input-cell" colspan="3">
-              <el-input v-model="form.text" type="textarea" :rows="6" placeholder="自由输入不超2000字符" maxlength="2000"
-                show-word-limit :disabled="isView || (putEditStatus !== null && putEditStatus !== 7)"
-                class="table-textarea"></el-input>
-            </td>
-          </tr>
         </table>
 
         <!-- 附件表格 -->
@@ -81,13 +73,14 @@
           <tr>
             <td class="label-cell">附件</td>
             <td class="input-cell" colspan="3">
-              <FileUpload v-if="!isView && (putEditStatus === null || putEditStatus === 7)"
-                v-model="form.attachments" style="margin: 5px 10px;" />
+              <FileUpload v-if="!isView && (putEditStatus === null || putEditStatus === 7)" v-model="form.attachments"
+                @upload-success="handleFileChange" style="margin: 5px 10px" />
               <div v-else-if="form.attachments" class="attachment-list">
                 <div v-for="(filePath, index) in form.attachments.split(',')" :key="index" class="attachment-item"
                   v-if="filePath.trim()">
-                  <span class="file-info">
-                    <i class="el-icon-document"></i> {{ getDisplayFileName(filePath) }}
+                  <span class="file-info" @click="previewFileOnline({ name: getFileName(filePath) })">
+                    <i class="el-icon-document"></i>
+                    {{ getDisplayFileName(filePath) }}
                   </span>
                   <div class="attachment-actions">
                     <el-button type="primary" size="mini"
@@ -97,13 +90,12 @@
                   </div>
                 </div>
               </div>
-              <div v-else style="display: flex;align-items: center;justify-content: center;">
-                <span style="color: #C0C4CC;">无附件</span>
+              <div v-else style="display: flex; align-items: center; justify-content: center">
+                <span style="color: #c0c4cc">无附件</span>
               </div>
             </td>
           </tr>
         </table>
-
 
         <!-- 审批意见表格 -->
         <table class="word-table">
@@ -113,9 +105,10 @@
               <div class="approval-section">
                 <el-input v-model="form.directorInstruction" type="textarea" :rows="3" placeholder="填写意见"
                   :disabled="isSectionDisabled(2)" class="table-textarea"></el-input>
-                <QuickReply v-if="!isSectionDisabled(2)" style="margin: 5px 10px;" :onSelect="(phrase) => handleSelectPhrase('director', phrase)"
-                  :superviseId="$route.query.id" :inputContent="form.directorInstruction" :buttonWidth="'90px'"
-                  :buttonHeight="'30px'" @collected="handleCollected" />
+                <QuickReply v-if="!isSectionDisabled(2)" style="margin: 5px 10px"
+                  :onSelect="phrase => handleSelectPhrase('director', phrase)" :superviseId="$route.query.id"
+                  :inputContent="form.directorInstruction" :buttonWidth="'90px'" :buttonHeight="'30px'"
+                  @collected="handleCollected" />
                 <div class="handler-info" v-if="form.directorHandler">
                   <span class="handler-time">处理人: {{ form.directorHandler }} 日期: {{ form.directorDate }} 时间: {{
                     form.directorTime }}</span>
@@ -124,13 +117,17 @@
             </td>
           </tr>
           <tr>
-            <td class="label-cell">综合管理部<br/>经理意见</td>
+            <td class="label-cell">
+              综合管理部
+              <br />
+              经理意见
+            </td>
             <td class="input-cell" colspan="3">
               <div class="approval-section">
                 <el-input v-model="form.comprehensiveOpinion" type="textarea" :rows="3" placeholder="填写意见"
                   :disabled="isSectionDisabled(1)" class="table-textarea"></el-input>
-                <QuickReply v-if="!isSectionDisabled(1)" style="margin: 5px 10px;"
-                  :onSelect="(phrase) => handleSelectPhrase('comprehensive', phrase)" :superviseId="$route.query.id"
+                <QuickReply v-if="!isSectionDisabled(1)" style="margin: 5px 10px"
+                  :onSelect="phrase => handleSelectPhrase('comprehensive', phrase)" :superviseId="$route.query.id"
                   :inputContent="form.comprehensiveOpinion" :buttonWidth="'100px'" :buttonHeight="'30px'"
                   @collected="handleCollected" />
                 <div class="handler-info" v-if="form.comprehensiveHandler">
@@ -140,23 +137,28 @@
               </div>
             </td>
           </tr>
+
           <tr>
             <td class="label-cell">综合管理部意见</td>
             <td class="input-cell" colspan="3">
               <div class="approval-section">
                 <el-input v-model="form.leadDeptOpinion" type="textarea" :rows="3" placeholder="填写意见"
                   :disabled="isSectionDisabled(3)" class="table-textarea"></el-input>
-                <QuickReply v-if="!isSectionDisabled(3)" style="margin: 5px 10px;" :onSelect="(phrase) => handleSelectPhrase('leadDept', phrase)"
-                  :superviseId="$route.query.id" :inputContent="form.leadDeptOpinion" :buttonWidth="'90px'"
-                  :buttonHeight="'30px'" @collected="handleCollected" />
+                <QuickReply v-if="!isSectionDisabled(3)" style="margin: 5px 10px"
+                  :onSelect="phrase => handleSelectPhrase('leadDept', phrase)" :superviseId="$route.query.id"
+                  :inputContent="form.leadDeptOpinion" :buttonWidth="'90px'" :buttonHeight="'30px'"
+                  @collected="handleCollected" />
                 <!-- 分发给部门经理的附件 -->
-                <el-form-item label="附件" prop="managerAttachment" style="margin-top: 10px;" v-if="form.managerAttachment && putEditStatus !== 3">
-                  <FileUpload v-if="!isView && !isSectionDisabled(3)" v-model="form.managerAttachment" style="margin: 5px 10px;" />
+                <el-form-item label="附件" prop="managerAttachment" style="margin-top: 10px"
+                  v-if="form.managerAttachment && putEditStatus !== 3">
+                  <FileUpload v-if="!isView && !isSectionDisabled(3)" v-model="form.managerAttachment"
+                    style="margin: 5px 10px" />
                   <div v-else-if="form.managerAttachment" class="attachment-list">
                     <div v-for="(filePath, index) in getAttachmentList(form.managerAttachment)" :key="index"
                       class="attachment-item" v-if="filePath.trim()">
-                      <span class="file-info">
-                        <i class="el-icon-document"></i> {{ getDisplayFileName(filePath) }}
+                      <span class="file-info" @click="previewFileOnline({ name: getDisplayFileName(filePath) })">
+                        <i class="el-icon-document"></i>
+                        {{ getDisplayFileName(filePath) }}
                       </span>
                       <div class="attachment-actions">
                         <el-button type="primary" size="mini"
@@ -169,17 +171,28 @@
                   <span v-else>无附件</span>
                 </el-form-item>
                 <div class="dept-distribution" v-if="!isSectionDisabled(3)">
-                  <div class="dept-distribution-content">
-                    <span class="dept-distribution-label">部门分发:</span>
-                    <el-select v-model="form.deptDistribution" multiple placeholder="请选择部门经理分发" style="width: 100%;"
-                      :disabled="isSectionDisabled(3)">
-                      <el-option v-for="item in departmentManagers" :key="item.id" :label="item.label" :value="item.id">
-                      </el-option>
-                    </el-select>
+                  <div class="dept-distribution-wrap">
+                    <div class="dept-distribution-content">
+                      <span class="dept-distribution-label">综合管理部部门分发:</span>
+                      <el-select v-model="form.deptDistribution" placeholder="请选择综合管理部部门经理分发" style="width: 100%"
+                        :disabled="isSectionDisabled(3)">
+                        <el-option v-for="item in departmentManagers" :key="item.id" :label="item.label"
+                          :value="item.id"></el-option>
+                      </el-select>
+                    </div>
+                    <div class="dept-distribution-content">
+                      <span class="dept-distribution-label">其他部门分发:</span>
+                      <el-select v-model="form.deptDistribution1" multiple placeholder="请选择其他部门经理分发" style="width: 100%"
+                        :disabled="isSectionDisabled(3)">
+                        <el-option v-for="item in departmentManagers" :key="item.id" :label="item.label"
+                          :value="item.id"></el-option>
+                      </el-select>
+                    </div>
                   </div>
-                  <el-form-item label="附件" prop="managerAttachment" style="margin-top: 10px;">
-                  <FileUpload v-if="!isView && !isSectionDisabled(3)" v-model="form.managerAttachment" />
-                </el-form-item>
+
+                  <el-form-item label="附件" prop="managerAttachment" style="margin-top: 10px">
+                    <FileUpload v-if="!isView && !isSectionDisabled(3)" v-model="form.managerAttachment" />
+                  </el-form-item>
                 </div>
                 <div class="handler-info" v-if="form.leadDeptHandler">
                   <span class="handler-time">处理人: {{ form.leadDeptHandler }} 日期: {{ form.leadDeptDate }} 时间: {{
@@ -189,38 +202,37 @@
             </td>
           </tr>
         </table>
-
-        <!-- 其他部门意见表格 -->
         <table class="word-table">
           <tr>
-            <td class="label-cell">其他部门意见</td>
-            <td class="input-cell" colspan="3">
+            <!-- 综合管理部门意见表格 -->
+            <td class="label-cell" style="width: 10%;">综合管理部门意见</td>
+            <td class="input-cell" style="width: 40%;">
               <div class="processing-record">
                 <div class="record-label">处理记录:</div>
                 <div class="record-list">
-                  <div v-for="(record, index) in filteredProcessingRecords" :key="index" class="record-item">
+                  <div v-for="(record, index) in filteredComprehensiveRecords" :key="record.id" class="record-item">
                     <span class="record-text">{{ record.text }}</span>
                     <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
                   </div>
                 </div>
               </div>
               <!-- 处理内容输入和按钮 -->
-              <div class="read-section" v-if="showReadButton()">
+              <div class="read-section" v-if="showReadButton() && this.userInfo.dept.deptName == '综合管理部'">
                 <el-form-item label="处理内容" prop="readOpinion">
                   <el-input v-model="form.readOpinion" type="textarea" :rows="3" placeholder="填写处理内容"
                     class="table-textarea"></el-input>
-                  <QuickReply style="margin: 5px 10px;" :onSelect="(phrase) => handleSelectPhrase('read', phrase)" :superviseId="$route.query.id"
-                    :inputContent="form.readOpinion" :buttonWidth="'90px'" :buttonHeight="'30px'"
-                    @collected="handleCollected" />
+                  <QuickReply style="margin: 5px 10px" :onSelect="phrase => handleSelectPhrase('read', phrase)"
+                    :superviseId="$route.query.id" :inputContent="form.readOpinion" :buttonWidth="'90px'"
+                    :buttonHeight="'30px'" @collected="handleCollected" />
                 </el-form-item>
                 <div class="read-button-wrapper">
                   <el-button type="primary" @click="handleConfirmRead">已阅</el-button>
                 </div>
               </div>
               <!-- 部门人员分发 -->
-              <div class="dept-distribution" v-if="!isSectionDisabled(4)">
+              <div class="dept-distribution" v-if="!isSectionDisabled(4) && this.userInfo.dept.deptName == '综合管理部'">
                 <el-form-item label="部门人员分发" prop="staffDistribution">
-                  <el-select v-model="form.staffDistribution" multiple placeholder="请选择分发人员" style="width: 100%;">
+                  <el-select v-model="form.staffDistribution" multiple placeholder="请选择分发人员" style="width: 100%">
                     <el-option v-for="item in currentDeptUsers" :key="item.userId" :label="item.nickName"
                       :value="item.userId"></el-option>
                   </el-select>
@@ -229,9 +241,52 @@
                 <el-form-item label="处理意见" prop="deptOpinion">
                   <el-input v-model="form.deptOpinion" type="textarea" :rows="3" placeholder="填写处理意见"
                     class="table-textarea"></el-input>
-                  <QuickReply style="margin: 5px 10px;" :onSelect="(phrase) => handleSelectPhrase('dept', phrase)" :superviseId="$route.query.id"
-                    :inputContent="form.deptOpinion" :buttonWidth="'90px'" :buttonHeight="'30px'"
-                    @collected="handleCollected" />
+                  <QuickReply style="margin: 5px 10px" :onSelect="phrase => handleSelectPhrase('dept', phrase)"
+                    :superviseId="$route.query.id" :inputContent="form.deptOpinion" :buttonWidth="'90px'"
+                    :buttonHeight="'30px'" @collected="handleCollected" />
+                </el-form-item>
+              </div>
+            </td>
+            <!-- 其他部门意见表格 -->
+            <td class="label-cell" style="width: 10%;">其他部门意见</td>
+            <td class="input-cell" style="width: 40%;">
+              <div class="processing-record">
+                <div class="record-label">处理记录:</div>
+                <div class="record-list">
+                  <div v-for="(record, index) in filteredOtherRecords" :key="record.id" class="record-item">
+                    <span class="record-text">{{ record.text }}</span>
+                    <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 处理内容输入和按钮 -->
+              <div class="read-section" v-if="showReadButton() && this.userInfo.dept.deptName != '综合管理部'">
+                <el-form-item label="处理内容" prop="readOpinion">
+                  <el-input v-model="form.readOpinion" type="textarea" :rows="3" placeholder="填写处理内容"
+                    class="table-textarea"></el-input>
+                  <QuickReply style="margin: 5px 10px" :onSelect="phrase => handleSelectPhrase('read', phrase)"
+                    :superviseId="$route.query.id" :inputContent="form.readOpinion" :buttonWidth="'90px'"
+                    :buttonHeight="'30px'" @collected="handleCollected" />
+                </el-form-item>
+                <div class="read-button-wrapper">
+                  <el-button type="primary" @click="handleConfirmRead">已阅</el-button>
+                </div>
+              </div>
+              <!-- 部门人员分发 -->
+              <div class="dept-distribution" v-if="!isSectionDisabled(4) && this.userInfo.dept.deptName != '综合管理部'">
+                <el-form-item label="部门人员分发" prop="staffDistribution">
+                  <el-select v-model="form.staffDistribution" multiple placeholder="请选择分发人员" style="width: 100%">
+                    <el-option v-for="item in currentDeptUsers" :key="item.userId" :label="item.nickName"
+                      :value="item.userId"></el-option>
+                  </el-select>
+                </el-form-item>
+                <!-- 部门经理处理意见 -->
+                <el-form-item label="处理意见" prop="deptOpinion">
+                  <el-input v-model="form.deptOpinion" type="textarea" :rows="3" placeholder="填写处理意见"
+                    class="table-textarea"></el-input>
+                  <QuickReply style="margin: 5px 10px" :onSelect="phrase => handleSelectPhrase('dept', phrase)"
+                    :superviseId="$route.query.id" :inputContent="form.deptOpinion" :buttonWidth="'90px'"
+                    :buttonHeight="'30px'" @collected="handleCollected" />
                 </el-form-item>
               </div>
             </td>
@@ -259,7 +314,8 @@
             <td class="label-cell">备注</td>
             <td class="input-cell" colspan="5">
               <el-input v-model="form.remarks" type="textarea" :rows="2" placeholder="自由输入"
-                :disabled="isView || (putEditStatus !== null && ![1, 2, 3, 6, 7].includes(putEditStatus))" class="table-textarea"></el-input>
+                :disabled="isView || (putEditStatus !== null && ![1, 2, 3, 6, 7].includes(putEditStatus))"
+                class="table-textarea"></el-input>
             </td>
           </tr>
         </table>
@@ -271,12 +327,152 @@
             <el-button type="success" :disabled="!canClickApprove" @click="handleApprove">通过</el-button>
             <el-button type="danger" :disabled="!canClickReject" @click="handleReject">退回</el-button>
             <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
+            <el-button type="primary" :disabled="putEditStatus === null" @click="confirmPrint">打印</el-button>
             <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText
-              }}</el-button>
+            }}</el-button>
             <el-button @click="handleExit">退出</el-button>
           </div>
         </el-form-item>
       </el-form>
+    </div>
+    <div class="print-area">
+      <div class="dialogVisible-wrap" id="printArea">
+        <div slot="title" class="dialog-title">
+          <span>天津众和收文处理单</span>
+        </div>
+
+        <!-- 1. 公文头部：密级、缓急 -->
+        <div class="doc-header">
+          <!-- <div class="header-top">
+                    <span class="security-level">密级</span>
+                    <span class="urgency-level">〔非密〕</span>
+                </div> -->
+          <!-- <div class="header-top" v-if="shouldShowField('urgencyLevel')">
+            <span class="security-level">紧急程度</span>
+            <span class="urgency-level">〔{{ form.urgencyLevel === 'routine' ? '普通' : form.urgencyLevel === 'emergency' ?
+              '一般' : '加急' }}〕</span>
+          </div> -->
+        </div>
+
+        <!-- 2. 信息表格 -->
+        <div class="docSignWord-table">
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">上级文件编号</div>
+            <div class="docSignWord-input-cell">{{ form.superiorDocNumber || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">来文字号</div>
+            <div class="docSignWord-input-cell">{{ form.incomingDocNumber || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">收文类型</div>
+            <div class="docSignWord-input-cell">{{ DM_DOCUMENT_SENDING_TYPE2[form.type] || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">收文编号</div>
+            <div class="docSignWord-input-cell">{{ form.originalDocDate || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item">
+            <div class="docSignWord-label-cell">收文日期</div>
+            <div class="docSignWord-input-cell">{{ form.receivedDate || '' }}</div>
+          </div>
+          <div class="docSignWord-table-item-unit">
+            <div class="label-cell-unit">来文单位</div>
+            <div class="input-cell-unit">{{ form.originatingUnit || '' }}</div>
+          </div>
+        </div>
+
+        <!-- 3. 标题 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">标题</div>
+          <div class="docSignWord-title-input1">{{ form.title || '' }}</div>
+        </div>
+
+        <!-- 4. 主任批示 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">主任批示</div>
+          <div class="docSignWord-div-handle">
+            <div class="docSignWord-title-input">
+              {{ form.directorInstruction || '' }}
+            </div>
+            <div class="handler-info" v-if="form.directorHandler">
+              <span class="handler-time">处理人: {{ form.directorHandler }} 日期: {{ form.directorDate }} 时间: {{
+                form.directorTime }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. 综合管理部经理意见 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">综合管理部经理意见</div>
+          <div class="docSignWord-div-handle">
+            <div class="docSignWord-title-input">{{ form.comprehensiveOpinion || '' }}</div>
+            <div class="handler-info" v-if="form.comprehensiveHandler">
+              <span class="handler-time">处理人: {{ form.comprehensiveHandler }} 日期: {{ form.comprehensiveDate }} 时间: {{
+                form.comprehensiveTime }}</span>
+            </div>
+          </div>
+        </div>
+        <!-- 5. 综合管理部意见 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">综合管理部意见</div>
+          <div class="docSignWord-div-handle">
+            <div class="docSignWord-title-input">{{ form.leadDeptOpinion || '' }}</div>
+            <div class="handler-info" v-if="form.leadDeptHandler">
+              <span class="handler-time">处理人: {{ form.leadDeptHandler }} 日期: {{ form.leadDeptDate }} 时间: {{
+                form.leadDeptTime }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. 主办处室意见表格 -->
+        <div class="docSignWord-ban">
+          <div class="docSignWord-ban-item">
+            <div class="docSignWord-ban-cell">综合管理部部门意见</div>
+            <div class="record-list">
+              <div v-for="(record, index) in filteredComprehensiveRecords" :key="record.id" class="record-item">
+                <span class="record-text">{{ record.text }}</span>
+                <span class="record-info">处理人:{{ record.handler }} 日期:{{ record.date }} 时间:{{ record.time }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="docSignWord-ban-item2">
+            <div class="docSignWord-ban-cell">其他部门意见</div>
+            <div class="record-list">
+              <div v-for="(record, index) in filteredOtherRecords" :key="index" class="record-item">
+                <span class="record-text">{{ record.text }}</span>
+                <span class="record-info">处理人:{{ record.handler }}; {{ record.date }}:{{ record.time }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="docSignWord-time">
+          <div class="docSignWord-time-item1">
+            <div class="docSignWord-time-cell">创建人</div>
+            <div class="docSignWord-time-input">{{ form.creator || '' }}</div>
+          </div>
+          <div class="docSignWord-time-item2">
+            <div class="docSignWord-time-cell">完成时间</div>
+            <div class="docSignWord-time-input">{{ form.completionTime || '' }}</div>
+          </div>
+          <div class="docSignWord-time-item3">
+            <div class="docSignWord-time-cell">复印分送情况</div>
+            <div class="docSignWord-time-input">{{ form.issuingAgency || '' }}</div>
+          </div>
+        </div>
+
+        <!-- 7. 备注 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">备注</div>
+          <div class="docSignWord-title-input">{{ form.remarks || '' }}</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div v-if="printImage" style="display: none">
+      <img :src="printImage" id="printImage" style="width:794px;height:auto;" />
     </div>
 
     <!-- 分隔线 -->
@@ -284,11 +480,12 @@
 
     <!-- 处理进度 -->
     <div class="processing-progress-section">
-      <h4 style="text-align: left;">处理流程</h4>
+      <h4 style="text-align: left">处理流程</h4>
       <el-table :data="processingProgressList" style="width: 100%" border>
         <el-table-column prop="no" label="序号" width="80" align="center"></el-table-column>
         <el-table-column prop="item" label="处理记录" min-width="200"></el-table-column>
         <el-table-column prop="handler" label="处理人" width="120" align="center"></el-table-column>
+        <el-table-column prop="notApprovedUserNames" label="处理状态" width="80"></el-table-column>
         <el-table-column prop="time" label="处理时间" width="180" align="center"></el-table-column>
       </el-table>
     </div>
@@ -299,9 +496,9 @@
       <el-form>
         <el-form-item label="下一处理人" required>
           <el-cascader v-model="selectedNextReviewer" :options="deptUserTreeOptions" :props="deptUserProps"
-            :placeholder="getPlaceholderText()" clearable multiple :multiple-limit="currentSelectionLimit"
-            @change="handleNextReviewerChange" style="width: 100%;border:1px solid #ccc;border-radius: 5px;">
-          </el-cascader>
+            :placeholder="getPlaceholderText()" clearable multiple @change="handleNextReviewerChange"
+            style="width: 100%; border: 1px solid #ccc; border-radius: 5px"></el-cascader>
+          <!-- :multiple-limit="currentSelectionLimit" -->
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -324,7 +521,7 @@ import {
   documentReceivingEnd,
   documentReceivingLeaderCompleted
 } from '@/api/oa/documentReceive';
-import { addDocument, submitDraft, officialDocumentHasBeenCompleted } from '@/api/oa/documentManagement';
+import { addDocument, submitDraft, officialDocumentHasBeenCompleted, getDocumentImageList, documentImageSave } from '@/api/oa/documentManagement';
 import { getDirectorList, getDeptUserTree } from '@/api/oa/publicApi.js';
 import { getDeptLeaderUserTreeList } from '@/api/oa/document';
 import QuickReply from '@/components/quickReply/index.vue';
@@ -332,13 +529,19 @@ import FileUpload from '@/components/FileUpload/index.vue';
 import ViewFile from '@/components/viewFile';
 import conf from '@/conf.js';
 import { mapGetters } from 'vuex';
+import DocSignDialog from '../components/DocSignDialog.vue';
+import { getToken } from '@/utils/auth';
+import RichEditor from '../components/RichEditor.vue';
+import { DM_DOCUMENT_SENDING_TYPE2 } from '@/views/constant/CommonConstant.js';
 
 export default {
   name: 'DocumentReceiveAdd',
-  components: { QuickReply, FileUpload, ViewFile },
+  components: { QuickReply, FileUpload, ViewFile, DocSignDialog, RichEditor },
   dicts: ['document_receive_type'],
   data() {
     return {
+      printImage: '',
+      DM_DOCUMENT_SENDING_TYPE2: DM_DOCUMENT_SENDING_TYPE2,
       isView: false,
       isNew: false,
       putEditStatus: null,
@@ -372,6 +575,8 @@ export default {
         managerAttachment: '', // 分发给部门经理的附件
         deptOpinion: '', // 部门经理处理意见
         processingRecords: [],
+        comprehensiveRecords: [],// 综合管理部部门员工处理意见
+        otherRecords: [],// 其他部门处理意见
         readOpinion: '',
         completionTime: '',
         issuingAgency: '',
@@ -407,7 +612,7 @@ export default {
         value: 'id',
         label: 'label',
         children: 'children',
-        checkStrictly: true,
+        checkStrictly: false, // 改为 false，允许父节点全选子节点
         emitPath: true,
         multiple: true,
         disabled: 'disabled',
@@ -416,8 +621,9 @@ export default {
       // 当前状态下的选择限制
       currentSelectionLimit: 1,
       // 锁定的用户ID（不可删除）
-      lockedUserId: null
-    }
+      lockedUserId: null,
+      getUploadFiles: []
+    };
   },
   computed: {
     ...mapGetters(['permissions', 'userInfo']),
@@ -445,20 +651,47 @@ export default {
       return '提交';
     },
     filteredProcessingRecords() {
-      console.log(this.form.processingRecords, 'this.form.processingRecords');
+      // console.log(this.form.processingRecords, 'this.form.processingRecords');
 
       // 显示除了主任批示、综合管理部经理意见、综合管理部意见之外的所有记录
       return this.form.processingRecords.filter(record => {
         if (!record.text) return false;
-        
         const text = record.text;
+
         // 排除这三种类型的记录
-        const excludePatterns = [
-          '主任岗审核通过',
-          '综合部经理审核通过', 
-          '收文综合部文秘岗分发'
-        ];
-        
+        const excludePatterns = ['主任岗审核通过', '综合部经理审核通过', '收文综合部文秘岗分发'];
+
+        // 如果包含排除模式中的任何一个，则不显示
+        return !excludePatterns.some(pattern => text.includes(pattern));
+      });
+    },
+    // 综合管理部门审批记录
+    filteredComprehensiveRecords() {
+      // console.log(this.form.comprehensiveRecords, 'this.form.comprehensiveRecords');
+      // 显示除了主任批示、综合管理部经理意见、综合管理部意见之外的所有记录
+      return this.form.comprehensiveRecords.filter(record => {
+        if (!record.text) return false;
+        const text = record.text;
+
+        // 排除这三种类型的记录
+        const excludePatterns = ['主任岗审核通过', '综合部经理审核通过', '收文综合部文秘岗分发'];
+
+        // 如果包含排除模式中的任何一个，则不显示
+        return !excludePatterns.some(pattern => text.includes(pattern));
+      });
+    },
+    // 部门经理审批记录
+    filteredOtherRecords() {
+      // console.log(this.form.otherRecords, 'this.form.otherRecords');
+
+      // 显示除了主任批示、综合管理部经理意见、综合管理部意见之外的所有记录
+      return this.form.otherRecords.filter(record => {
+        if (!record.text) return false;
+        const text = record.text;
+
+        // 排除这三种类型的记录
+        const excludePatterns = ['主任岗审核通过', '综合部经理审核通过', '收文综合部文秘岗分发'];
+
         // 如果包含排除模式中的任何一个，则不显示
         return !excludePatterns.some(pattern => text.includes(pattern));
       });
@@ -495,6 +728,26 @@ export default {
     }
   },
   methods: {
+    // 在线文件
+    previewFileOnline(file) {
+      if (this.getUploadFiles && this.getUploadFiles.length > 0) {
+        const fileInList = this.getUploadFiles.find(f => f.fileName.includes(file.name));
+        const token = getToken();
+        if (fileInList) {
+          // 构建目标 URL
+          const baseUrl = 'http://192.168.0.139:5174/'; // 替换为实际地址
+          const id = this.$route.query.id;
+          // 方式1：通过 URL 参数传递
+          const url = `${baseUrl}?fileId=${fileInList.id}&userId=${this.userInfo.userId}&token=${token}&userName=${decodeURIComponent(this.userInfo.nickName)}`;
+          // // 在新窗口打开
+          window.open(url, '_blank');
+        }
+      }
+    },
+    // 上传文件列表
+    handleFileChange(files) {
+      this.uploadFiles = files;
+    },
     isSectionDisabled(sectionStatus) {
       if (this.isView) {
         return true;
@@ -535,9 +788,9 @@ export default {
     // 获取占位符文本
     getPlaceholderText() {
       if (this.currentSelectionLimit === 2) {
-        return '请选择部门和人员（最多选择2人，zxzr1不可删除）';
+        return '请选择部门和人员（主任不可删除）';
       } else {
-        return '请选择部门和人员（只能选择1人）';
+        return '请选择部门和人员';
       }
     },
     // 将用户ID数组转换为级联选择器需要的路径格式
@@ -592,40 +845,40 @@ export default {
       return userIds;
     },
     // 更新选项的禁用状态
-    updateOptionsDisabled() {
-      const hasSelection = this.selectedNextReviewer && this.selectedNextReviewer.length > 0;
-      this.updateTreeDisabled(this.deptUserTreeOptions, hasSelection);
-    },
+    // updateOptionsDisabled() {
+    //     const hasSelection = this.selectedNextReviewer && this.selectedNextReviewer.length > 0;
+    //     this.updateTreeDisabled(this.deptUserTreeOptions, hasSelection);
+    // },
     // 递归更新树节点的禁用状态
-    updateTreeDisabled(nodes, hasSelection) {
-      if (!nodes) return;
+    // updateTreeDisabled(nodes, hasSelection) {
+    //     if (!nodes) return;
 
-      nodes.forEach(node => {
-        if (node.isUser) {
-          // 对于用户节点
-          if (this.lockedUserId && node.id === this.lockedUserId) {
-            // 锁定的用户永远不禁用（但不可删除）
-            node.disabled = false;
-          } else if (this.currentSelectionLimit === 1) {
-            // 限制1人时：如果已有选择且当前节点未被选中，则禁用
-            node.disabled = hasSelection && !this.isNodeSelected(node);
-          } else if (this.currentSelectionLimit === 2) {
-            // 限制2人时：如果已选2人且当前节点未被选中，则禁用
-            node.disabled = hasSelection && this.selectedNextReviewer.length >= 2 && !this.isNodeSelected(node);
-          } else {
-            node.disabled = false;
-          }
-        } else {
-          // 对于部门节点，始终禁用（不可选择）
-          node.disabled = true;
-        }
+    //     nodes.forEach(node => {
+    //         if (node.isUser) {
+    //             // 对于用户节点
+    //             if (this.lockedUserId && node.id === this.lockedUserId) {
+    //                 // 锁定的用户永远不禁用（但不可删除）
+    //                 node.disabled = false;
+    //             } else if (this.currentSelectionLimit === 1) {
+    //                 // 限制1人时：如果已有选择且当前节点未被选中，则禁用
+    //                 node.disabled = hasSelection && !this.isNodeSelected(node);
+    //             } else if (this.currentSelectionLimit === 2) {
+    //                 // 限制2人时：如果已选2人且当前节点未被选中，则禁用
+    //                 node.disabled = hasSelection && this.selectedNextReviewer.length >= 2 && !this.isNodeSelected(node);
+    //             } else {
+    //                 node.disabled = false;
+    //             }
+    //         } else {
+    //             // 对于部门节点，始终禁用（不可选择）
+    //             node.disabled = true;
+    //         }
 
-        // 递归处理子节点
-        if (node.children) {
-          this.updateTreeDisabled(node.children, hasSelection);
-        }
-      });
-    },
+    //         // 递归处理子节点
+    //         if (node.children) {
+    //             this.updateTreeDisabled(node.children, hasSelection);
+    //         }
+    //     });
+    // },
     // 检查节点是否被选中
     isNodeSelected(node) {
       if (!this.selectedNextReviewer || this.selectedNextReviewer.length === 0) {
@@ -679,47 +932,74 @@ export default {
     getDeptUserTree() {
       // 获取部门和用户的树形数据
       getDeptUserTree().then(res => {
-        this.deptUserTreeOptions = this.formatDeptUserTree(res.data);
+        this.deptUserTreeOptions = this.formatDeptUserTree(res.data, 1);
       });
     },
-    formatDeptUserTree(data) {
+    formatDeptUserTree(data, level = 1) {
       if (!data) return [];
-      return data.map(item => {
-        const node = {
-          id: item.deptId,
-          label: item.deptName,
-          children: [],
-          disabled: true, // 部门节点默认禁用
-          isUser: false // 部门节点不是用户
-        };
 
-        // 添加用户到子节点
-        if (item.userList && item.userList.length > 0) {
-          item.userList.forEach(user => {
-            node.children.push({
-              id: user.userId,
-              label: user.nickName || user.userName,
-              deptId: item.deptId,
-              isUser: true,
-              disabled: false,
-              userName: user.userName // 添加userName字段用于区分
+      let shouldFilter = false;
+      let allowedDeptIds = [];
+      if (this.putEditStatus === null) {
+        // 新建时只显示 103, 102
+        shouldFilter = true;
+        allowedDeptIds = ['103', '102'];
+      } else if (this.putEditStatus === 1 || this.putEditStatus === 3) {
+        // 综合部经理审批 或 综合部文秘岗分发 时显示 103, 102, 2841
+        shouldFilter = true;
+        allowedDeptIds = ['103', '102', '2841'];
+      }
+
+      return data
+        .filter(item => {
+          // 第一级（根节点）不过滤
+          if (level === 1) {
+            return true;
+          }
+          // 第二级及以上只保留指定部门
+          if (shouldFilter) {
+            return item.deptId && allowedDeptIds.includes(String(item.deptId));
+          }
+          return true;
+        })
+        .map(item => {
+          const node = {
+            id: item.deptId,
+            label: item.deptName,
+            children: [],
+            disabled: false,
+            isUser: false
+          };
+
+          // 添加用户到子节点
+          if (item.userList && item.userList.length > 0) {
+            item.userList.forEach(user => {
+              node.children.push({
+                id: user.userId,
+                label: user.nickName || user.userName,
+                deptId: item.deptId,
+                isUser: true,
+                disabled: false,
+                userName: user.userName
+              });
             });
-          });
-        }
+          }
 
-        // 递归处理子部门
-        if (item.children && item.children.length > 0) {
-          const childDepts = this.formatDeptUserTree(item.children);
-          node.children = [...node.children, ...childDepts];
-        }
+          // 递归处理子部门
+          if (item.children && item.children.length > 0) {
+            const childDepts = this.formatDeptUserTree(item.children, level + 1);
+            if (childDepts && childDepts.length > 0) {
+              node.children = [...node.children, ...childDepts];
+            }
+          }
 
-        // 如果没有子节点，则删除children属性
-        if (node.children.length === 0) {
-          delete node.children;
-        }
+          // 如果没有子节点，则删除children属性
+          if (node.children.length === 0) {
+            delete node.children;
+          }
 
-        return node;
-      });
+          return node;
+        });
     },
     loadDeptByUserId(userId) {
       // 根据用户ID查找用户信息，获取部门ID
@@ -755,6 +1035,10 @@ export default {
     getDetail(id) {
       dispatchAllDetails({ id }).then(response => {
         const { document, documentProcessList, putEdit } = response.data;
+        getDocumentImageList({ documentId: id }).then(res => {
+          this.getUploadFiles = res.data || [];
+        });
+
         this.putEditStatus = putEdit;
         if (putEdit === 1) {
           this.setDefaultReviewer('zxzr1');
@@ -774,14 +1058,14 @@ export default {
         this.form.issuingAgency = document.issuingAgency || '';
 
         this.form.remarks = document.remark;
-        
+
         // 反显创建人信息
         if (document.createId) {
-          console.log(document.createId,'document.createId');
+          console.log(document.createId, 'document.createId');
           // 直接使用documentProcessList中的nickName字段
           const creatorProcess = documentProcessList.find(p => p.userId === document.createId);
-          this.form.creator = creatorProcess ? (creatorProcess.nickName || '未知') : '未知';
-          console.log(this.form.creator,'this.form.creator');
+          this.form.creator = creatorProcess ? creatorProcess.nickName || '未知' : '未知';
+          console.log(this.form.creator, 'this.form.creator');
         }
 
         if (documentProcessList && documentProcessList.length > 0) {
@@ -790,7 +1074,8 @@ export default {
             no: index + 1,
             item: p.returnRemark,
             handler: p.nickName || '未知',
-            time: p.processTime
+            time: p.processTime,
+            notApprovedUserNames: p.notApprovedUserNames ? '未处理' : '已处理'
           }));
 
           const records = [];
@@ -817,14 +1102,31 @@ export default {
               this.form.leadDeptTime = p.processTime ? p.processTime.split(' ')[1] : '';
               // 反显附件
               this.form.managerAttachment = p.attachment || '';
-
-            } else if(p.returnRemark.includes('收文部门经理分发部门人员完成')|| p.returnRemark.includes('收文部门人员阅读完成')) {
+            } else if (p.returnRemark.includes('收文部门经理分发部门人员完成') || p.returnRemark.includes('收文部门人员阅读完成')) {
               records.push({
-                text:  (p.remark ? `${p.remark}` : p.returnRemark),
+                id: p.id,
+                text: p.remark ? `${p.remark}` : p.returnRemark,
                 handler: p.nickName || '未知',
                 date: p.processTime ? p.processTime.split(' ')[0] : '',
                 time: p.processTime ? p.processTime.split(' ')[1] : ''
               });
+              if (p.deptId == '103') {
+                this.form.comprehensiveRecords.push({
+                  id: p.id,
+                  text: p.remark ? `${p.remark}` : p.returnRemark,
+                  handler: p.nickName || '未知',
+                  date: p.processTime ? p.processTime.split(' ')[0] : '',
+                  time: p.processTime ? p.processTime.split(' ')[1] : ''
+                });
+              } else {
+                this.form.otherRecords.push({
+                  id: p.id,
+                  text: p.remark ? `${p.remark}` : p.returnRemark,
+                  handler: p.nickName || '未知',
+                  date: p.processTime ? p.processTime.split(' ')[0] : '',
+                  time: p.processTime ? p.processTime.split(' ')[1] : ''
+                });
+              }
             }
           });
           this.form.processingRecords = records;
@@ -850,7 +1152,7 @@ export default {
         getDeptUserTree().then(res => {
           const getUsersByDeptId = (deptId, tree) => {
             let users = [];
-            const findNode = (nodes) => {
+            const findNode = nodes => {
               for (const node of nodes) {
                 if (node.deptId === deptId) {
                   users = node.userList || [];
@@ -863,7 +1165,7 @@ export default {
             };
             findNode(tree);
             return users;
-          }
+          };
           this.currentDeptUsers = getUsersByDeptId(this.userInfo.deptId, res.data);
         });
       }
@@ -922,7 +1224,7 @@ export default {
       })
         .then(() => {
           // 参考列表页的综合岗办结逻辑
-          return officialDocumentHasBeenCompleted({ 
+          return officialDocumentHasBeenCompleted({
             docId: docId,
             documentRemark: this.form.remarks
           });
@@ -934,7 +1236,7 @@ export default {
         .catch(() => { });
     },
     handleSubmit() {
-      this.$refs.documentForm.validate((valid) => {
+      this.$refs.documentForm.validate(valid => {
         if (valid) {
           const payload = {
             secrecy: this.form.superiorDocNumber,
@@ -950,7 +1252,21 @@ export default {
             issuingAgency: this.form.issuingAgency
           };
 
-          addDocument(payload).then(() => {
+          addDocument(payload).then(res => {
+            if (this.uploadFiles && this.uploadFiles.length > 0) {
+              const documentSaveObj = this.uploadFiles.map(item => ({
+                document_id: res.data,
+                url: item.urlBack,
+                file_name: item.name,
+                edit: false
+              }));
+              if (res.data) {
+                documentImageSave(documentSaveObj).then(ress => {
+                  console.log('🚀 ~ ress ~ :', ress);
+                });
+              }
+            }
+
             this.$modal.msgSuccess('新增成功');
             this.$router.push('/document/documentReceive');
           });
@@ -960,7 +1276,8 @@ export default {
       });
     },
     handleProcess() {
-      this.$refs.documentForm.validate((valid) => {
+      console.log('🚀 ~ this.form.deptDistribution ~ :', this.form.deptDistribution)
+      this.$refs.documentForm.validate(valid => {
         if (valid) {
           const docId = this.$route.query.id;
           let promise;
@@ -992,7 +1309,8 @@ export default {
               }
               promise = documentReceivingLeaderDistribute({
                 docId: docId,
-                userIds: this.form.deptDistribution.join(','),
+                // userIds: this.form.deptDistribution && this.form.deptDistribution.join(','),
+                userIds: `${this.form.deptDistribution},${this.form.deptDistribution1.join(',')}`,
                 remark: this.form.leadDeptOpinion,
                 attachment: this.form.managerAttachment || '',
                 documentRemark: this.form.remarks
@@ -1064,11 +1382,11 @@ export default {
     },
     handleExit() {
       // 退出逻辑
-      this.$router.go(-1)
+      this.$router.go(-1);
     },
     showReadButton() {
       // 显示已阅按钮的条件：只有状态5时部门成员且有相应权限才显示
-      return this.putEditStatus === 5 && this.userPermissions.canDepartmentReadConfirm;
+      return this.putEditStatus === 5;
     },
     handleNextHandlerConfirm() {
       if (!this.selectedNextReviewer || this.selectedNextReviewer.length === 0) {
@@ -1092,23 +1410,21 @@ export default {
       this.showNextHandlerDialog = true;
 
       // 更新选项的禁用状态
-      this.$nextTick(() => {
-        this.updateOptionsDisabled();
-      });
+      // this.$nextTick(() => {
+      //     this.updateOptionsDisabled();
+      // });
     },
     handleNextReviewerChange(value) {
       // 检查是否超过限制
-      if (value && value.length > this.currentSelectionLimit) {
-        this.$message.warning(`最多只能选择${this.currentSelectionLimit}人`);
-        return;
-      }
+      // if (value && value.length > this.currentSelectionLimit) {
+      //     this.$message.warning(`最多只能选择${this.currentSelectionLimit}人`);
+      //     return;
+      // }
 
       // 检查是否尝试删除锁定的用户
       if (this.lockedUserId && value) {
         const lockedUserPath = this.findUserPath(this.lockedUserId, this.deptUserTreeOptions);
-        const hasLockedUser = lockedUserPath && value.some(path =>
-          JSON.stringify(path) === JSON.stringify(lockedUserPath)
-        );
+        const hasLockedUser = lockedUserPath && value.some(path => JSON.stringify(path) === JSON.stringify(lockedUserPath));
 
         if (!hasLockedUser) {
           this.$message.warning('用户不可删除');
@@ -1125,9 +1441,9 @@ export default {
       this.selectedNextReviewer = value;
 
       // 更新选项的禁用状态
-      this.$nextTick(() => {
-        this.updateOptionsDisabled();
-      });
+      // this.$nextTick(() => {
+      //     this.updateOptionsDisabled();
+      // });
     },
     handleSubmitAction() {
       if (this.isNew) {
@@ -1153,9 +1469,318 @@ export default {
         this.form.directorStatus = '2';
       }
       this.handleProcess();
+    },
+    confirmPrint() {
+
+      const printContent = document.getElementById('printArea').outerHTML;
+      const printWindow = window.open(
+        '',
+        '_blank',
+      );
+      printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title></title>
+      <style>
+        @page {
+          size: A4;
+          margin: 10mm;
+        }
+        * {
+          box-sizing: border-box;
+        }
+        body {
+          margin:0;
+          background:#fff;
+          font-family:
+          "Microsoft YaHei",
+          Arial,
+          sans-serif;
+
+        }
+        .dialogVisible-wrap {
+          padding: 40px 40px 0 40px;
+
+          /* ========== 对话框标题样式 ========== */
+          .record-list{
+            padding: 5px;
+          }
+          .dialog-title {
+            font-size: 30px;
+            text-align: center;
+            letter-spacing: 4px;
+            color: red;
+          }
+
+          .doc-header {
+            padding: 5px;
+            display: flex;
+            justify-content: space-between;
+          }
+
+          .header-top {
+            display: flex;
+          }
+
+          .security-level {
+            color: red;
+          }
+
+          .docSignWord-table {
+            width: 100%;
+            border: 1px solid #000;
+            margin-bottom: 0;
+            display: flex;
+            text-align: center;
+            flex-wrap: wrap;
+            border-left: none;
+            border-right: none;
+          }
+
+          .docSignWord-table1 {
+            width: 100%;
+            border: 1px solid #000;
+            margin-bottom: 0;
+            display: flex;
+            text-align: center;
+            flex-wrap: wrap;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+          }
+
+          .docSignWord-table-item {
+            display: flex;
+            width: 50%;
+            height: 40px;
+          }
+
+          .docSignWord-table-item-unit {
+            display: flex;
+            width: 100%;
+            height: 40px;
+          }
+
+          .docSignWord-label-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+            width: 110px;
+            padding: 5px 0;
+          }
+
+          .label-cell-unit {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+            width: 110px;
+            padding: 5px 0;
+          }
+
+          .docSignWord-input-cell {
+            white-space: nowrap;
+            text-align: left;
+            padding: 5px 0;
+            flex: 1;
+          }
+
+          .input-cell-unit {
+            white-space: nowrap;
+            text-align: left;
+            padding: 5px 0;
+            flex: 1;
+          }
+
+          .docSignWord-div {
+            padding: 5px 0;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-div-wrap {
+            padding: 5px 0;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+          }
+
+          .docSignWord-div-handle {
+            display: flex;
+            justify-content: space-between;
+          }
+
+          .docSignWord-title-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-title-input {
+            white-space: nowrap;
+            text-align: left;
+            min-height: 60px;
+          }
+
+          .docSignWord-title-input1 {
+            white-space: nowrap;
+            text-align: left;
+            min-height: 40px;
+          }
+
+          .docSignWord-title-input2 {
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-zhu {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-zhu-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-zhu-input {
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-ban {
+            display: flex;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-ban-item1 {
+            display: flex;
+            width: 100%;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-item1 .handler-info {
+            flex-shrink: 0;
+          }
+
+          .docSignWord-ban-item {
+            display: flex;
+            width: 50%;
+            border-right: 1px dashed #ccc;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-item2 {
+            display: flex;
+            width: 50%;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+
+            padding: 5px;
+            border-bottom: 1px dashed #ccc;
+          }
+
+          .docSignWord-ban-input {
+            text-align: left;
+            min-height: 80px;
+            padding: 5px 0;
+            flex-wrap: wrap;
+            display: flex;
+            word-break: break-word;
+          }
+
+          .docSignWord-ban-item .docSignWord-ban-input {
+            padding: 5px;
+          }
+
+          .record-text {
+            margin-right: 10px;
+          }
+
+          .docSignWord-time {
+            display: flex;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-time-item1 {
+            flex: 1;
+            display: flex;
+            padding: 5px 0;
+            gap: 5px;
+            border-right: 1px solid #000;
+          }
+
+          .docSignWord-time-item2 {
+            flex: 1;
+            display: flex;
+            padding: 5px 5px 0 5px;
+            gap: 5px;
+            border-right: 1px solid #000;
+          }
+
+          .docSignWord-time-item3 {
+            flex: 1;
+            display: flex;
+            padding: 5px 5px 0 5px;
+            gap: 5px;
+          }
+
+          .docSignWord-time-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-time-input {
+            text-align: left;
+          }
+        }
+
+        #printArea {
+
+          width:794px;
+
+          margin:0 auto;
+
+          background:#fff;
+
+        }
+        .dialog-title {
+          text-align:center;
+          font-size:20px;
+          font-weight:bold;
+          margin-bottom:20px;
+        }
+        /* 保留你的原打印样式 */
+      </style>
+    </head>
+    <body>
+      ${printContent}
+    </body>
+    </html>
+  `);
+
+      printWindow.document.close();
+      printWindow.onload = function () {
+        printWindow.print();
+        printWindow.close();
+      };
+
+    },
+
+    closePreview() {
+      // 清理资源
+      this.printImage = null;
     }
   }
-}
+};
 </script>
 
 <style scoped>
@@ -1164,7 +1789,7 @@ export default {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .page-title {
@@ -1177,7 +1802,7 @@ export default {
   font-size: 24px;
   font-weight: bold;
   margin: 0;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .document-form {
@@ -1217,7 +1842,7 @@ export default {
   width: 120px;
   min-width: 120px;
   color: #000;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   padding: 12px 8px;
   vertical-align: middle;
 }
@@ -1233,7 +1858,7 @@ export default {
   border: none !important;
   background: transparent !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .table-input .el-input__inner {
@@ -1241,7 +1866,7 @@ export default {
   background: transparent !important;
   padding: 0 !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   box-shadow: none !important;
   outline: none !important;
 }
@@ -1268,7 +1893,7 @@ export default {
   background: transparent !important;
   padding: 0 !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   box-shadow: none !important;
   outline: none !important;
 }
@@ -1295,7 +1920,7 @@ export default {
   background: transparent !important;
   padding: 0 !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   box-shadow: none !important;
   outline: none !important;
 }
@@ -1322,7 +1947,7 @@ export default {
   background: transparent !important;
   padding: 0 !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   resize: none;
   box-shadow: none !important;
   outline: none !important;
@@ -1401,8 +2026,9 @@ export default {
 .file-info {
   flex: 1;
   color: #333;
+  cursor: pointer;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .attachment-actions {
@@ -1411,8 +2037,8 @@ export default {
 }
 
 .attachment-actions .el-button {
-  background-color: #409EFF !important;
-  border-color: #409EFF !important;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
   color: #fff !important;
 }
 
@@ -1422,8 +2048,8 @@ export default {
 }
 
 .read-button-wrapper .el-button {
-  background-color: #409EFF !important;
-  border-color: #409EFF !important;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
   color: #fff !important;
 }
 
@@ -1434,8 +2060,8 @@ export default {
 
 /* 弹窗按钮样式 */
 .el-dialog__footer .el-button--primary {
-  background-color: #409EFF !important;
-  border-color: #409EFF !important;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
   color: #fff !important;
 }
 
@@ -1445,8 +2071,8 @@ export default {
 }
 
 .el-dialog__footer .el-button--default {
-  background-color: #409EFF !important;
-  border-color: #409EFF !important;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
   color: #fff !important;
 }
 
@@ -1495,15 +2121,22 @@ export default {
   color: #f56c6c;
   font-weight: 500;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .dept-distribution {
   margin-top: 8px;
 }
 
+.dept-distribution-wrap {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
 .dept-distribution-content {
   display: flex;
+  width: 50%;
   align-items: center;
   gap: 8px;
 }
@@ -1512,7 +2145,7 @@ export default {
   color: #333;
   font-weight: 500;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -1529,14 +2162,14 @@ export default {
   padding: 4px 8px;
   /* background: #f5f7fa; */
   border-radius: 4px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   text-align: right;
 }
 
 .handler-time {
   font-size: 12px;
   color: #666;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .processing-record {
@@ -1548,7 +2181,7 @@ export default {
   font-weight: 500;
   margin-bottom: 8px;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .record-list {
@@ -1565,7 +2198,8 @@ export default {
   padding: 4px 0;
   border-bottom: 1px solid #ddd;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
+  gap: 5px;
 }
 
 .record-item:last-child {
@@ -1575,13 +2209,13 @@ export default {
 .record-text {
   color: #333;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .record-info {
   font-size: 12px;
   color: #666;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .read-section {
@@ -1609,8 +2243,8 @@ export default {
 }
 
 .action-buttons .el-button {
-  background-color: #409EFF !important;
-  border-color: #409EFF !important;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
   color: #fff !important;
 }
 
@@ -1639,7 +2273,7 @@ export default {
   margin-bottom: 20px;
   font-size: 18px;
   font-weight: bold;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   text-align: center;
 }
 
@@ -1699,16 +2333,319 @@ export default {
   background-color: #ffffff !important;
   border: none !important;
 }
+
 ::v-deep .el-textarea .el-textarea__inner {
   background-color: #ffffff !important;
   border: none !important;
 }
+
 ::v-deep .el-textarea__inner {
   background-color: #ffffff !important;
   border: none !important;
 }
+
 ::v-deep .el-input__inner {
   background-color: #ffffff !important;
   border: none !important;
+}
+
+
+
+.dialogVisible-wrap {
+  padding: 40px 40px 0 40px;
+
+  /* ========== 对话框标题样式 ========== */
+  .dialog-title {
+    font-size: 30px;
+    text-align: center;
+    letter-spacing: 4px;
+    color: red;
+  }
+
+  .doc-header {
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .header-top {
+    display: flex;
+  }
+
+  .security-level {
+    color: red;
+  }
+
+  .docSignWord-table {
+    width: 100%;
+    border: 1px solid #000;
+    margin-bottom: 0;
+    display: flex;
+    text-align: center;
+    flex-wrap: wrap;
+    border-left: none;
+    border-right: none;
+  }
+
+  .docSignWord-table1 {
+    width: 100%;
+    border: 1px solid #000;
+    margin-bottom: 0;
+    display: flex;
+    text-align: center;
+    flex-wrap: wrap;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+
+  .docSignWord-table-item {
+    display: flex;
+    width: 50%;
+    height: 40px;
+  }
+
+  .docSignWord-table-item-unit {
+    display: flex;
+    width: 100%;
+    height: 40px;
+  }
+
+  .docSignWord-label-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+    width: 110px;
+    padding: 5px 0;
+  }
+
+  .label-cell-unit {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+    width: 110px;
+    padding: 5px 0;
+  }
+
+  .docSignWord-input-cell {
+    white-space: nowrap;
+    text-align: left;
+    padding: 5px 0;
+    flex: 1;
+  }
+
+  .input-cell-unit {
+    white-space: nowrap;
+    text-align: left;
+    padding: 5px 0;
+    flex: 1;
+  }
+
+  .docSignWord-div {
+    padding: 5px 0;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-div-wrap {
+    padding: 5px 0;
+    border-bottom: 1px solid #000;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .docSignWord-div-handle {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .docSignWord-title-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-title-input {
+    white-space: nowrap;
+    text-align: left;
+    min-height: 60px;
+  }
+
+  .docSignWord-title-input1 {
+    white-space: nowrap;
+    text-align: left;
+    min-height: 40px;
+  }
+
+  .docSignWord-title-input2 {
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-zhu {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-zhu-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-zhu-input {
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-ban {
+    display: flex;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-ban-item1 {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .docSignWord-ban-item1 .handler-info {
+    flex-shrink: 0;
+  }
+
+  .docSignWord-ban-item {
+    display: flex;
+    width: 50%;
+    border-right: 1px dashed #ccc;
+    flex-direction: column;
+  }
+
+  .docSignWord-ban-item2 {
+    display: flex;
+    width: 50%;
+    flex-direction: column;
+  }
+
+  .docSignWord-ban-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+
+    padding: 5px;
+    border-bottom: 1px dashed #ccc;
+  }
+
+  .docSignWord-ban-input {
+    text-align: left;
+    min-height: 80px;
+    padding: 5px 0;
+    flex-wrap: wrap;
+    display: flex;
+    word-break: break-word;
+  }
+
+  .docSignWord-ban-item .docSignWord-ban-input {
+    padding: 5px;
+  }
+
+  .record-text {
+    margin-right: 10px;
+  }
+
+  .docSignWord-time {
+    display: flex;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-time-item1 {
+    flex: 1;
+    display: flex;
+    padding: 5px 0;
+    gap: 5px;
+    border-right: 1px solid #000;
+  }
+
+  .docSignWord-time-item2 {
+    flex: 1;
+    display: flex;
+    padding: 5px 5px 0 5px;
+    gap: 5px;
+    border-right: 1px solid #000;
+  }
+
+  .docSignWord-time-item3 {
+    flex: 1;
+    display: flex;
+    padding: 5px 5px 0 5px;
+    gap: 5px;
+  }
+
+  .docSignWord-time-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-time-input {
+    text-align: left;
+  }
+}
+
+.docSignWord-fu {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.docSignWord-fu-cell {
+  color: red;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.docSignWord-fu-input {
+  white-space: nowrap;
+  text-align: left;
+  min-height: 30px;
+}
+
+.docSignWord-btn {
+  margin-top: 10px;
+  padding: 0px 50px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+
+.print-area {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  width: 794px;
+}
+
+/* 打印时 */
+@media print {
+
+  body * {
+    visibility: hidden;
+  }
+
+  #printArea,
+  #printArea * {
+    visibility: visible;
+  }
+
+  #printArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 794px !important;
+    background: #fff;
+
+  }
+
 }
 </style>

@@ -58,7 +58,7 @@
               <el-form-item label="是否消费者本人" prop="isSelf">
                 <el-radio-group v-model="form.isSelf" disabled>
                   <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
-                  }}</el-radio>
+                    }}</el-radio>
                 </el-radio-group>
               </el-form-item>
             </el-col>
@@ -657,7 +657,7 @@
             <el-form-item label="当事人资料" prop="consumerAttachment">
               <!--            <file-upload v-if="form.consumerAttachment" v-model="form.consumerAttachment" :isShowDele="false" :isShowBtn="false" :isShowTip="false" /> -->
               <!--            <span v-else>无</span>-->
-              <FileList :fileList="form.consumerAttachment" emptyText="无"/>
+              <FileList :fileList="form.consumerAttachment" emptyText="无" />
             </el-form-item>
           </el-col>
           <el-col :span="24">

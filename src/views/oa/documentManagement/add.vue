@@ -12,7 +12,7 @@
         <table class="word-table">
           <tr>
             <td class="label-cell">发文类型</td>
-            <td class="input-cell" colspan="3">
+            <td class="word-input-cell" colspan="3">
               <el-select v-model="form.type" placeholder="请选择发文类型" :disabled="isReadOnly" class="table-select"
                 @change="handleTypeChange">
                 <el-option v-for="dict in dict.type.document_sending_type" :key="dict.value" :label="dict.label"
@@ -28,19 +28,19 @@
           <table class="word-table">
             <tr v-if="shouldShowField('wordSize')">
               <td class="label-cell">发文字号</td>
-              <td class="input-cell">
+              <td class="word-input-cell">
                 <el-input v-model="form.wordSize" placeholder="保存后由系统自动生成" :disabled="true"
                   class="table-input"></el-input>
               </td>
               <td class="label-cell" v-if="shouldShowField('draftDate')">发文日期</td>
-              <td class="input-cell" v-if="shouldShowField('draftDate')">
+              <td class="word-input-cell" v-if="shouldShowField('draftDate')">
                 <el-date-picker v-model="form.draftDate" type="date" placeholder="选择发文日期"
                   value-format="yyyy-MM-dd HH:mm:ss" :disabled="isReadOnly" class="table-date-picker"></el-date-picker>
               </td>
             </tr>
             <tr v-if="shouldShowField('urgencyLevel')">
               <td class="label-cell">紧急程度</td>
-              <td class="input-cell" colspan="3">
+              <td class="word-input-cell" colspan="3">
                 <el-select v-model="form.urgencyLevel" placeholder="选择紧急程度" :disabled="isReadOnly" class="table-select">
                   <el-option v-for="dict in dict.type.official_urgency_level" :key="dict.value" :label="dict.label"
                     :value="dict.value"></el-option>
@@ -53,10 +53,11 @@
           <table class="word-table" v-if="shouldShowField('mainDeliveryAgency')">
             <tr>
               <td class="label-cell">主送单位</td>
-              <td class="input-cell" colspan="3">
+              <td class="word-input-cell" colspan="3">
                 <el-input v-model="form.mainDeliveryAgency" placeholder="请输入主送单位" :disabled="isReadOnly"
                   class="table-input"></el-input>
-                <quick-reply  style="margin: 5px 10px;" v-if="!isReadOnly" :isShowSave="false" :onSelect="(phrase) => handleSelectPhrase('mainDeliveryAgency', phrase)"
+                <quick-reply style="margin: 5px 10px" v-if="!isReadOnly" :isShowSave="false"
+                  :onSelect="phrase => handleSelectPhrase('mainDeliveryAgency', phrase)"
                   :inputContent="form.mainDeliveryAgency" :superviseId="$route.query.id" :buttonWidth="'90px'"
                   :buttonHeight="'30px'" @collected="handleCollected" />
               </td>
@@ -67,37 +68,48 @@
           <table class="word-table">
             <tr v-if="shouldShowField('title')">
               <td class="label-cell">标题</td>
-              <td class="input-cell" colspan="3">
+              <td class="word-input-cell" colspan="3">
                 <el-input v-model="form.title" placeholder="请输入标题" maxlength="200" show-word-limit
                   :disabled="isReadOnly" class="table-input"></el-input>
               </td>
             </tr>
             <tr v-if="shouldShowField('text')">
               <td class="label-cell">内容</td>
-              <td class="input-cell" colspan="3">
-                <el-input v-model="form.text" type="textarea" :rows="5" placeholder="请输入内容" maxlength="2000"
-                  show-word-limit :disabled="isReadOnly" class="table-textarea"></el-input>
+              <td class="word-input-cell" colspan="3">
+                <!-- <el-input
+                                    v-model="form.text"
+                                    type="textarea"
+                                    :rows="5"
+                                    placeholder="请输入内容"
+                                    maxlength="2000"
+                                    show-word-limit
+                                    :disabled="isReadOnly"
+                                    class="table-textarea"
+                                ></el-input> -->
+                <RichEditor v-model="form.text" :disabled="isReadOnly" />
                 <!-- 浏览套头文件按钮，当有公文ID时显示 -->
                 <div class="content-actions" v-if="form.id">
                   <el-button type="info" size="small" @click="previewRedHeaderDoc">
-                    <i class="el-icon-document"></i> 浏览套头文件
+                    <i class="el-icon-document"></i>
+                    浏览套头文件
                   </el-button>
                 </div>
               </td>
             </tr>
           </table>
-
-            <!-- 附件表格 -->
-            <table class="word-table" v-if="shouldShowField('filePath')">
+          <!-- 附件表格 -->
+          <table class="word-table" v-if="shouldShowField('filePath')">
             <tr>
               <td class="label-cell">附件</td>
               <td class="input-cell" colspan="3">
-                <FileUpload v-if="!isReadOnly" v-model="form.filePath" style="margin: 5px 10px;" />
+                <FileUpload v-if="!isReadOnly" v-model="form.filePath" style="margin: 5px 10px"
+                  @upload-success="handleFileChange" />
                 <div v-else-if="form.filePath" class="attachment-list">
                   <div v-for="(filePath, index) in form.filePath.split(',')" :key="index" class="attachment-item"
                     v-if="filePath.trim()">
-                    <span class="file-info">
-                      <i class="el-icon-document"></i> {{ getDisplayFileName(filePath) }}
+                    <span class="file-info" @click="previewFileOnline({ name: getFileName(filePath) })">
+                      <i class="el-icon-document"></i>
+                      {{ getDisplayFileName(filePath) }}
                     </span>
                     <div class="attachment-actions">
                       <el-button type="primary" size="mini"
@@ -107,8 +119,8 @@
                     </div>
                   </div>
                 </div>
-                <div v-else style="display: flex;align-items: center;justify-content: center;">
-                  <span style="color: #C0C4CC;">无附件</span>
+                <div v-else style="display: flex; align-items: center; justify-content: center">
+                  <span style="color: #c0c4cc">无附件</span>
                 </div>
               </td>
             </tr>
@@ -120,23 +132,22 @@
               <td class="label-cell" v-if="shouldShowField('cc')">抄送</td>
               <td class="input-cell" v-if="shouldShowField('cc')">
                 <el-input v-model="form.cc" placeholder="请输入抄送单位" :disabled="isReadOnly" class="table-input"></el-input>
-                <quick-reply  style="margin: 5px 10px;" :isShowSave="false" v-if="!isReadOnly" :onSelect="(phrase) => handleSelectPhrase('cc', phrase)"
-                  :inputContent="form.cc" :superviseId="$route.query.id" :buttonWidth="'90px'" :buttonHeight="'30px'"
+                <quick-reply style="margin: 5px 10px" :isShowSave="false" v-if="!isReadOnly"
+                  :onSelect="phrase => handleSelectPhrase('cc', phrase)" :inputContent="form.cc"
+                  :superviseId="$route.query.id" :buttonWidth="'90px'" :buttonHeight="'30px'"
                   @collected="handleCollected" />
               </td>
               <td class="label-cell" v-if="shouldShowField('internalCirculation')">内部发送</td>
               <td class="input-cell" v-if="shouldShowField('internalCirculation')">
                 <el-input v-model="form.internalCirculation" placeholder="请输入内部发送" :disabled="isReadOnly"
                   class="table-input"></el-input>
-                <quick-reply  style="margin: 5px 10px;" :isShowSave="false"   v-if="!isReadOnly"
-                  :onSelect="(phrase) => handleSelectPhrase('internalCirculation', phrase)"
+                <quick-reply style="margin: 5px 10px" :isShowSave="false" v-if="!isReadOnly"
+                  :onSelect="phrase => handleSelectPhrase('internalCirculation', phrase)"
                   :inputContent="form.internalCirculation" :superviseId="$route.query.id" :buttonWidth="'90px'"
                   :buttonHeight="'30px'" @collected="handleCollected" />
               </td>
             </tr>
           </table>
-
-
 
           <!-- 联系人和联系电话表格 -->
           <table class="word-table" v-if="shouldShowField('contactPerson') || shouldShowField('contactPhone')">
@@ -155,8 +166,6 @@
           </table>
 
           <!-- 套头模板表格 - 已隐藏，通过发文类型自动设置 -->
-
-        
         </template>
 
         <!-- 打印份数和印发日期表格 -->
@@ -194,9 +203,6 @@
           </el-alert>
         </div> -->
 
-
-
-
         <!-- 审批意见表格 -->
         <table class="word-table">
           <tr>
@@ -209,22 +215,24 @@
                 </el-radio-group> -->
                 <el-input v-model="directorRemark" type="textarea" :rows="3" placeholder="填写意见"
                   :disabled="editStatus !== 3" class="table-textarea"></el-input>
-                <quick-reply  style="margin: 5px 10px;" v-if="editStatus === 3"
-                  :onSelect="(phrase) => handleSelectPhrase('directorRemark', phrase)" :inputContent="directorRemark"
+                <quick-reply style="margin: 5px 10px" v-if="editStatus === 3"
+                  :onSelect="phrase => handleSelectPhrase('directorRemark', phrase)" :inputContent="directorRemark"
                   :superviseId="$route.query.id" :buttonWidth="'90px'" :buttonHeight="'30px'"
                   @collected="handleCollected" />
                 <div class="handler-info" v-if="directorHandler">
                   <span class="handler-time">处理人: {{ directorHandler }} 日期: {{ directorDate }} 时间: {{ directorTime
-                  }}</span>
+                    }}</span>
                 </div>
               </div>
             </td>
           </tr>
 
-
-
           <tr>
-            <td class="label-cell">综合管理部<br>经理意见</td>
+            <td class="label-cell">
+              综合管理部
+              <br />
+              经理意见
+            </td>
             <td class="input-cell" colspan="3">
               <div class="approval-section">
                 <!-- <el-radio-group v-model="comprehensiveStatus" v-if="editStatus === 2">
@@ -233,8 +241,8 @@
             </el-radio-group> -->
                 <el-input v-model="comprehensiveRemark" type="textarea" :rows="3" placeholder="填写审批意见"
                   :disabled="editStatus !== 2" class="table-textarea"></el-input>
-                <quick-reply  style="margin: 5px 10px;" v-if="editStatus === 2"
-                  :onSelect="(phrase) => handleSelectPhrase('comprehensiveRemark', phrase)"
+                <quick-reply style="margin: 5px 10px" v-if="editStatus === 2"
+                  :onSelect="phrase => handleSelectPhrase('comprehensiveRemark', phrase)"
                   :inputContent="comprehensiveRemark" :superviseId="$route.query.id" :buttonWidth="'90px'"
                   :buttonHeight="'30px'" @collected="handleCollected" />
                 <div class="handler-info" v-if="comprehensiveHandler">
@@ -254,12 +262,13 @@
                 </el-radio-group> -->
                 <el-input v-model="managerRemark" type="textarea" :rows="3" placeholder="填写意见"
                   :disabled="editStatus !== 1" class="table-textarea"></el-input>
-                <quick-reply  style="margin: 5px 10px;" v-if="editStatus === 1" :onSelect="(phrase) => handleSelectPhrase('managerRemark', phrase)"
-                  :inputContent="managerRemark" :superviseId="$route.query.id" :buttonWidth="'90px'"
-                  :buttonHeight="'30px'" @collected="handleCollected" />
+                <quick-reply style="margin: 5px 10px" v-if="editStatus === 1"
+                  :onSelect="phrase => handleSelectPhrase('managerRemark', phrase)" :inputContent="managerRemark"
+                  :superviseId="$route.query.id" :buttonWidth="'90px'" :buttonHeight="'30px'"
+                  @collected="handleCollected" />
                 <div class="handler-info" v-if="managerHandler">
                   <span class="handler-time">处理人: {{ managerHandler }} 日期: {{ managerDate }} 时间: {{ managerTime
-                  }}</span>
+                    }}</span>
                 </div>
               </div>
             </td>
@@ -270,8 +279,8 @@
               <div class="approval-section">
                 <el-input v-model="comprehensiveProcessRemark" type="textarea" :rows="3" placeholder="填写综合管理部处理意见"
                   :disabled="editStatus !== 4" class="table-textarea"></el-input>
-                <quick-reply  style="margin: 5px 10px;" v-if="editStatus === 4"
-                  :onSelect="(phrase) => handleSelectPhrase('comprehensiveProcessRemark', phrase)"
+                <quick-reply style="margin: 5px 10px" v-if="editStatus === 4"
+                  :onSelect="phrase => handleSelectPhrase('comprehensiveProcessRemark', phrase)"
                   :inputContent="comprehensiveProcessRemark" :superviseId="$route.query.id" :buttonWidth="'90px'"
                   :buttonHeight="'30px'" @collected="handleCollected" />
                 <div class="handler-info" v-if="comprehensiveProcessHandler">
@@ -324,7 +333,6 @@
             </td>
           </tr>
         </table> -->
-
       </el-form>
     </div>
 
@@ -334,21 +342,152 @@
       <el-button type="success" :disabled="!canClickApprove" @click="handleApprove">通过</el-button>
       <el-button type="danger" :disabled="!canClickReject" @click="handleReject">退回</el-button>
       <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
+      <el-button type="primary" :disabled="editStatus === null" @click="confirmPrint">打印</el-button>
       <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText
-      }}</el-button>
+        }}</el-button>
       <el-button v-if="canClickConfirmRead" type="info" @click="handleConfirmRead">已阅</el-button>
       <el-button @click="handleExit">退出</el-button>
     </div>
 
+    <div class="print-area">
+      <div class="dialogVisible-wrap" id="printArea">
+        <div slot="title" class="dialog-title">
+          <span>天津众和发文处理单</span>
+        </div>
+
+        <!-- 1. 公文头部：密级、缓急 -->
+        <div class="doc-header">
+          <div class="header-top">
+            <!-- <span class="security-level">密级</span>
+                    <span class="urgency-level">〔非密〕</span> -->
+          </div>
+          <div class="header-top" v-if="shouldShowField('urgencyLevel')">
+            <span class="security-level">紧急程度</span>
+            <span class="urgency-level">〔{{ form.urgencyLevel === 'routine' ? '普通' : form.urgencyLevel === 'emergency' ?
+              '一般' : '加急' }}〕</span>
+          </div>
+        </div>
+
+        <!-- 2. 信息表格 -->
+        <div v-if="form.type && visibleFields.fields.length > 0">
+          <div class="docSignWord-table">
+            <div class="docSignWord-table-item-unit">
+              <div class="label-cell-unit">发文类型</div>
+              <div class="input-cell-unit">{{ DM_DOCUMENT_SENDING_TYPE[form.type] || '' }}</div>
+            </div>
+            <div class="docSignWord-table-item">
+              <div class="docSignWord-label-cell" v-if="shouldShowField('wordSize')">发文字号</div>
+              <div class="docSignWord-input-cell">{{ form.wordSize || '' }}</div>
+            </div>
+            <div class="docSignWord-table-item" v-if="shouldShowField('draftDate')">
+              <div class="docSignWord-label-cell">发文日期</div>
+              <div class="docSignWord-input-cell">{{ form.draftDate || '' }}</div>
+            </div>
+            <div class="docSignWord-table-item-unit" v-if="shouldShowField('mainDeliveryAgency')">
+              <div class="label-cell-unit">主送单位</div>
+              <div class="input-cell-unit">{{ form.mainDeliveryAgency || '' }}</div>
+            </div>
+          </div>
+          <div class="docSignWord-div" v-if="shouldShowField('text')">
+            <div class="docSignWord-title-cell">内容</div>
+            <div class="docSignWord-title-input" v-html="form.text || ''"></div>
+          </div>
+
+          <!-- 3. 标题 -->
+          <div class="docSignWord-div">
+            <div class="docSignWord-title-cell">标题</div>
+            <div class="docSignWord-title-input1">{{ form.title || '' }}</div>
+          </div>
+          <div class="docSignWord-table1" v-if="shouldShowField('cc') || shouldShowField('internalCirculation')">
+            <div class="docSignWord-table-item" v-if="shouldShowField('cc')">
+              <div class="docSignWord-label-cell">抄送</div>
+              <div class="docSignWord-input-cell">{{ form.cc || '' }}</div>
+            </div>
+            <div class="docSignWord-table-item" v-if="shouldShowField('internalCirculation')">
+              <div class="docSignWord-label-cell">内部发送</div>
+              <div class="docSignWord-input-cell">{{ form.internalCirculation || '' }}</div>
+            </div>
+          </div>
+          <div class="docSignWord-table1" v-if="shouldShowField('contactPerson') || shouldShowField('contactPhone')">
+            <div class="docSignWord-table-item" v-if="shouldShowField('contactPerson')">
+              <div class="docSignWord-label-cell">联系人</div>
+              <div class="docSignWord-input-cell">{{ form.contactPerson || '' }}</div>
+            </div>
+            <div class="docSignWord-table-item" v-if="shouldShowField('contactPhone')">
+              <div class="docSignWord-label-cell">联系电话</div>
+              <div class="docSignWord-input-cell">{{ form.contactPhone || '' }}</div>
+            </div>
+          </div>
+        </div>
+        <!-- 3. 印发日期 -->
+        <div class="docSignWord-div-wrap" v-if="shouldShowField('issuingDate')">
+          <div class="docSignWord-title-cell">印发日期</div>
+          <div class="docSignWord-title-input2">{{ form.issuingDate || '' }}</div>
+        </div>
+
+        <!-- 4. 主任批示 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">主任批示</div>
+
+          <div class="docSignWord-div-handle">
+            <div class="docSignWord-title-input">
+              {{ directorRemark || '' }}
+            </div>
+            <div class="handler-info" v-if="directorHandler">
+              <span class="handler-time">处理人: {{ directorHandler }} 日期: {{ directorDate }} 时间: {{ directorTime }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. 综合管理部经理意见 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">综合管理部经理意见</div>
+          <div class="docSignWord-div-handle">
+            <div class="docSignWord-title-input">{{ comprehensiveRemark || '' }}</div>
+            <div class="handler-info" v-if="comprehensiveHandler">
+              <span class="handler-time">处理人: {{ comprehensiveHandler }} 日期: {{ comprehensiveDate }} 时间: {{
+                comprehensiveTime }}</span>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 6. 主办处室意见表格 -->
+        <div class="docSignWord-ban">
+          <div class="docSignWord-ban-item1">
+            <div class="docSignWord-ban-cell">综合管理部处理</div>
+            <div class="docSignWord-div-handle">
+              <div class="docSignWord-ban-input">{{ comprehensiveProcessRemark }}</div>
+              <div class="handler-info" v-if="comprehensiveProcessHandler">
+                <span class="handler-time">处理人: {{ comprehensiveProcessHandler }} 日期: {{ comprehensiveProcessDate }} 时间:
+                  {{
+                    comprehensiveProcessTime }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. 备注 -->
+        <div class="docSignWord-div">
+          <div class="docSignWord-title-cell">备注</div>
+          <div class="docSignWord-title-input">{{ form.documentRemark || '' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="printImage" style="display: none">
+      <img :src="printImage" id="printImage" style="width:794px;height:auto;" />
+    </div>
     <!-- 分隔线 -->
     <el-divider></el-divider>
 
     <!-- 处理流程 -->
     <div class="process-flow-section">
-      <h4 style="text-align: left;">处理流程</h4>
+      <h4 style="text-align: left">处理流程</h4>
       <el-table :data="processFlowList" style="width: 100%" border>
         <el-table-column prop="no" label="序号" width="80" align="center"></el-table-column>
         <el-table-column prop="record" label="处理记录" min-width="200"></el-table-column>
+        <el-table-column prop="notApprovedUserNames" label="处理状态" width="80"></el-table-column>
         <el-table-column prop="handler" label="处理人" width="120" align="center"></el-table-column>
         <el-table-column prop="time" label="处理时间" width="180" align="center"></el-table-column>
       </el-table>
@@ -361,9 +500,9 @@
       <el-form>
         <el-form-item label="下一处理人" required>
           <el-cascader v-model="selectedNextReviewer" :options="deptUserTreeOptions" :props="deptUserProps"
-            :placeholder="getPlaceholderText()" clearable multiple :multiple-limit="currentSelectionLimit"
-            @change="handleNextReviewerChange" style="width: 100%;border:1px solid #ccc;border-radius: 5px;">
-          </el-cascader>
+            :placeholder="getPlaceholderText()" clearable multiple checkStrictly="false"
+            @change="handleNextReviewerChange"
+            style="width: 100%; border: 1px solid #ccc; border-radius: 5px"></el-cascader>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -378,16 +517,31 @@
 import FileUpload from '@/components/FileUpload';
 import ViewFile from '@/components/viewFile';
 import QuickReply from '@/components/quickReply/index.vue';
+import RichEditor from '../components/RichEditor.vue';
+import DocSignDialog from '../components/DocSignDialog.vue';
 import conf from '@/conf.js';
-import { addDocument, documentLeaderCheck, documentComprehensiveCheck, documentDirectorCheck, departmentalDistribution, documentDirectorHair, readingConfirmation, submitDraft } from '@/api/oa/documentManagement';
+import {
+  addDocument,
+  documentImageSave,
+  documentLeaderCheck,
+  documentComprehensiveCheck,
+  documentDirectorCheck,
+  departmentalDistribution,
+  documentDirectorHair,
+  readingConfirmation,
+  submitDraft,
+  getDocumentImageList
+} from '@/api/oa/documentManagement';
 import { dispatchAllDetails } from '@/api/oa/documentReceive';
 import { getDirectorList, getDeptUserTree, getDocumentDict } from '@/api/oa/publicApi';
 import { getDeptLeaderUserTreeList, getPreviewRedHeaderDoc } from '@/api/oa/document';
 import { mapGetters } from 'vuex';
+import { getToken } from '@/utils/auth';
+import { DM_DOCUMENT_SENDING_TYPE } from '@/views/constant/CommonConstant.js';
 
 export default {
   name: 'DocumentAdd',
-  components: { FileUpload, ViewFile, QuickReply },
+  components: { FileUpload, ViewFile, QuickReply, RichEditor, DocSignDialog },
   dicts: ['document_sending_type', 'official_urgency_level'],
   data() {
     const validateNextApprover = (rule, value, callback) => {
@@ -406,6 +560,8 @@ export default {
       return callback();
     };
     return {
+      printImage: '',
+      DM_DOCUMENT_SENDING_TYPE: DM_DOCUMENT_SENDING_TYPE,
       editStatus: null,
       needsWrittenDate: false,
       nextApproverUsers: [],
@@ -439,7 +595,7 @@ export default {
         nextReviewer: [],
         deptDistribution: [],
         userIds: [],
-        status: null,
+        status: null
       },
       documentTemplates: [], // 套头模板列表
       // 流程处理相关数据
@@ -478,7 +634,9 @@ export default {
         nextReviewer: [{ validator: validateNextApprover, trigger: 'change' }],
         deptDistribution: [{ required: true, message: '请选择部门分发', trigger: 'change' }],
         userIds: [{ required: true, message: '请选择分发人员', trigger: 'change' }],
-        comprehensiveProcessRemark: [{ validator: (rule, value, callback) => this.validateRequiredField('comprehensiveProcessRemark', value, callback, '请填写综合管理部处理意见'), trigger: 'blur' }]
+        comprehensiveProcessRemark: [
+          { validator: (rule, value, callback) => this.validateRequiredField('comprehensiveProcessRemark', value, callback, '请填写综合管理部处理意见'), trigger: 'blur' }
+        ]
       },
       processFlowList: [],
       showNextHandlerDialog: false,
@@ -488,7 +646,7 @@ export default {
         value: 'id',
         label: 'label',
         children: 'children',
-        checkStrictly: true,
+        checkStrictly: false, // 改为 false，允许父节点全选子节点
         emitPath: true,
         multiple: true,
         disabled: 'disabled',
@@ -497,8 +655,11 @@ export default {
       // 当前状态下的选择限制
       currentSelectionLimit: 1,
       // 锁定的用户ID（不可删除）
-      lockedUserId: null
-    }
+      lockedUserId: null,
+
+      uploadFiles: [],
+      getUploadFiles: []
+    };
   },
   computed: {
     ...mapGetters(['permissions', 'userInfo']),
@@ -508,27 +669,62 @@ export default {
     // 根据发文类型获取需要显示的字段
     visibleFields() {
       const typeMap = {
-        '6': { // （发）津众和发
-          fields: ['wordSize', 'draftDate', 'mainDeliveryAgency', 'title', 'text', 'word', 'cc', 'internalCirculation', 'partNumber', 'filePath', 'contactPerson', 'contactPhone', 'issuingDate'],
+        6: {
+          // （发）津众和发
+          fields: [
+            'wordSize',
+            'draftDate',
+            'mainDeliveryAgency',
+            'title',
+            'text',
+            'word',
+            'cc',
+            'internalCirculation',
+            'partNumber',
+            'filePath',
+            'contactPerson',
+            'contactPhone',
+            'issuingDate'
+          ],
           wordPrefix: '津众和发'
         },
-        '7': { // （发）调解风险建议书
+        7: {
+          // （发）调解风险建议书
           fields: ['wordSize', 'draftDate', 'title', 'text', 'word', 'mainDeliveryAgency', 'cc', 'internalCirculation', 'contactPerson', 'contactPhone', 'filePath', 'issuingDate'],
           wordPrefix: '调解风险建议书'
         },
-        '8': { // （发）津众和党发
-          fields: ['wordSize', 'draftDate', 'urgencyLevel', 'mainDeliveryAgency', 'title', 'text', 'word', 'filePath', 'cc', 'internalCirculation', 'partNumber', 'contactPerson', 'contactPhone', 'issuingDate'],
+        8: {
+          // （发）津众和党发
+          fields: [
+            'wordSize',
+            'draftDate',
+            'urgencyLevel',
+            'mainDeliveryAgency',
+            'title',
+            'text',
+            'word',
+            'filePath',
+            'cc',
+            'internalCirculation',
+            'partNumber',
+            'contactPerson',
+            'contactPhone',
+            'issuingDate'
+          ],
           wordPrefix: '津众和党发'
         },
-        '9': { // （发）津众和函
+        9: {
+          // （发）津众和函
           fields: ['wordSize', 'draftDate', 'mainDeliveryAgency', 'title', 'text', 'word', 'filePath', 'internalCirculation', 'partNumber', 'contactPerson', 'contactPhone', 'issuingDate'],
           wordPrefix: '津众和函'
         },
-        '10': { // （发）津众和便函
+        10: {
+          // （发）津众和便函
           fields: ['wordSize', 'draftDate', 'mainDeliveryAgency', 'title', 'text', 'word', 'filePath', 'contactPerson', 'contactPhone', 'issuingDate'],
           wordPrefix: '津众和便函'
         },
-        '11': { // （发）主任办公会议纪要
+        11: {
+          // （发）主任办公会议纪要
           fields: ['wordSize', 'draftDate', 'title', 'text', 'word', 'filePath', 'issuingDate'],
           wordPrefix: '主任办公会议纪要'
         }
@@ -537,7 +733,7 @@ export default {
     },
     // 检查字段是否应该显示
     shouldShowField() {
-      return (fieldName) => {
+      return fieldName => {
         return this.visibleFields.fields.includes(fieldName);
       };
     },
@@ -545,9 +741,7 @@ export default {
     canClickNextHandler() {
       // 新建时可点击，或者有权限且状态为1,2时可点击，或修改重新提交时可点击
       const hasPermission = this.permissions && this.permissions.includes('document:leader:user');
-      return (this.editStatus === null && hasPermission) ||
-        ([1, 2].includes(this.editStatus) && hasPermission) ||
-        this.editStatus === 7;
+      return (this.editStatus === null && hasPermission) || ([1, 2].includes(this.editStatus) && hasPermission) || this.editStatus === 7;
     },
     canClickApprove() {
       // 状态1,2,3时可点击通过
@@ -603,6 +797,17 @@ export default {
     }
   },
   methods: {
+    // 上传文件列表
+    handleFileChange(files) {
+      this.uploadFiles = files;
+    },
+    //文签弹框
+    handleClose() {
+      this.dialogVisible = false;
+    },
+    openDocSignDialog() {
+      this.dialogVisible = true;
+    },
     // 处理发文类型变化
     handleTypeChange(typeValue, forceUpdate = true) {
       if (!typeValue) {
@@ -619,9 +824,7 @@ export default {
         const cleanLabel = selectedType.label.replace(/^（发）\s*/, '');
 
         // 模糊匹配：查找包含cleanLabel的套头模板
-        const matchedTemplate = this.documentTemplates.find(template =>
-          template.dictLabel && template.dictLabel.includes(cleanLabel)
-        );
+        const matchedTemplate = this.documentTemplates.find(template => template.dictLabel && template.dictLabel.includes(cleanLabel));
 
         if (matchedTemplate && forceUpdate) {
           this.form.word = matchedTemplate.dictValue;
@@ -645,6 +848,11 @@ export default {
     getDetails(id) {
       dispatchAllDetails({ id }).then(response => {
         const { document, documentProcessList, sendEdit } = response.data;
+        // 获取附件列表
+        getDocumentImageList({ documentId: id }).then(res => {
+          this.getUploadFiles = res.data || [];
+        });
+
         this.form = document;
         this.editStatus = sendEdit;
 
@@ -671,29 +879,35 @@ export default {
             no: index + 1,
             record: p.returnRemark,
             handler: p.nickName || '未知',
-            time: p.processTime
+            time: p.processTime,
+            notApprovedUserNames: p.notApprovedUserNames ? '未处理' : '已处理'
           }));
 
-          console.log('processFlowList', this.processFlowList);
+          // console.log('processFlowList', this.processFlowList);
 
           // 反显审批意见（仅反显意见内容和处理人信息，不反显通过/退回状态）
           documentProcessList.forEach(p => {
+            console.log('🚀 ~p.returnRemark  ~ :', p.returnRemark);
             if (p.returnRemark === '部门经理审核通过') {
+              console.log('🚀 ~ 部门经理审核通过 ~ :');
               this.managerRemark = p.remark || '';
               this.managerHandler = p.nickName || '未知';
               this.managerDate = p.createTime ? p.createTime.split(' ')[0] : '';
               this.managerTime = p.createTime ? p.createTime.split(' ')[1] : '';
             } else if (p.returnRemark && p.returnRemark.includes('综合部审核通过')) {
+              console.log('🚀 ~ 综合部审核通过 ~ :');
               this.comprehensiveRemark = p.remark || '';
               this.comprehensiveHandler = p.nickName || '未知';
               this.comprehensiveDate = p.createTime ? p.createTime.split(' ')[0] : '';
               this.comprehensiveTime = p.createTime ? p.createTime.split(' ')[1] : '';
             } else if (p.returnRemark && p.returnRemark.includes('主任审核通过')) {
+              console.log('🚀 ~ 主任审核通过 ~ :');
               this.directorRemark = p.remark || '';
               this.directorHandler = p.nickName || '未知';
               this.directorDate = p.createTime ? p.createTime.split(' ')[0] : '';
               this.directorTime = p.createTime ? p.createTime.split(' ')[1] : '';
-            } else if (p.returnRemark && p.returnRemark.includes('综合部经理发文办结')) {
+            } else if (p.returnRemark && p.returnRemark.includes('发文办结')) {
+              console.log('🚀 ~综合部经理发文办结  ~ :');
               this.comprehensiveProcessRemark = p.remark || '';
               this.comprehensiveProcessHandler = p.nickName || '未知';
               this.comprehensiveProcessDate = p.createTime ? p.createTime.split(' ')[0] : '';
@@ -792,9 +1006,9 @@ export default {
     // 获取占位符文本
     getPlaceholderText() {
       if (this.currentSelectionLimit === 2) {
-        return '请选择部门和人员（最多选择2人，zxzr1不可删除）';
+        return '请选择部门和人员（主任不可删除）';
       } else {
-        return '请选择部门和人员（只能选择1人）';
+        return '请选择部门和人员';
       }
     },
     // 根据状态更新选择规则
@@ -833,47 +1047,65 @@ export default {
     getDeptUserTree() {
       // 获取部门和用户的树形数据
       getDeptUserTree().then(res => {
-        this.deptUserTreeOptions = this.formatDeptUserTree(res.data);
+        this.deptUserTreeOptions = this.formatDeptUserTree(res.data, 1);
       });
     },
-    formatDeptUserTree(data) {
+    formatDeptUserTree(data, level = 1) {
       if (!data) return [];
-      return data.map(item => {
-        const node = {
-          id: item.deptId,
-          label: item.deptName,
-          children: [],
-          disabled: true, // 部门节点默认禁用
-          isUser: false // 部门节点不是用户
-        };
 
-        // 添加用户到子节点
-        if (item.userList && item.userList.length > 0) {
-          item.userList.forEach(user => {
-            node.children.push({
-              id: user.userId,
-              label: user.nickName || user.userName,
-              deptId: item.deptId,
-              isUser: true,
-              disabled: false,
-              userName: user.userName // 添加userName字段用于区分
+      const shouldFilter = this.editStatus === 2 || this.editStatus === 4;
+      const allowedDeptIds = ['103', '102', '2841'];
+
+      return data
+        .filter(item => {
+          // 第一级（根节点）不过滤
+          if (level === 1) {
+            return true;
+          }
+          // 第二级及以上只保留指定部门
+          if (shouldFilter) {
+            return item.deptId && allowedDeptIds.includes(String(item.deptId));
+          }
+          return true;
+        })
+        .map(item => {
+          const node = {
+            id: item.deptId,
+            label: item.deptName,
+            children: [],
+            disabled: false,
+            isUser: false
+          };
+
+          // 添加用户到子节点
+          if (item.userList && item.userList.length > 0) {
+            item.userList.forEach(user => {
+              node.children.push({
+                id: user.userId,
+                label: user.nickName || user.userName,
+                deptId: item.deptId,
+                isUser: true,
+                disabled: false,
+                userName: user.userName
+              });
             });
-          });
-        }
+          }
 
-        // 递归处理子部门
-        if (item.children && item.children.length > 0) {
-          const childDepts = this.formatDeptUserTree(item.children);
-          node.children = [...node.children, ...childDepts];
-        }
+          // 递归处理子部门
+          if (item.children && item.children.length > 0) {
+            const childDepts = this.formatDeptUserTree(item.children, level + 1);
+            if (childDepts && childDepts.length > 0) {
+              node.children = [...node.children, ...childDepts];
+            }
+          }
 
-        // 如果没有子节点，则删除children属性
-        if (node.children.length === 0) {
-          delete node.children;
-        }
+          // 如果没有子节点，则删除children属性
+          if (node.children.length === 0) {
+            delete node.children;
+          }
 
-        return node;
-      });
+          return node;
+        });
     },
     // 将用户ID数组转换为级联选择器需要的路径格式
     convertToCascaderValue(userIds) {
@@ -927,40 +1159,40 @@ export default {
       return userIds;
     },
     // 更新选项的禁用状态
-    updateOptionsDisabled() {
-      const hasSelection = this.selectedNextReviewer && this.selectedNextReviewer.length > 0;
-      this.updateTreeDisabled(this.deptUserTreeOptions, hasSelection);
-    },
+    // updateOptionsDisabled() {
+    //     const hasSelection = this.selectedNextReviewer && this.selectedNextReviewer.length > 0;
+    //     // this.updateTreeDisabled(this.deptUserTreeOptions, hasSelection);
+    // },
     // 递归更新树节点的禁用状态
-    updateTreeDisabled(nodes, hasSelection) {
-      if (!nodes) return;
+    // updateTreeDisabled(nodes, hasSelection) {
+    //     if (!nodes) return;
 
-      nodes.forEach(node => {
-        if (node.isUser) {
-          // 对于用户节点
-          if (this.lockedUserId && node.id === this.lockedUserId) {
-            // 锁定的用户永远不禁用（但不可删除）
-            node.disabled = false;
-          } else if (this.currentSelectionLimit === 1) {
-            // 限制1人时：如果已有选择且当前节点未被选中，则禁用
-            node.disabled = hasSelection && !this.isNodeSelected(node);
-          } else if (this.currentSelectionLimit === 2) {
-            // 限制2人时：如果已选2人且当前节点未被选中，则禁用
-            node.disabled = hasSelection && this.selectedNextReviewer.length >= 2 && !this.isNodeSelected(node);
-          } else {
-            node.disabled = false;
-          }
-        } else {
-          // 对于部门节点，始终禁用（不可选择）
-          node.disabled = true;
-        }
+    //     nodes.forEach(node => {
+    //         if (node.isUser) {
+    //             // 对于用户节点
+    //             if (this.lockedUserId && node.id === this.lockedUserId) {
+    //                 // 锁定的用户永远不禁用（但不可删除）
+    //                 node.disabled = false;
+    //             } else if (this.currentSelectionLimit === 1) {
+    //                 // 限制1人时：如果已有选择且当前节点未被选中，则禁用
+    //                 node.disabled = hasSelection && !this.isNodeSelected(node);
+    //             } else if (this.currentSelectionLimit === 2) {
+    //                 // 限制2人时：如果已选2人且当前节点未被选中，则禁用
+    //                 node.disabled = hasSelection && this.selectedNextReviewer.length >= 2 && !this.isNodeSelected(node);
+    //             } else {
+    //                 node.disabled = false;
+    //             }
+    //         } else {
+    //             // 对于部门节点，始终禁用（不可选择）
+    //             node.disabled = true;
+    //         }
 
-        // 递归处理子节点
-        if (node.children) {
-          this.updateTreeDisabled(node.children, hasSelection);
-        }
-      });
-    },
+    //         // 递归处理子节点
+    //         if (node.children) {
+    //             this.updateTreeDisabled(node.children, hasSelection);
+    //         }
+    //     });
+    // },
     // 检查节点是否被选中
     isNodeSelected(node) {
       if (!this.selectedNextReviewer || this.selectedNextReviewer.length === 0) {
@@ -997,7 +1229,7 @@ export default {
         getDeptUserTree().then(res => {
           const getUsersByDeptId = (deptId, tree) => {
             let users = [];
-            const findNode = (nodes) => {
+            const findNode = nodes => {
               for (const node of nodes) {
                 if (node.deptId === deptId) {
                   users = node.userList || [];
@@ -1010,7 +1242,7 @@ export default {
             };
             findNode(tree);
             return users;
-          }
+          };
           this.currentDeptUsers = getUsersByDeptId(this.userInfo.deptId, res.data);
         });
       }
@@ -1028,6 +1260,23 @@ export default {
       const fileName = file.name;
       const fileExt = fileName.split('.').pop().toLowerCase();
       this.$refs.viewFileRef.openDialog(fileUrl, fileExt);
+    },
+    // 预览文件在线
+    previewFileOnline(file) {
+      if (this.getUploadFiles && this.getUploadFiles.length > 0) {
+        const fileInList = this.getUploadFiles.find(f => f.fileName.includes(file.name));
+        const token = getToken();
+        if (fileInList) {
+          // 构建目标 URL
+          const baseUrl = 'http://192.168.0.139:5174/'; // 替换为实际地址
+          const id = this.$route.query.id;
+          // 方式1：通过 URL 参数传递
+          const url = `${baseUrl}?fileId=${fileInList.id}&userId=${this.userInfo.userId}&token=${token}&userName=${decodeURIComponent(this.userInfo.nickName)}`;
+
+          // // 在新窗口打开
+          window.open(url, '_blank');
+        }
+      }
     },
     getFileName(filePath) {
       if (!filePath) return '未知文件';
@@ -1150,7 +1399,7 @@ export default {
       }
     },
     handleArchive() {
-      this.$message.info('归档功能待实现')
+      this.$message.info('归档功能待实现');
     },
     handleSubmit() {
       // 手动校验印发日期
@@ -1167,7 +1416,7 @@ export default {
         }
       }
 
-      this.$refs.documentForm.validate((valid) => {
+      this.$refs.documentForm.validate(valid => {
         if (valid) {
           const payload = {
             type: this.form.type,
@@ -1183,9 +1432,7 @@ export default {
             payload.wordSize = this.form.wordSize;
           }
           if (this.shouldShowField('draftDate')) {
-            payload.draftDate = this.form.draftDate && !this.form.draftDate.includes(' ')
-              ? this.form.draftDate + ' 00:00:00'
-              : this.form.draftDate;
+            payload.draftDate = this.form.draftDate && !this.form.draftDate.includes(' ') ? this.form.draftDate + ' 00:00:00' : this.form.draftDate;
           }
           if (this.shouldShowField('urgencyLevel')) payload.urgencyLevel = this.form.urgencyLevel;
           if (this.shouldShowField('mainDeliveryAgency')) payload.mainDeliveryAgency = this.form.mainDeliveryAgency;
@@ -1195,18 +1442,29 @@ export default {
           if (this.shouldShowField('contactPerson')) payload.contactPerson = this.form.contactPerson;
           if (this.shouldShowField('contactPhone')) payload.contactPhone = this.form.contactPhone;
           if (this.shouldShowField('issuingDate')) {
-            payload.issuingDate = this.form.issuingDate && !this.form.issuingDate.includes(' ')
-              ? this.form.issuingDate + ' 00:00:00'
-              : this.form.issuingDate;
+            payload.issuingDate = this.form.issuingDate && !this.form.issuingDate.includes(' ') ? this.form.issuingDate + ' 00:00:00' : this.form.issuingDate;
           }
           if (this.shouldShowField('word')) payload.word = this.form.word;
 
           if (this.showNextApprover && this.editStatus === null) {
             payload.receivedIds = this.form.nextReviewer.join(',');
           }
-          console.log('payload:', payload);
 
           addDocument(payload).then(response => {
+            if (this.uploadFiles && this.uploadFiles.length > 0) {
+              const documentSaveObj = this.uploadFiles.map(item => ({
+                document_id: response.data,
+                url: item.urlBack,
+                file_name: item.name,
+                edit: true
+              }));
+              if (response.data) {
+                documentImageSave(documentSaveObj).then(ress => {
+                  console.log('🚀 ~ ress ~ :', ress);
+                });
+              }
+            }
+
             this.$modal.msgSuccess('提交成功');
             this.$router.push('/document/documentManagement');
           });
@@ -1229,15 +1487,14 @@ export default {
       // 部门经理重新提交时校验下一处理人
       if (this.editStatus === 7 && !this.showNextApprover) {
         console.log('部门经理重新提交时校验下一处理人');
-        
+
         if (!this.form.nextReviewer || !Array.isArray(this.form.nextReviewer) || this.form.nextReviewer.length === 0) {
           this.$message.error('请选择下一处理人');
           return;
         }
       }
-    
 
-      this.$refs.documentForm.validate((valid) => {
+      this.$refs.documentForm.validate(valid => {
         if (!valid) {
           this.$message.error('请完善必填信息');
           return;
@@ -1281,9 +1538,7 @@ export default {
               cc: this.form.cc,
               partNumber: this.form.partNumber ? String(this.form.partNumber) : '',
               internalCirculation: this.form.internalCirculation,
-              issuingDate: this.form.issuingDate && !this.form.issuingDate.includes(' ')
-                ? this.form.issuingDate + ' 00:00:00'
-                : this.form.issuingDate,
+              issuingDate: this.form.issuingDate && !this.form.issuingDate.includes(' ') ? this.form.issuingDate + ' 00:00:00' : this.form.issuingDate,
               word: this.form.word,
               documentRemark: this.form.documentRemark
             };
@@ -1330,13 +1585,13 @@ export default {
       }
 
       getPreviewRedHeaderDoc(docId)
-        .then((res) => {
+        .then(res => {
           // 创建 blob 对象，设置正确的 MIME 类型
           const blob = new Blob([res], {
-            type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
           });
           // 创建下载链接
-          const link = document.createElement("a");
+          const link = document.createElement('a');
           link.href = window.URL.createObjectURL(blob);
           // 设置下载文件名
           link.download = `公文_${docId}.docx`;
@@ -1347,7 +1602,7 @@ export default {
           document.body.removeChild(link);
           window.URL.revokeObjectURL(link.href);
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('预览套头文件失败:', error);
           this.$message.error('预览套头文件失败');
         });
@@ -1380,7 +1635,7 @@ export default {
       return callback();
     },
     handleExit() {
-      this.$router.go(-1)
+      this.$router.go(-1);
     },
     // 下一处理人弹窗相关方法
     openNextHandlerDialog() {
@@ -1393,9 +1648,9 @@ export default {
       this.showNextHandlerDialog = true;
 
       // 更新选项的禁用状态
-      this.$nextTick(() => {
-        this.updateOptionsDisabled();
-      });
+      // this.$nextTick(() => {
+      //     this.updateOptionsDisabled();
+      // });
     },
     handleNextHandlerConfirm() {
       if (!this.selectedNextReviewer || this.selectedNextReviewer.length === 0) {
@@ -1411,20 +1666,18 @@ export default {
     },
     handleNextReviewerChange(value) {
       // 检查是否超过限制
-      if (value && value.length > this.currentSelectionLimit) {
-        this.$message.warning(`最多只能选择${this.currentSelectionLimit}人`);
-        return;
-      }
+      // if (value && value.length > this.currentSelectionLimit) {
+      //     this.$message.warning(`最多只能选择${this.currentSelectionLimit}人`);
+      //     return;
+      // }
 
       // 检查是否尝试删除锁定的用户
       if (this.lockedUserId && value) {
         const lockedUserPath = this.findUserPath(this.lockedUserId, this.deptUserTreeOptions);
-        const hasLockedUser = lockedUserPath && value.some(path =>
-          JSON.stringify(path) === JSON.stringify(lockedUserPath)
-        );
+        const hasLockedUser = lockedUserPath && value.some(path => JSON.stringify(path) === JSON.stringify(lockedUserPath));
 
         if (!hasLockedUser) {
-          this.$message.warning('zxzr1用户不可删除');
+          this.$message.warning('主任用户不可删除');
           this.$nextTick(() => {
             if (lockedUserPath) {
               this.selectedNextReviewer = [...value, lockedUserPath];
@@ -1438,9 +1691,9 @@ export default {
       this.selectedNextReviewer = value;
 
       // 更新选项的禁用状态
-      this.$nextTick(() => {
-        this.updateOptionsDisabled();
-      });
+      // this.$nextTick(() => {
+      //     this.updateOptionsDisabled();
+      // });
     },
     // 统一提交处理方法
     handleSubmitAction() {
@@ -1473,9 +1726,334 @@ export default {
         this.directorStatus = '2';
       }
       this.handleProcess();
+    },
+    // handlePrint() {
+    //   this.$nextTick(() => {
+
+    //     window.print();
+
+    //   });
+    // },
+
+    confirmPrint() {
+
+      const printContent = document.getElementById('printArea').outerHTML;
+      const printWindow = window.open(
+        '',
+        '_blank',
+      );
+      printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title></title>
+      <style>
+        @page {
+          size: A4;
+          margin: 10mm;
+        }
+        * {
+          box-sizing: border-box;
+        }
+        body {
+          margin:0;
+          background:#fff;
+          font-family:
+          "Microsoft YaHei",
+          Arial,
+          sans-serif;
+
+        }
+        .dialogVisible-wrap {
+          padding: 40px 40px 0 40px;
+
+          /* ========== 对话框标题样式 ========== */
+          .dialog-title {
+            font-size: 30px;
+            text-align: center;
+            letter-spacing: 4px;
+            color: red;
+          }
+
+          .doc-header {
+            padding: 5px;
+            display: flex;
+            justify-content: space-between;
+          }
+
+          .header-top {
+            display: flex;
+          }
+
+          .security-level {
+            color: red;
+          }
+
+          .docSignWord-table {
+            width: 100%;
+            border: 1px solid #000;
+            margin-bottom: 0;
+            display: flex;
+            text-align: center;
+            flex-wrap: wrap;
+            border-left: none;
+            border-right: none;
+          }
+
+          .docSignWord-table1 {
+            width: 100%;
+            border: 1px solid #000;
+            margin-bottom: 0;
+            display: flex;
+            text-align: center;
+            flex-wrap: wrap;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+          }
+
+          .docSignWord-table-item {
+            display: flex;
+            width: 50%;
+            height: 40px;
+          }
+
+          .docSignWord-table-item-unit {
+            display: flex;
+            width: 100%;
+            height: 40px;
+          }
+
+          .docSignWord-label-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+            width: 80px;
+            padding: 5px 0;
+          }
+
+          .label-cell-unit {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+            width: 80px;
+            padding: 5px 0;
+          }
+
+          .docSignWord-input-cell {
+            white-space: nowrap;
+            text-align: left;
+            padding: 5px 0;
+            flex: 1;
+          }
+
+          .input-cell-unit {
+            white-space: nowrap;
+            text-align: left;
+            padding: 5px 0;
+            flex: 1;
+          }
+
+          .docSignWord-div {
+            padding: 5px 0;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-div-wrap {
+            padding: 5px 0;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+          }
+
+          .docSignWord-div-handle {
+            display: flex;
+            justify-content: space-between;
+          }
+
+          .docSignWord-title-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-title-input {
+            white-space: nowrap;
+            text-align: left;
+            min-height: 60px;
+          }
+
+          .docSignWord-title-input1 {
+            white-space: nowrap;
+            text-align: left;
+            min-height: 40px;
+          }
+
+          .docSignWord-title-input2 {
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-zhu {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-zhu-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-zhu-input {
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-ban {
+            display: flex;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-ban-item1 {
+            display: flex;
+            width: 100%;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-item1 .handler-info {
+            flex-shrink: 0;
+          }
+
+          .docSignWord-ban-item {
+            display: flex;
+            width: 50%;
+            border-right: 1px dashed #ccc;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-item2 {
+            display: flex;
+            width: 50%;
+            flex-direction: column;
+          }
+
+          .docSignWord-ban-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+
+            padding: 5px 0;
+            border-bottom: 1px dashed #ccc;
+          }
+
+          .docSignWord-ban-item .docSignWord-ban-cell {
+            padding: 5px;
+          }
+
+          .docSignWord-ban-input {
+            text-align: left;
+            min-height: 80px;
+            padding: 5px 0;
+            flex-wrap: wrap;
+            display: flex;
+            word-break: break-word;
+          }
+
+          .docSignWord-ban-item .docSignWord-ban-input {
+            padding: 5px;
+          }
+
+          .record-text {
+            margin-right: 10px;
+          }
+
+          .docSignWord-time {
+            display: flex;
+            border-bottom: 1px solid #000;
+          }
+
+          .docSignWord-time-item1 {
+            flex: 1;
+            display: flex;
+            padding: 5px 0;
+            gap: 5px;
+            border-right: 1px solid #000;
+          }
+
+          .docSignWord-time-item2 {
+            flex: 1;
+            display: flex;
+            padding: 5px 5px 0 5px;
+            gap: 5px;
+            border-right: 1px solid #000;
+          }
+
+          .docSignWord-time-item3 {
+            flex: 1;
+            display: flex;
+            padding: 5px 5px 0 5px;
+            gap: 5px;
+          }
+
+          .docSignWord-time-cell {
+            color: red;
+            white-space: nowrap;
+            text-align: left;
+          }
+
+          .docSignWord-time-input {
+            text-align: left;
+          }
+        }
+
+        #printArea {
+
+          width:794px;
+
+          margin:0 auto;
+
+          background:#fff;
+
+        }
+        .dialog-title {
+          text-align:center;
+          font-size:20px;
+          font-weight:bold;
+          margin-bottom:20px;
+        }
+        /* 保留你的原打印样式 */
+      </style>
+    </head>
+    <body>
+      ${printContent}
+    </body>
+    </html>
+  `);
+
+      printWindow.document.close();
+      printWindow.onload = function () {
+        printWindow.print();
+        printWindow.close();
+      };
+
+    },
+
+    closePreview() {
+      // 清理资源
+      this.printImage = null;
+    }
+  },
+
+  beforeDestroy() {
+    // 清理图片资源
+    if (this.printImage) {
+      URL.revokeObjectURL(this.printImage);
     }
   }
-}
+};
 </script>
 
 <style scoped>
@@ -1484,7 +2062,7 @@ export default {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .page-title {
@@ -1497,7 +2075,7 @@ export default {
   font-size: 24px;
   font-weight: bold;
   margin: 0;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .document-form {
@@ -1537,7 +2115,7 @@ export default {
   width: 120px;
   min-width: 120px;
   color: #000;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   padding: 12px 8px;
   vertical-align: middle;
 }
@@ -1553,7 +2131,7 @@ export default {
   border: none !important;
   background: transparent !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .table-input .el-input__inner {
@@ -1561,7 +2139,7 @@ export default {
   background: transparent !important;
   padding: 0 !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   box-shadow: none !important;
   outline: none !important;
 }
@@ -1588,7 +2166,7 @@ export default {
   background: transparent !important;
   padding: 0 !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   box-shadow: none !important;
   outline: none !important;
 }
@@ -1615,7 +2193,7 @@ export default {
   background: transparent !important;
   padding: 0 !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   box-shadow: none !important;
   outline: none !important;
 }
@@ -1642,7 +2220,7 @@ export default {
   background: transparent !important;
   padding: 0 !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   resize: none;
   box-shadow: none !important;
   outline: none !important;
@@ -1670,7 +2248,7 @@ export default {
   background: transparent !important;
   padding: 0 !important;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   box-shadow: none !important;
   outline: none !important;
 }
@@ -1707,8 +2285,8 @@ export default {
 .part-number-btn {
   width: 24px;
   height: 24px;
-  border: 1px solid #409EFF;
-  background: #409EFF;
+  border: 1px solid #409eff;
+  background: #409eff;
   color: #fff;
   font-size: 16px;
   font-weight: bold;
@@ -1832,14 +2410,14 @@ export default {
   padding: 4px 8px;
   background: #ffffff;
   border-radius: 4px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
   text-align: right;
 }
 
 .handler-time {
   font-size: 12px;
   color: #666;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .action-buttons {
@@ -1854,8 +2432,8 @@ export default {
 }
 
 .action-buttons .el-button {
-  background-color: #409EFF !important;
-  border-color: #409EFF !important;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
   color: #fff !important;
 }
 
@@ -1872,8 +2450,8 @@ export default {
 
 /* 弹窗按钮样式 */
 .el-dialog__footer .el-button--primary {
-  background-color: #409EFF !important;
-  border-color: #409EFF !important;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
   color: #fff !important;
 }
 
@@ -1883,8 +2461,8 @@ export default {
 }
 
 .el-dialog__footer .el-button--default {
-  background-color: #409EFF !important;
-  border-color: #409EFF !important;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
   color: #fff !important;
 }
 
@@ -1918,7 +2496,8 @@ export default {
   flex: 1;
   color: #333;
   font-size: 14px;
-  font-family: "Microsoft YaHei", "SimSun", serif;
+  cursor: pointer;
+  font-family: 'Microsoft YaHei', 'SimSun', serif;
 }
 
 .attachment-actions {
@@ -1927,8 +2506,8 @@ export default {
 }
 
 .attachment-actions .el-button {
-  background-color: #409EFF !important;
-  border-color: #409EFF !important;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
   color: #fff !important;
 }
 
@@ -1972,8 +2551,312 @@ export default {
   background-color: #ffffff !important;
   border: none !important;
 }
+
 ::v-deep .el-input__inner {
   background-color: #ffffff !important;
   border: none !important;
+}
+
+.dialogVisible-wrap {
+  padding: 40px 40px 0 40px;
+
+  /* ========== 对话框标题样式 ========== */
+  .dialog-title {
+    font-size: 30px;
+    text-align: center;
+    letter-spacing: 4px;
+    color: red;
+  }
+
+  .doc-header {
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .header-top {
+    display: flex;
+  }
+
+  .security-level {
+    color: red;
+  }
+
+  .docSignWord-table {
+    width: 100%;
+    border: 1px solid #000;
+    margin-bottom: 0;
+    display: flex;
+    text-align: center;
+    flex-wrap: wrap;
+    border-left: none;
+    border-right: none;
+  }
+
+  .docSignWord-table1 {
+    width: 100%;
+    border: 1px solid #000;
+    margin-bottom: 0;
+    display: flex;
+    text-align: center;
+    flex-wrap: wrap;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+
+  .docSignWord-table-item {
+    display: flex;
+    width: 50%;
+    height: 40px;
+  }
+
+  .docSignWord-table-item-unit {
+    display: flex;
+    width: 100%;
+    height: 40px;
+  }
+
+  .docSignWord-label-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+    width: 80px;
+    padding: 5px 0;
+  }
+
+  .label-cell-unit {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+    width: 80px;
+    padding: 5px 0;
+  }
+
+  .docSignWord-input-cell {
+    white-space: nowrap;
+    text-align: left;
+    padding: 5px 0;
+    flex: 1;
+  }
+
+  .input-cell-unit {
+    white-space: nowrap;
+    text-align: left;
+    padding: 5px 0;
+    flex: 1;
+  }
+
+  .docSignWord-div {
+    padding: 5px 0;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-div-wrap {
+    padding: 5px 0;
+    border-bottom: 1px solid #000;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .docSignWord-div-handle {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .docSignWord-title-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-title-input {
+    white-space: nowrap;
+    text-align: left;
+    min-height: 60px;
+  }
+
+  .docSignWord-title-input1 {
+    white-space: nowrap;
+    text-align: left;
+    min-height: 40px;
+  }
+
+  .docSignWord-title-input2 {
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-zhu {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-zhu-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-zhu-input {
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-ban {
+    display: flex;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-ban-item1 {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .docSignWord-ban-item1 .handler-info {
+    flex-shrink: 0;
+  }
+
+  .docSignWord-ban-item {
+    display: flex;
+    width: 50%;
+    border-right: 1px dashed #ccc;
+    flex-direction: column;
+  }
+
+  .docSignWord-ban-item2 {
+    display: flex;
+    width: 50%;
+    flex-direction: column;
+  }
+
+  .docSignWord-ban-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+
+    padding: 5px 0;
+    border-bottom: 1px dashed #ccc;
+  }
+
+  .docSignWord-ban-item .docSignWord-ban-cell {
+    padding: 5px;
+  }
+
+  .docSignWord-ban-input {
+    text-align: left;
+    min-height: 80px;
+    padding: 5px 0;
+    flex-wrap: wrap;
+    display: flex;
+    word-break: break-word;
+  }
+
+  .docSignWord-ban-item .docSignWord-ban-input {
+    padding: 5px;
+  }
+
+  .record-text {
+    margin-right: 10px;
+  }
+
+  .docSignWord-time {
+    display: flex;
+    border-bottom: 1px solid #000;
+  }
+
+  .docSignWord-time-item1 {
+    flex: 1;
+    display: flex;
+    padding: 5px 0;
+    gap: 5px;
+    border-right: 1px solid #000;
+  }
+
+  .docSignWord-time-item2 {
+    flex: 1;
+    display: flex;
+    padding: 5px 5px 0 5px;
+    gap: 5px;
+    border-right: 1px solid #000;
+  }
+
+  .docSignWord-time-item3 {
+    flex: 1;
+    display: flex;
+    padding: 5px 5px 0 5px;
+    gap: 5px;
+  }
+
+  .docSignWord-time-cell {
+    color: red;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .docSignWord-time-input {
+    text-align: left;
+  }
+}
+
+.docSignWord-fu {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.docSignWord-fu-cell {
+  color: red;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.docSignWord-fu-input {
+  white-space: nowrap;
+  text-align: left;
+  min-height: 30px;
+}
+
+.docSignWord-btn {
+  margin-top: 10px;
+  padding: 0px 50px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+
+.print-area {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  width: 794px;
+}
+
+/* 打印时 */
+@media print {
+
+  body * {
+    visibility: hidden;
+  }
+
+  #printArea,
+  #printArea * {
+    visibility: visible;
+  }
+
+  #printArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 794px !important;
+    background: #fff;
+
+  }
+
+
 }
 </style>
