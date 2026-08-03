@@ -530,7 +530,7 @@
       <el-row>
         <el-col :span="24" v-if="form.createType === DM_CREATE_TYPE.TYPE2">
           <el-form-item label="人民调解申请书" prop="applicationAttachment"
-            :rules="[{ required: SYS_YES_NO.sys_yes === form.consumerAcceptMediate, message: '请上传《人民调解申请书》或其他金融消费者同意调解作证材', trigger: 'change' }]">
+            :rules="[{ required: SYS_YES_NO.sys_yes === form.consumerAcceptMediate, message: '请上传《人民调解申请书》或其他金融消费者同意调解作证材料', trigger: 'change' }]">
             <file-upload v-model="form.applicationAttachment" :fileType="[
               'bmp',
               'jpg',
@@ -629,7 +629,8 @@
               'wave',
               'aiff',
               'mp3',
-              'wav'
+              'wav',
+              'm4a'
             ]" :limit="5"
               :oldList="disabled && attachmentForm.attachment ? attachmentForm.attachment.split(',') : []" />
           </el-form-item>

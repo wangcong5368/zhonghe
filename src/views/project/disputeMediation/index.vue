@@ -1,4 +1,4 @@
-<template>
+<template xmlns="http://www.w3.org/1999/html">
   <div class="app-container">
     <div v-sticky="{ zIndex: 1000, stickyTop: 0 }" style="background-color: #fff; padding: 5px">
       <el-form :model="queryParams" ref="queryForm" size="small" v-show="showSearch" label-width="108px">
@@ -166,10 +166,28 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="5">
+            <el-col :span="6">
               <el-form-item label="联系方式">
                 <el-input v-model="queryParams.params.phone" placeholder="请输入联系方式或代理人联系方式" clearable
                   @keyup.enter.native="handleQuery" style="width: 100%" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="签署协议情况" prop="signWay">
+                <el-select v-model="queryParams.signWay" placeholder="请选择签署协议情况" clearable style="width: 100%">
+                  <el-option label="未签署" value="0"/>
+                  <el-option v-for="dict in dict.type.dm_sign_way" :key="dict.value" :label="dict.label" :value="dict.value" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="业务类型" prop="industry">
+                <el-select v-model="queryParams.industry" placeholder="请选择业务类型" clearable style="width: 100%">
+                  <el-option v-for="dict in dict.type.dm_industry" :key="dict.value" :label="dict.label" :value="dict.value" />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="7">
@@ -374,7 +392,7 @@
         v-if="columns.find(s => s.label === '联系方式').visible" />
       <el-table-column label="接案时间" align="center" width="100" v-if="columns.find(s => s.label === '接案时间').visible">
         <template slot-scope="scope">
-          <span v-if="scope.row.createType !== '2'">{{ parseTime(scope.row.createTime) }}</span>
+          <span>{{ parseTime(scope.row.mediatorAcceptTime, '{y}-{m}-{d}') }}</span><br/><span>{{ parseTime(scope.row.mediatorAcceptTime, '{h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="机构名称" align="center" prop="deptId" v-if="columns.find(s => s.label === '机构名称').visible">
@@ -382,6 +400,7 @@
           <span>{{ deptMap.get(scope.row.deptId) ? deptMap.get(scope.row.deptId).deptName : '' }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="调解员" align="center" prop="mediatorName" v-if="columns.find(s => s.label === '调解员').visible"/>
       <el-table-column label="工单状态" align="center" prop="status" v-if="columns.find(s => s.label === '状态').visible">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.dm_status" :value="scope.row.status" />
@@ -443,6 +462,13 @@
           <span :class="{ 'text-danger': !isSatisfactionScored(scope.row.satisfactionScore) }">
             {{ isSatisfactionScored(scope.row.satisfactionScore) ? '已打分' : '未打分' }}
           </span>
+        </template>
+      </el-table-column>
+      <el-table-column label="盖章反馈天数" align="center" prop="stampedFeedbackAttachmentDay" width="110"
+        v-if="columns.find(s => s.label === '盖章反馈天数').visible">
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.stampedFeedbackAttachmentTime ? 'success' : 'danger'"
+            v-if="scope.row.stampedFeedbackAttachmentDay != null">{{ scope.row.stampedFeedbackAttachmentDay }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" width="100"
@@ -567,20 +593,17 @@
               v-if="$store.getters.userInfo.isDMInstitutionHandle && DM_STATUS.DM_STATUS3 === row.status && !row.deptAcceptMediate && !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel)">
               反馈
             </el-button>
-            <el-button size="mini" type="text" icon="el-icon-edit" @click="handleFeedback2(row)" v-if="
-              $store.getters.userInfo.isDMInstitutionHandle &&
-              DM_STATUS.DM_STATUS20 !== row.status &&
-              SYS_YES_NO.sys_yes === row.deptAcceptMediate &&
-              !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel)
-            ">
-              {{ DM_STATUS.DM_STATUS3 === row.status && !row.feedbackTime ? '补充反馈单' : '修改反馈单' }}
-            </el-button>
-            <el-button size="mini" type="text" icon="el-icon-star-on" @click="handleSatisfaction(row)" v-if="
-              $store.getters.userInfo.isDMInstitutionHandle &&
-              SYS_YES_NO.sys_yes === row.deptAcceptMediate &&
-              !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel) &&
-              [DM_STATUS.DM_STATUS10, DM_STATUS.DM_STATUS20].includes(row.status)
-            ">
+            <template v-if="$store.getters.userInfo.isDMInstitutionHandle && DM_STATUS.DM_STATUS20 !== row.status && SYS_YES_NO.sys_yes === row.deptAcceptMediate && !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel)">
+              <el-tooltip v-if="!row.stampedFeedbackAttachment" class="item" effect="dark" content="请及时上传已盖章反馈单附件" placement="left">
+                <el-button size="mini" type="text" icon="el-icon-edit" @click="handleFeedback2(row)">
+                  {{ DM_STATUS.DM_STATUS3 === row.status && !row.feedbackTime ? '补充反馈单' : '修改反馈单' }}
+                </el-button>
+              </el-tooltip>
+              <el-button size="mini" type="text" icon="el-icon-edit" @click="handleFeedback2(row)" v-else>
+                {{ DM_STATUS.DM_STATUS3 === row.status && !row.feedbackTime ? '补充反馈单' : '修改反馈单' }}
+              </el-button>
+            </template>
+            <el-button size="mini" type="text" icon="el-icon-star-on" @click="handleSatisfaction(row)" v-if="$store.getters.userInfo.isDMInstitutionHandle && SYS_YES_NO.sys_yes === row.deptAcceptMediate && !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel) && [DM_STATUS.DM_STATUS10, DM_STATUS.DM_STATUS20].includes(row.status)">
               满意度
             </el-button>
           </template>
@@ -1058,11 +1081,12 @@ export default {
     'sys_yes_no'
     // "dm_audit_result",
     // "dm_investigation_place",
-    // "dm_sign_way",
+    "dm_sign_way",
     // "sign_status",
     // "sign_item_status",
     // "dm_terminate_accept_reason",
     // "dm_terminate_mediate_reason",
+    "dm_industry",
   ],
   data() {
     return {
@@ -1171,6 +1195,7 @@ export default {
         { label: `调解结果`, visible: false },
         { label: `结案类型`, visible: false },
         { label: `是否打分`, visible: true },
+        { label: `盖章反馈天数`, visible: false },
         { label: `创建时间`, visible: true },
         { label: `修改时间`, visible: false }
       ],
@@ -1325,6 +1350,9 @@ export default {
       } else {
         delete data.params.createTime;
       }
+      if (data.params.statusIn && data.params.statusIn.length === 0) {
+        delete data.params.statusIn;
+      }
       return data;
     },
     /** 查询纠纷业务工单列表 */
@@ -1340,6 +1368,20 @@ export default {
           }
           if (disputeMediation.sendFeedbackTime && !disputeMediation.feedbackTime) {
             disputeMediation.deptHandleTime = this.calculateDaysBetween(disputeMediation.sendFeedbackTime, new Date());
+          }
+          // 计算盖章反馈天数
+          if (disputeMediation.createType === DM_CREATE_TYPE.TYPE2 || disputeMediation.createType === DM_CREATE_TYPE.TYPE4) {
+            if (disputeMediation.acceptTime && disputeMediation.stampedFeedbackAttachmentTime) {
+              disputeMediation.stampedFeedbackAttachmentDay = disputeMediation.acceptTime > disputeMediation.stampedFeedbackAttachmentTime ? 0 : (this.calculateDaysBetween(disputeMediation.acceptTime, disputeMediation.stampedFeedbackAttachmentTime) - 1)
+            } else if (disputeMediation.acceptTime && disputeMediation.deptAcceptMediate === SYS_YES_NO.sys_yes && !disputeMediation.stampedFeedbackAttachment) {
+              disputeMediation.stampedFeedbackAttachmentDay = this.calculateDaysBetween(disputeMediation.acceptTime, new Date()) - 1;
+            }
+          } else if (disputeMediation.createType === DM_CREATE_TYPE.TYPE1 || disputeMediation.createType === DM_CREATE_TYPE.TYPE3) {
+            if (disputeMediation.sendFeedbackTime && disputeMediation.stampedFeedbackAttachmentTime) {
+              disputeMediation.stampedFeedbackAttachmentDay = this.calculateDaysBetween(disputeMediation.sendFeedbackTime, disputeMediation.stampedFeedbackAttachmentTime) - 1
+            } else if (disputeMediation.acceptTime && disputeMediation.deptAcceptMediate === SYS_YES_NO.sys_yes && !disputeMediation.stampedFeedbackAttachment) {
+              disputeMediation.stampedFeedbackAttachmentDay = this.calculateDaysBetween(disputeMediation.sendFeedbackTime, new Date()) - 1
+            }
           }
         }
         this.total = total;
@@ -1868,6 +1910,10 @@ export default {
         !row.feedbackTime &&
         this.calculateDaysBetween(row.sendFeedbackTime, new Date()) > 5
       ) {
+        return 'dept-reminder-row';
+      }
+      // 机构没有上传盖章反馈单
+      if (this.$store.getters.userInfo.isDMInstitution && DM_STATUS.DM_STATUS10 !== row.status && DM_STATUS.DM_STATUS20 !== row.status && row.deptAcceptMediate === SYS_YES_NO.sys_yes && !row.stampedFeedbackAttachment) {
         return 'dept-reminder-row';
       }
       if (row.mediatorReminder && this.isDMMediator(row)) {

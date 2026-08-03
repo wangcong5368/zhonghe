@@ -153,7 +153,11 @@ export default {
           this.loading = true;
           feedback1(this.form).then((response) => {
             this.loading = false;
-            this.$modal.msgSuccess("操作成功");
+            if (this.form.deptAcceptMediate === SYS_YES_NO.sys_yes) {
+              this.$modal.alertSuccess('操作成功，请继续填报反馈单相关信息')
+            } else {
+              this.$modal.msgSuccess("操作成功");
+            }
             this.visible = false;
             this.$emit('callback')
           }).catch(() => {

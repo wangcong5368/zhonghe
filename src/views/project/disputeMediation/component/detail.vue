@@ -654,6 +654,13 @@
         </el-row>
         <el-row>
           <el-col :span="24">
+            <el-form-item label="当事人资料" prop="consumerAttachment">
+              <!--            <file-upload v-if="form.consumerAttachment" v-model="form.consumerAttachment" :isShowDele="false" :isShowBtn="false" :isShowTip="false" /> -->
+              <!--            <span v-else>无</span>-->
+              <FileList :fileList="form.consumerAttachment" emptyText="无"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
             <el-form-item label="人民调解申请书" prop="applicationAttachment">
               <!--            <file-upload v-if="form.applicationAttachment" v-model="form.applicationAttachment" :isShowDele="false" :isShowBtn="false" :isShowTip="false" />-->
               <!--            <span v-else>无</span>-->

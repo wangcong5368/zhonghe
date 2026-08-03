@@ -38,6 +38,9 @@ export default {
         /** OCR 识别服务基址（如 /ocr/upload 等接口均在此服务下） */
         ocrBaseUrl: _envS('$ocrBaseUrl', 'http://192.168.0.60:35000/api'),
 
+        /** 图片 OCR 识别上传（新服务，须全路径调用；zhishan 分支代码使用） */
+        ocrUploadUrl: _envS('$ocrUploadUrl', 'http://192.168.0.60:35000/api/ocr/upload'),
+
         // baseUrl: _envS('$baseUrl', 'http://data.zhi-shan.cn/tj-mediation-server'),
         publicPath: _envS('$publicPath', 'tj-mediation-manage'),
         serverIp: _envS('$serverIp', '192.168.50.30'),

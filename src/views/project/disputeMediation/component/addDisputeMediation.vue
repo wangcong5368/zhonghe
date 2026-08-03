@@ -542,7 +542,7 @@
                   <el-col :span="12">
                     <el-form-item label="保险消费投诉事由分类" prop="insuranceComplaintType" label-width="165px" :rules="[
                       {
-                        required: !$store.getters.userInfo.isDMEntryClerk && DEPT_TYPE.insuranceList.includes(form.deptType),
+                        required: (!$store.getters.userInfo.isDMEntryClerk && DEPT_TYPE.insuranceList.includes(form.deptType)) || ($store.getters.userInfo.isDMInstitution && SYS_YES_NO.sys_no !== form.deptAcceptMediate),
                         message: '保险消费投诉事由分类为必填项',
                         trigger: 'change'
                       }
@@ -915,26 +915,26 @@
               </el-row>
               <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
                 <el-col :span="12">
-                  <el-form-item label="业务所属支公司" prop="businessCompany">
+                  <el-form-item label="业务所属支公司" prop="businessCompany" :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
                     <el-input v-model="form.businessCompany" placeholder="请输入业务所属支公司" clearable maxlength="100"
                       show-word-limit />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="销售人员（网点、理赔人员）" prop="salesman" label-width="200px">
+                  <el-form-item label="销售人员（网点、理赔人员）" prop="salesman" label-width="200px" :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
                     <el-input v-model="form.salesman" placeholder="请输入销售人员" clearable maxlength="10" show-word-limit />
                   </el-form-item>
                 </el-col>
               </el-row>
               <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
                 <el-col :span="12">
-                  <el-form-item label="销售、网点、理赔工号" prop="salesmanJobNum" label-width="160px">
+                  <el-form-item label="销售、网点、理赔工号" prop="salesmanJobNum" label-width="160px" :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
                     <el-input v-model="form.salesmanJobNum" placeholder="请输入销售、网点、理赔工号" clearable maxlength="20"
                       show-word-limit />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="销售人员、理赔人员证件号码" prop="salesmanCertNum" label-width="200px">
+                  <el-form-item label="销售人员、理赔人员证件号码" prop="salesmanCertNum" label-width="200px" :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
                     <el-input v-model="form.salesmanCertNum" placeholder="请输入销售人员、理赔人员证件号码" clearable maxlength="18"
                       show-word-limit />
                   </el-form-item>
@@ -945,7 +945,7 @@
                   <el-form-item label="人民调解申请书" prop="applicationAttachment" :rules="[
                     {
                       required: this.$store.getters.userInfo.isDMInstitution && SYS_YES_NO.sys_yes === this.form.consumerAcceptMediate,
-                      message: '请上传《人民调解申请书》或其他金融消费者同意调解作证材',
+                      message: '请上传《人民调解申请书》或其他金融消费者同意调解作证材料',
                       trigger: 'change'
                     }
                   ]">
@@ -1013,6 +1013,13 @@
                       'mp3',
                       'wav'
                     ]" :limit="1" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row v-if="!$store.getters.userInfo.isDMInstitution">
+                <el-col :span="24">
+                  <el-form-item label="当事人资料" prop="consumerAttachment">
+                    <file-upload v-model="form.consumerAttachment" :fileType="['bmp', 'jpg', 'jpeg', 'png', 'tif', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'mp4', 'avi', 'rmvb', 'flv', 'm4v', 'mov', '3gp', '3g2', 'wmv', 'mpg', 'mpeg', 'cd', 'wave', 'aiff', 'mp3', 'wav', 'm4a']" :limit="5" />
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -2762,7 +2769,7 @@ export default {
         profession: null,
         phone: null,
         address: null,
-        disputeDate: null,
+        disputeDate: new Date,
         deptId: null,
         deptType: null,
         deptAddress: null,
@@ -2784,14 +2791,14 @@ export default {
         insuranceComplaintType: null,
         complaintContent: null,
         appeal: null,
-        needCheck: null,
+        needCheck: !this.$store.getters.userInfo.isDMInstitution ? this.SYS_YES_NO.sys_yes : null,
         product: null,
         contract: null,
         involveAmount: null,
         appealAmount: null,
         deptAcceptMediate: this.$store.getters.userInfo.isDMInstitution ? this.SYS_YES_NO.sys_yes : null,
         consumerAcceptMediate: null,
-        acceptStatus: null,
+        acceptStatus: !this.$store.getters.userInfo.isDMInstitution ? this.DM_ACCEPT_STATUS.accept : null,
         rejectReason: null,
         deptHandlerName: null,
         deptHandlerPhone: null,
@@ -2811,6 +2818,7 @@ export default {
         salesmanCertNum: null,
         stampedFeedbackAttachment: null,
         attachment: null,
+        consumerAttachment: null,
         photocopyAttachment: null,
         applicationAttachment: null,
         mediatorUserId: null,

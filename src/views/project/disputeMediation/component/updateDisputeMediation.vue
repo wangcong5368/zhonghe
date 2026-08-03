@@ -918,6 +918,13 @@
           </el-form-item>
         </el-col>
       </el-row>
+      <el-row>
+        <el-col :span="24">
+          <el-form-item label="当事人资料" prop="consumerAttachment" v-if="!$store.getters.userInfo.isDMInstitution">
+            <file-upload v-model="form.consumerAttachment" :fileType="['bmp', 'jpg', 'jpeg', 'png', 'tif', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'mp4', 'avi', 'rmvb', 'flv', 'm4v', 'mov', '3gp', '3g2', 'wmv', 'mpg', 'mpeg','cd', 'wave', 'aiff', 'mp3', 'wav', 'm4a',]" :limit="5"/>
+          </el-form-item>
+        </el-col>
+      </el-row>
       <el-row v-if="form.deptAcceptMediate">
         <el-col :span="24">
           <el-form-item label="已盖章反馈单" prop="stampedFeedbackAttachment">
@@ -1512,6 +1519,7 @@ export default {
         salesman: null,
         salesmanJobNum: null,
         salesmanCertNum: null,
+        consumerAttachment: null,
         stampedFeedbackAttachment: null,
         attachment: null,
         photocopyAttachment: null,

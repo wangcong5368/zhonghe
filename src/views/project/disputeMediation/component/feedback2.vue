@@ -574,7 +574,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="业务所属支公司" prop="businessCompany">
+          <el-form-item label="业务所属支公司" prop="businessCompany" :rules="[{ required: this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
             <el-input v-model="form.businessCompany" :placeholder="disabled ? '' : '请输入业务所属支公司'" clearable
               maxlength="100" show-word-limit :disabled="disabled" />
           </el-form-item>
@@ -582,13 +582,13 @@
       </el-row>
       <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
         <el-col :span="12">
-          <el-form-item label="销售人员（网点、理赔人员）" prop="salesman">
+          <el-form-item label="销售人员（网点、理赔人员）" prop="salesman" :rules="[{ required: this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
             <el-input v-model="form.salesman" :placeholder="disabled ? '' : '请输入销售人员（网点、理赔人员）'" clearable maxlength="10"
               show-word-limit :disabled="disabled" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="销售、网点、理赔工号" prop="salesmanJobNum">
+          <el-form-item label="销售、网点、理赔工号" prop="salesmanJobNum" :rules="[{ required: this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
             <el-input v-model="form.salesmanJobNum" :placeholder="disabled ? '' : '请输入销售、网点、理赔工号'" clearable
               maxlength="10" show-word-limit :disabled="disabled" />
           </el-form-item>
@@ -596,7 +596,7 @@
       </el-row>
       <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
         <el-col :span="12">
-          <el-form-item label="销售人员、理赔人员证件号码" prop="salesmanCertNum">
+          <el-form-item label="销售人员、理赔人员证件号码" prop="salesmanCertNum" :rules="[{ required: this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
             <el-input v-model="form.salesmanCertNum" :placeholder="disabled ? '' : '请输入销售人员、理赔人员证件号码'" clearable
               maxlength="18" show-word-limit :disabled="disabled" />
           </el-form-item>
@@ -664,7 +664,7 @@
       <el-row>
         <el-col :span="24" v-if="form.createType === DM_CREATE_TYPE.TYPE2">
           <el-form-item label="人民调解申请书" prop="applicationAttachment"
-            :rules="[{ required: SYS_YES_NO.sys_yes === form.consumerAcceptMediate, message: '请上传《人民调解申请书》或其他金融消费者同意调解作证材', trigger: 'change' }]">
+            :rules="[{ required: SYS_YES_NO.sys_yes === form.consumerAcceptMediate, message: '请上传《人民调解申请书》或其他金融消费者同意调解作证材料', trigger: 'change' }]">
             <file-upload v-model="form.applicationAttachment" :fileType="[
               'bmp',
               'jpg',
@@ -763,7 +763,8 @@
               'wave',
               'aiff',
               'mp3',
-              'wav'
+              'wav',
+              'm4a'
             ]" :limit="5"
               :oldList="disabled && attachmentForm.attachment ? attachmentForm.attachment.split(',') : []" />
           </el-form-item>
@@ -1310,7 +1311,11 @@ export default {
                 institutionType
               });
               this.loading = false;
-              this.$modal.msgSuccess('操作成功');
+              if (this.form.deptAcceptMediate === SYS_YES_NO.sys_yes && !this.form.stampedFeedbackAttachment) {
+                this.$modal.alertSuccess('操作成功，请继续上传"已盖章反馈单"')
+              } else {
+                this.$modal.msgSuccess('操作成功');
+              }
               this.visible = false;
               this.$emit('callback');
             })
