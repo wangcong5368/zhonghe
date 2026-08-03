@@ -175,8 +175,9 @@
             <el-col :span="6">
               <el-form-item label="签署协议情况" prop="signWay">
                 <el-select v-model="queryParams.signWay" placeholder="请选择签署协议情况" clearable style="width: 100%">
-                  <el-option label="未签署" value="0"/>
-                  <el-option v-for="dict in dict.type.dm_sign_way" :key="dict.value" :label="dict.label" :value="dict.value" />
+                  <el-option label="未签署" value="0" />
+                  <el-option v-for="dict in dict.type.dm_sign_way" :key="dict.value" :label="dict.label"
+                    :value="dict.value" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -186,7 +187,8 @@
             <el-col :span="6">
               <el-form-item label="业务类型" prop="industry">
                 <el-select v-model="queryParams.industry" placeholder="请选择业务类型" clearable style="width: 100%">
-                  <el-option v-for="dict in dict.type.dm_industry" :key="dict.value" :label="dict.label" :value="dict.value" />
+                  <el-option v-for="dict in dict.type.dm_industry" :key="dict.value" :label="dict.label"
+                    :value="dict.value" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -392,7 +394,8 @@
         v-if="columns.find(s => s.label === '联系方式').visible" />
       <el-table-column label="接案时间" align="center" width="100" v-if="columns.find(s => s.label === '接案时间').visible">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.mediatorAcceptTime, '{y}-{m}-{d}') }}</span><br/><span>{{ parseTime(scope.row.mediatorAcceptTime, '{h}:{i}:{s}') }}</span>
+          <span>{{ parseTime(scope.row.mediatorAcceptTime, '{y}-{m}-{d}') }}</span><br /><span>{{
+            parseTime(scope.row.mediatorAcceptTime, '{h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="机构名称" align="center" prop="deptId" v-if="columns.find(s => s.label === '机构名称').visible">
@@ -400,7 +403,8 @@
           <span>{{ deptMap.get(scope.row.deptId) ? deptMap.get(scope.row.deptId).deptName : '' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="调解员" align="center" prop="mediatorName" v-if="columns.find(s => s.label === '调解员').visible"/>
+      <el-table-column label="调解员" align="center" prop="mediatorName"
+        v-if="columns.find(s => s.label === '调解员').visible" />
       <el-table-column label="工单状态" align="center" prop="status" v-if="columns.find(s => s.label === '状态').visible">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.dm_status" :value="scope.row.status" />
@@ -593,8 +597,10 @@
               v-if="$store.getters.userInfo.isDMInstitutionHandle && DM_STATUS.DM_STATUS3 === row.status && !row.deptAcceptMediate && !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel)">
               反馈
             </el-button>
-            <template v-if="$store.getters.userInfo.isDMInstitutionHandle && DM_STATUS.DM_STATUS20 !== row.status && SYS_YES_NO.sys_yes === row.deptAcceptMediate && !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel)">
-              <el-tooltip v-if="!row.stampedFeedbackAttachment" class="item" effect="dark" content="请及时上传已盖章反馈单附件" placement="left">
+            <template
+              v-if="$store.getters.userInfo.isDMInstitutionHandle && DM_STATUS.DM_STATUS20 !== row.status && SYS_YES_NO.sys_yes === row.deptAcceptMediate && !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel)">
+              <el-tooltip v-if="!row.stampedFeedbackAttachment" class="item" effect="dark" content="请及时上传已盖章反馈单附件"
+                placement="left">
                 <el-button size="mini" type="text" icon="el-icon-edit" @click="handleFeedback2(row)">
                   {{ DM_STATUS.DM_STATUS3 === row.status && !row.feedbackTime ? '补充反馈单' : '修改反馈单' }}
                 </el-button>
@@ -603,7 +609,8 @@
                 {{ DM_STATUS.DM_STATUS3 === row.status && !row.feedbackTime ? '补充反馈单' : '修改反馈单' }}
               </el-button>
             </template>
-            <el-button size="mini" type="text" icon="el-icon-star-on" @click="handleSatisfaction(row)" v-if="$store.getters.userInfo.isDMInstitutionHandle && SYS_YES_NO.sys_yes === row.deptAcceptMediate && !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel) && [DM_STATUS.DM_STATUS10, DM_STATUS.DM_STATUS20].includes(row.status)">
+            <el-button size="mini" type="text" icon="el-icon-star-on" @click="handleSatisfaction(row)"
+              v-if="$store.getters.userInfo.isDMInstitutionHandle && SYS_YES_NO.sys_yes === row.deptAcceptMediate && !DM_ENTRY_CHANNEL.COURT.includes(row.entryChannel) && [DM_STATUS.DM_STATUS10, DM_STATUS.DM_STATUS20].includes(row.status)">
               满意度
             </el-button>
           </template>
@@ -893,7 +900,8 @@
     <AgreementRecordDetail ref="agreementDetailRef" :title="agreementRecordDetailTitle" />
 
     <!-- 新增回访记录 -->
-    <CallbackRecordCreate ref="callbackCreateRef" :title="callbackRecordCreateTitle" @callback="handleCallback" @saved="getList" />
+    <CallbackRecordCreate ref="callbackCreateRef" :title="callbackRecordCreateTitle" @callback="handleCallback"
+      @saved="getList" />
 
     <!-- 回访记录详情 -->
     <CallbackRecordDetail ref="callbackDetailRef" :title="callbackRecordDetailTitle" />
@@ -1078,7 +1086,7 @@ export default {
     'dm_mediation_result',
     'dm_finish_type',
     'dm_insurance_type',
-    'sys_yes_no'
+    'sys_yes_no',
     // "dm_audit_result",
     // "dm_investigation_place",
     "dm_sign_way",
@@ -1184,6 +1192,7 @@ export default {
         { label: `联系方式`, visible: true },
         { label: `接案时间`, visible: true },
         { label: `机构名称`, visible: true },
+        { label: `调解员`, visible: true },
         { label: `状态`, visible: true },
         { label: `结案时间`, visible: true },
         { label: `证件类型`, visible: false },
