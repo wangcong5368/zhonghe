@@ -1395,6 +1395,8 @@ export default {
         }
         this.total = total;
         this.loading = false;
+      }).catch(() => {
+        this.loading = false;
       });
     },
     /** 转换机构数据结构 */

@@ -116,7 +116,7 @@
                   </el-col>
                   <el-col :span="12" v-if="SYS_YES_NO.sys_no === form.isSelf">
                     <el-form-item label="代理人姓名" prop="agentName"
-                      :rules="[{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人姓名为必填项', trigger: 'blur' }, { validator: this.validName, trigger: 'blur' }]">
+                      :rules="[{ required: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL, message: '代理人姓名为必填项', trigger: 'blur' }]">
                       <el-input v-model="form.agentName" placeholder="请输入代理人姓名" clearable maxlength="10"
                         show-word-limit />
                     </el-form-item>
@@ -915,26 +915,30 @@
               </el-row>
               <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
                 <el-col :span="12">
-                  <el-form-item label="业务所属支公司" prop="businessCompany" :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
+                  <el-form-item label="业务所属支公司" prop="businessCompany"
+                    :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
                     <el-input v-model="form.businessCompany" placeholder="请输入业务所属支公司" clearable maxlength="100"
                       show-word-limit />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="销售人员（网点、理赔人员）" prop="salesman" label-width="200px" :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
+                  <el-form-item label="销售人员（网点、理赔人员）" prop="salesman" label-width="200px"
+                    :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
                     <el-input v-model="form.salesman" placeholder="请输入销售人员" clearable maxlength="10" show-word-limit />
                   </el-form-item>
                 </el-col>
               </el-row>
               <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType) && $store.getters.userInfo.isDMInstitution">
                 <el-col :span="12">
-                  <el-form-item label="销售、网点、理赔工号" prop="salesmanJobNum" label-width="160px" :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
+                  <el-form-item label="销售、网点、理赔工号" prop="salesmanJobNum" label-width="160px"
+                    :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
                     <el-input v-model="form.salesmanJobNum" placeholder="请输入销售、网点、理赔工号" clearable maxlength="20"
                       show-word-limit />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="销售人员、理赔人员证件号码" prop="salesmanCertNum" label-width="200px" :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
+                  <el-form-item label="销售人员、理赔人员证件号码" prop="salesmanCertNum" label-width="200px"
+                    :rules="[{ required: this.$store.getters.userInfo.isDMInstitution && this.SYS_YES_NO.sys_no !== this.form.deptAcceptMediate, message: '必填项', trigger: 'change' }]">
                     <el-input v-model="form.salesmanCertNum" placeholder="请输入销售人员、理赔人员证件号码" clearable maxlength="18"
                       show-word-limit />
                   </el-form-item>
@@ -1019,7 +1023,9 @@
               <el-row v-if="!$store.getters.userInfo.isDMInstitution">
                 <el-col :span="24">
                   <el-form-item label="当事人资料" prop="consumerAttachment">
-                    <file-upload v-model="form.consumerAttachment" :fileType="['bmp', 'jpg', 'jpeg', 'png', 'tif', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'mp4', 'avi', 'rmvb', 'flv', 'm4v', 'mov', '3gp', '3g2', 'wmv', 'mpg', 'mpeg', 'cd', 'wave', 'aiff', 'mp3', 'wav', 'm4a']" :limit="5" />
+                    <file-upload v-model="form.consumerAttachment"
+                      :fileType="['bmp', 'jpg', 'jpeg', 'png', 'tif', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'mp4', 'avi', 'rmvb', 'flv', 'm4v', 'mov', '3gp', '3g2', 'wmv', 'mpg', 'mpeg', 'cd', 'wave', 'aiff', 'mp3', 'wav', 'm4a']"
+                      :limit="5" />
                   </el-form-item>
                 </el-col>
               </el-row>
