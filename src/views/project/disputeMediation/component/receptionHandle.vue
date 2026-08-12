@@ -45,7 +45,7 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="是否消费者本人" prop="isSelf">
-              <el-radio-group v-model="form.isSelf">
+              <el-radio-group v-model="form.isSelf" :disabled="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
                 }}</el-radio>
               </el-radio-group>

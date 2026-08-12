@@ -47,7 +47,7 @@
           <el-col :span="12">
             <el-form-item label="是否消费者本人" prop="isSelf"
               :rules="disabled ? [] : [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }]">
-              <el-radio-group v-model="form.isSelf" :disabled="disabled">
+              <el-radio-group v-model="form.isSelf" :disabled="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL || disabled">
                 <el-radio v-for="dict in dict.type.sys_yes_no" :key="dict.value" :label="dict.value">{{ dict.label
                   }}</el-radio>
               </el-radio-group>
