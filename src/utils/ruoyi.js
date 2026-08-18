@@ -232,7 +232,8 @@ export function tansParams(params) {
 export function blobValidate(data) {
   // 检查是否为Blob对象
   if (data instanceof Blob) {
-    return true;
+    const type = String(data.type || '').toLowerCase()
+    return !type.includes('json')
   }
   // 检查是否为ArrayBuffer
   if (data instanceof ArrayBuffer) {

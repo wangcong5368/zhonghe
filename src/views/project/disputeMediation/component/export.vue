@@ -114,6 +114,13 @@ export default {
         if (valid) {
           const finishTimeStart = this.form.finishTime[0];
           const finishTimeEnd = this.form.finishTime[1];
+          const exportFileNameMap = {
+            '银行业_10': '银行-已结案自收反馈',
+            '保险业_10': '保险-已结案自收反馈',
+            '银行业_4': '银行-调解中自收反馈',
+            '保险业_4': '保险-调解中自收反馈'
+          };
+          const exportFileName = `${exportFileNameMap[`${this.form.industry}_${this.form.status}`]}_${this.parseTime(finishTimeEnd, '{y}-{m}-{d}')}.xlsx`;
           this.download(
             'project/disputeMediation/selfReceivingCaseExport',
             {
@@ -124,7 +131,7 @@ export default {
                 finishTimeEnd: this.parseTime(finishTimeEnd, '{y}-{m}-{d} {h}:{i}:{s}')
               }
             },
-            `消保平台自收案件导出_${this.parseTime(finishTimeEnd, '{y}-{m}-{d}')}.xlsx`
+            exportFileName
           );
           this.visible = false;
         }
