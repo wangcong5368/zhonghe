@@ -353,8 +353,15 @@
       </el-row>
       <el-row v-if="DEPT_TYPE.insuranceList.includes(form.deptType)">
         <el-col :span="12">
-          <el-form-item label="产品销售渠道" prop="saleChannel">
-            <el-select v-model="form.saleChannel" placeholder="" style="width: 100%" disabled>
+          <el-form-item :rules="[
+            {
+              required: true,
+              message: '产品销售渠道为必填项',
+              trigger: 'change'
+            }
+          ]" label="产品销售渠道" prop="saleChannel">
+            <el-select v-model="form.saleChannel" :placeholder="disabled ? '' : '请选择产品销售渠道'"
+              style="width: 100%" :disabled="disabled">
               <el-option v-for="dict in dict.type.dm_sale_channel" :key="dict.value" :label="dict.label"
                 :value="dict.value"></el-option>
             </el-select>
