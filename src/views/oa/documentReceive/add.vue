@@ -329,7 +329,7 @@
             <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
             <el-button type="primary" :disabled="putEditStatus === null" @click="confirmPrint">打印</el-button>
             <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText
-            }}</el-button>
+              }}</el-button>
             <el-button @click="handleExit">退出</el-button>
           </div>
         </el-form-item>
@@ -735,7 +735,7 @@ export default {
         const token = getToken();
         if (fileInList) {
           // 构建目标 URL
-          const baseUrl = 'http://192.168.0.139:5174/'; // 替换为实际地址
+          const baseUrl = 'http://192.168.50.18:30080/'; // 替换为实际地址
           const id = this.$route.query.id;
           // 方式1：通过 URL 参数传递
           const url = `${baseUrl}?fileId=${fileInList.id}&userId=${this.userInfo.userId}&token=${token}&userName=${decodeURIComponent(this.userInfo.nickName)}`;

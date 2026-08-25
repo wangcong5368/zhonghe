@@ -221,7 +221,7 @@
                   @collected="handleCollected" />
                 <div class="handler-info" v-if="directorHandler">
                   <span class="handler-time">处理人: {{ directorHandler }} 日期: {{ directorDate }} 时间: {{ directorTime
-                    }}</span>
+                  }}</span>
                 </div>
               </div>
             </td>
@@ -268,7 +268,7 @@
                   @collected="handleCollected" />
                 <div class="handler-info" v-if="managerHandler">
                   <span class="handler-time">处理人: {{ managerHandler }} 日期: {{ managerDate }} 时间: {{ managerTime
-                    }}</span>
+                  }}</span>
                 </div>
               </div>
             </td>
@@ -344,7 +344,7 @@
       <el-button type="success" :disabled="!canClickComplete" @click="handleComplete">办结</el-button>
       <el-button type="primary" :disabled="editStatus === null" @click="confirmPrint">打印</el-button>
       <el-button type="primary" :disabled="!canClickSubmit" @click="handleSubmitAction">{{ getSubmitButtonText
-        }}</el-button>
+      }}</el-button>
       <el-button v-if="canClickConfirmRead" type="info" @click="handleConfirmRead">已阅</el-button>
       <el-button @click="handleExit">退出</el-button>
     </div>
@@ -1268,7 +1268,7 @@ export default {
         const token = getToken();
         if (fileInList) {
           // 构建目标 URL
-          const baseUrl = 'http://192.168.0.139:5174/'; // 替换为实际地址
+          const baseUrl = 'http://192.168.50.18:30080/'; // 替换为实际地址
           const id = this.$route.query.id;
           // 方式1：通过 URL 参数传递
           const url = `${baseUrl}?fileId=${fileInList.id}&userId=${this.userInfo.userId}&token=${token}&userName=${decodeURIComponent(this.userInfo.nickName)}`;
