@@ -105,7 +105,7 @@
           <el-row>
             <el-col :span="12">
               <el-form-item label="消费者身份类型" prop="consumerIdentityType">
-                <el-select v-model="form.consumerIdentityType" disabled style="width: 100%" placeholder="">
+                <el-select :value="DM_IDENTITY_TYPE.NATURAL" disabled style="width: 100%" placeholder="">
                   <el-option v-for="dict in dict.type.dm_consumer_identity_type" :key="dict.value" :label="dict.label"
                     :value="dict.value"></el-option>
                 </el-select>
@@ -114,8 +114,7 @@
           </el-row>
           <el-row>
             <el-col :span="12">
-              <el-form-item :label="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '法人或非法人组织' : '消费者姓名'"
-                prop="name" :label-width="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '140px' : '120px'">
+              <el-form-item label="消费者姓名" prop="name">
                 <el-input v-model="form.name" readonly maxlength="50" />
               </el-form-item>
             </el-col>
@@ -135,8 +134,7 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item :label="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '统一社会信用代码' : '证件号码'"
-                prop="certNum" :label-width="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '140px' : '120px'">
+              <el-form-item label="证件号码" prop="certNum">
                 <el-input v-model="form.certNum" maxlength="18" readonly />
               </el-form-item>
             </el-col>

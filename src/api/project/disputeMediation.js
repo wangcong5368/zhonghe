@@ -25,8 +25,9 @@ function assertExpandBaseUrl() {
 }
 function assertOcrServiceUrl() {
   const base = String(conf.server.ocrBaseUrl || '').trim();
-  if (!base || !/^https?:\/\//i.test(base)) {
-    throw new Error('扩展服务地址未配置或无效，请检查 conf.server.expandBaseUrl');
+  const valid = /^https?:\/\//i.test(base) || base.startsWith('/');
+  if (!base || !valid) {
+    throw new Error('OCR 服务地址未配置或无效，请检查 conf.server.ocrBaseUrl');
   }
 }
 
@@ -822,11 +823,28 @@ export function getByDeptId(deptId) {
   });
 }
 
-export function getCompare(deptId) {
+export function collectEvidence(workOrderId) {
   return request({
-    url: ocrServiceUrl(`/evidence/compare?work_order_id=${deptId}`),
+    url: ocrServiceUrl('/evidence/collect'),
     method: "get",
+    params: { work_order_id: workOrderId },
   });
+}
+
+export function compareEvidence(workOrderId, evidenceIds) {
+  return request({
+    url: ocrServiceUrl('/evidence/compare'),
+    method: "post",
+    data: {
+      work_order_id: workOrderId,
+      evidence_ids: evidenceIds,
+    },
+  });
+}
+
+export function getEvidenceFileUrl(workOrderId, evidenceId) {
+  const query = `work_order_id=${encodeURIComponent(workOrderId)}&evidence_id=${encodeURIComponent(evidenceId)}`;
+  return ocrServiceUrl(`/evidence/file?${query}`);
 }
 export function getProvinceCityTree() {
   return request({

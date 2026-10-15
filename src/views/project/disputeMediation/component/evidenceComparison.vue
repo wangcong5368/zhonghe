@@ -7,13 +7,62 @@
       <header class="ec-header">
         <div class="ec-header__left">
           <i class="el-icon-s-data ec-header__icon" />
-          <span class="ec-header__title">证据比对报告</span>
+          <span class="ec-header__title">证据收集与比对</span>
         </div>
         <i class="el-icon-close ec-header__close" @click="visible = false" />
       </header>
 
       <div class="ec-body" v-loading="loading">
-        <p class="ec-case-no">案件编号：{{ reportData.caseNo }}</p>
+        <p class="ec-case-no">案件编号：{{ row.workOrderId || reportData.caseNo }}</p>
+
+        <el-steps :active="stage === 'select' ? 1 : 3" simple finish-status="success" class="ec-steps">
+          <el-step title="收集证据" icon="el-icon-folder-opened" />
+          <el-step title="确认真实证据" icon="el-icon-circle-check" />
+          <el-step title="生成比对报告" icon="el-icon-data-analysis" />
+        </el-steps>
+
+        <template v-if="stage === 'select'">
+          <section class="ec-evidence-section">
+            <div class="ec-evidence-toolbar">
+              <div>
+                <h3 class="ec-evidence-title">候选证据</h3>
+                <p class="ec-evidence-subtitle">请核验材料内容，只勾选确认真实的证据。</p>
+              </div>
+              <div class="ec-evidence-count">
+                共 {{ evidenceList.length }} 项，已选择
+                <strong>{{ selectedEvidenceIds.length }}</strong> 项
+              </div>
+            </div>
+
+            <el-table ref="evidenceTable" :data="evidenceList" row-key="id" border
+              class="ec-evidence-table" empty-text="未收集到可供比对的证据"
+              @selection-change="handleEvidenceSelectionChange">
+              <el-table-column type="selection" width="48" align="center" :selectable="isEvidenceSelectable" />
+              <el-table-column label="证据名称" min-width="220">
+                <template slot-scope="scope">
+                  <div class="ec-evidence-name">{{ scope.row.name }}</div>
+                  <el-tag v-if="!scope.row.supported" type="warning" size="mini">暂不支持比对</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="证据方" prop="partyLabel" width="100" align="center" />
+              <el-table-column label="来源" prop="source" width="120" align="center" />
+              <el-table-column label="类型" prop="typeLabel" width="90" align="center" />
+              <el-table-column label="内容摘要" min-width="320" show-overflow-tooltip>
+                <template slot-scope="scope">
+                  <span class="ec-evidence-summary">{{ scope.row.contentPreview || '-' }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="查看" width="80" align="center">
+                <template slot-scope="scope">
+                  <el-button type="text" icon="el-icon-view" :disabled="!canPreviewEvidence(scope.row)"
+                    @click="handlePreviewEvidence(scope.row)">查看</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </section>
+        </template>
+
+        <template v-else>
 
         <!-- 一、最终比对结果 -->
         <section class="ec-section">
@@ -215,81 +264,171 @@
             </li>
           </ol>
         </section>
+        </template>
       </div>
 
       <footer class="ec-footer">
-        <el-button :loading="regenerating" @click="handleRegenerate">重新生成</el-button>
-        <el-button type="primary" :loading="confirming" @click="handleConfirm">确认</el-button>
+        <template v-if="stage === 'select'">
+          <el-button icon="el-icon-refresh" :loading="loading" @click="loadEvidence">重新收集</el-button>
+          <el-button type="primary" icon="el-icon-data-analysis" :loading="comparing"
+            :disabled="selectedEvidenceIds.length === 0" @click="handleCompare">
+            使用已选证据进行比对
+          </el-button>
+        </template>
+        <template v-else>
+          <el-button icon="el-icon-back" @click="handleBackToEvidence">重新选择证据</el-button>
+          <el-button icon="el-icon-refresh" :loading="regenerating" @click="handleRegenerate">重新生成</el-button>
+          <el-button type="primary" :loading="confirming" @click="handleConfirm">确认</el-button>
+        </template>
       </footer>
     </div>
+
+    <el-dialog :visible.sync="previewVisible" width="760px" append-to-body title="证据内容"
+      custom-class="evidence-preview-dialog">
+      <h4 class="ec-preview-title">{{ previewEvidence.name }}</h4>
+      <pre class="ec-preview-content">{{ previewEvidence.content }}</pre>
+    </el-dialog>
   </el-dialog>
 </template>
 
 <script>
-import { getCompare } from '@/api/project/disputeMediation';
+import {
+  collectEvidence,
+  compareEvidence,
+  getEvidenceFileUrl
+} from '@/api/project/disputeMediation';
+
+function createEmptyReport() {
+  return {
+    caseNo: '',
+    finalResult: {
+      conclusion: '',
+      summary: '',
+      institutionAdvantage: 0,
+      consumerAdvantage: 0,
+      metrics: {
+        evidenceCompleteness: 0,
+        analysisConfidence: 0,
+        disputePointCount: 0
+      },
+      disclaimer: ''
+    },
+    disputeSummary: {
+      institutionWinCount: 0,
+      consumerWinCount: 0
+    },
+    disputePoints: [],
+    conclusionBasis: {
+      dimensions: [],
+      institutionBasis: [],
+      consumerBasis: [],
+      summary: ''
+    },
+    mediationSuggestions: []
+  };
+}
+
 export default {
   name: 'EvidenceComparison',
   data() {
     return {
       visible: false,
       loading: false,
+      comparing: false,
       regenerating: false,
       confirming: false,
+      stage: 'select',
       row: {},
-      reportData: {
-        caseNo: '',
-        finalResult: {
-          conclusion: '',
-          summary: '',
-          institutionAdvantage: 0,
-          consumerAdvantage: 0,
-          metrics: {
-            evidenceCompleteness: 0,
-            analysisConfidence: 0,
-            disputePointCount: 0
-          },
-          disclaimer: ''
-        },
-        disputeSummary: {
-          institutionWinCount: 0,
-          consumerWinCount: 0
-        },
-        disputePoints: [],
-        conclusionBasis: {
-          dimensions: [],
-          institutionBasis: [],
-          consumerBasis: [],
-          summary: ''
-        },
-        mediationSuggestions: []
-      }
+      evidenceList: [],
+      selectedEvidence: [],
+      previewVisible: false,
+      previewEvidence: {},
+      reportData: createEmptyReport()
     };
+  },
+  computed: {
+    selectedEvidenceIds() {
+      return this.selectedEvidence.map(item => item.id);
+    }
   },
   methods: {
     open(row) {
       this.row = row || {};
+      this.stage = 'select';
+      this.evidenceList = [];
+      this.selectedEvidence = [];
+      this.reportData = createEmptyReport();
       this.visible = true;
-      this.loadReport();
+      this.loadEvidence();
     },
-    loadReport() {
+    loadEvidence() {
+      if (!this.row.workOrderId) {
+        this.$message.error('案件编号不能为空');
+        return;
+      }
       this.loading = true;
-      getCompare(this.row.workOrderId).then(res => {
-        if (res.code == 200 && res.data) {
-          this.reportData = res.data;
-          this.$message.success('报告已生成');
+      collectEvidence(this.row.workOrderId).then(res => {
+        if (res.code === 200 && res.data) {
+          this.evidenceList = Array.isArray(res.data.evidences) ? res.data.evidences : [];
+          this.selectedEvidence = [];
+          this.reportData.caseNo = res.data.caseNo || this.row.workOrderId;
         }
       }).finally(() => {
         this.loading = false;
       });
     },
+    handleEvidenceSelectionChange(selection) {
+      this.selectedEvidence = selection;
+    },
+    isEvidenceSelectable(row) {
+      return row.supported !== false;
+    },
+    canPreviewEvidence(row) {
+      return row.type === 'file' || Boolean(row.content);
+    },
+    handlePreviewEvidence(evidence) {
+      if (evidence.type === 'file') {
+        const url = getEvidenceFileUrl(this.row.workOrderId, evidence.id);
+        window.open(url, '_blank');
+        return;
+      }
+      this.previewEvidence = evidence;
+      this.previewVisible = true;
+    },
+    handleCompare() {
+      if (this.selectedEvidenceIds.length === 0) {
+        this.$message.warning('请至少选择一项真实证据');
+        return;
+      }
+      this.comparing = true;
+      this.generateReport('证据比对报告已生成').finally(() => {
+        this.comparing = false;
+      });
+    },
+    generateReport(successMessage) {
+      return compareEvidence(this.row.workOrderId, this.selectedEvidenceIds).then(res => {
+        if (res.code === 200 && res.data) {
+          this.reportData = res.data;
+          this.stage = 'report';
+          this.$message.success(successMessage);
+        }
+      });
+    },
+    handleBackToEvidence() {
+      const selectedIds = new Set(this.selectedEvidenceIds);
+      this.stage = 'select';
+      this.$nextTick(() => {
+        if (!this.$refs.evidenceTable) return;
+        this.evidenceList.forEach(item => {
+          if (selectedIds.has(item.id)) {
+            this.$refs.evidenceTable.toggleRowSelection(item, true);
+          }
+        });
+      });
+    },
     handleRegenerate() {
       this.regenerating = true;
-      getCompare(this.row.workOrderId).then(res => {
-        if (res.code == 200 && res.data) {
-          this.reportData = res.data;
-          this.$message.success('报告已重新生成');
-        }
-      }).finally(() => {
+      this.generateReport('报告已重新生成').finally(() => {
         this.regenerating = false;
       });
     },
@@ -302,8 +441,11 @@ export default {
     },
     handleClosed() {
       this.loading = false;
+      this.comparing = false;
       this.regenerating = false;
       this.confirming = false;
+      this.previewVisible = false;
+      this.previewEvidence = {};
     }
   }
 };
@@ -318,6 +460,95 @@ $text-primary: #1e293b;
 $text-secondary: #64748b;
 $border-color: #e2e8f0;
 $bg-page: #f8fafc;
+
+.ec-steps {
+  margin-bottom: 18px;
+  border: 1px solid $border-color;
+}
+
+.ec-evidence-section {
+  min-height: 420px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+}
+
+.ec-evidence-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.ec-evidence-title {
+  margin: 0;
+  color: $text-primary;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.ec-evidence-subtitle {
+  margin: 5px 0 0;
+  color: $text-secondary;
+  font-size: 12px;
+}
+
+.ec-evidence-count {
+  flex-shrink: 0;
+  color: $text-secondary;
+  font-size: 13px;
+  line-height: 24px;
+
+  strong {
+    color: $inst-color;
+    font-size: 16px;
+  }
+}
+
+.ec-evidence-table {
+  width: 100%;
+
+  ::v-deep .el-table__row {
+    height: 58px;
+  }
+}
+
+.ec-evidence-name {
+  margin-bottom: 3px;
+  color: $text-primary;
+  line-height: 1.45;
+}
+
+.ec-evidence-summary {
+  display: block;
+  overflow: hidden;
+  color: $text-secondary;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ec-preview-title {
+  margin: 0 0 12px;
+  color: $text-primary;
+  font-size: 15px;
+}
+
+.ec-preview-content {
+  max-height: 55vh;
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  border: 1px solid $border-color;
+  background: #f8fafc;
+  color: $text-primary;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
 .ec-dot {
   display: inline-block;
@@ -989,6 +1220,14 @@ $bg-page: #f8fafc;
 
   .el-dialog__body {
     padding: 0;
+  }
+}
+
+.evidence-preview-dialog {
+  border-radius: 6px;
+
+  .el-dialog__body {
+    padding-top: 12px;
   }
 }
 </style>

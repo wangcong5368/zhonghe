@@ -406,7 +406,7 @@ export default {
       if (!this.smartScriptVisible || !this.isCallAnswered() || this.smartScriptSessionEnded) return;
       this.smartScriptTimer = setInterval(() => {
         this.fetchSmartScriptAnalysis({ silent: true });
-      }, 10000);
+      }, 5000);
     },
     stopSmartScriptPolling() {
       if (this.smartScriptTimer) {
@@ -418,12 +418,13 @@ export default {
       return this.sseList
         .filter(d => d && String(d.message || '').trim())
         .map(d => ({
-          role: this.mapRoleToTranscriptRole(d.role),
+          role: this.mapRoleToSmartScriptRole(d.role),
           content: String(d.message || '').trim(),
           timestamp: this.formatTranscriptTimestamp(d.timestamp),
         }));
     },
     async fetchSmartScriptAnalysis({ silent = false } = {}) {
+      if (silent && (this.smartScriptLoading || this.smartScriptRegenerating)) return;
       const messages = this.buildSmartScriptMessages();
       if (!messages.length) {
         if (!silent) {
@@ -437,6 +438,9 @@ export default {
         const res = await analyzeTypicalChat({ messages });
         const body = res && res.data ? res.data : res;
         if (body && body.code === 200 && body.data) {
+          if (silent && JSON.stringify(this.smartScriptData || {}) === JSON.stringify(body.data)) {
+            return;
+          }
           this.smartScriptData = body.data;
           return;
         }
@@ -655,6 +659,9 @@ export default {
     },
     mapRoleToTranscriptRole(role) {
       return role === '投诉人' ? 'consumer' : 'mediator';
+    },
+    mapRoleToSmartScriptRole(role) {
+      return role === '投诉人' ? 'customer' : 'mediator';
     },
     formatTranscriptTimestamp(ts) {
       const date = ts != null ? new Date(ts) : new Date();

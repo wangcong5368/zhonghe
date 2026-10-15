@@ -13,7 +13,8 @@ export function ocrServiceUrl(path) {
 
 function assertOcrBaseUrl() {
     const base = String(conf.server.ocrBaseUrl || '').trim();
-    if (!base || !/^https?:\/\//i.test(base)) {
+    const valid = /^https?:\/\//i.test(base) || base.startsWith('/');
+    if (!base || !valid) {
         throw new Error('OCR 服务地址未配置或无效，请检查 conf.server.ocrBaseUrl');
     }
 }

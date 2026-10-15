@@ -54,15 +54,23 @@
                     </el-form-item>
                   </el-col>
                 </el-row>
-                <el-row v-if="form.entryChannel && form.entryChannel !== DM_ENTRY_CHANNEL.E">
+                <el-row v-if="
+                  (form.entryChannel && form.entryChannel !== DM_ENTRY_CHANNEL.E) ||
+                  $store.getters.userInfo.isDMCourtBankEntryClerk ||
+                  $store.getters.userInfo.isDMCourtNonBankEntryClerk ||
+                  $store.getters.userInfo.isDMCourtInsuranceEntryClerk
+                ">
                   <el-col :span="24">
                     <el-form-item label="图片/pdf信息识别">
                       <el-upload ref="ocrUpload" action="" accept="image/*,.pdf,application/pdf" multiple
-                        :show-file-list="false" :limit="5" :http-request="handleOcrUpload"
-                        :before-upload="beforeOcrUpload" :on-exceed="handleOcrExceed" :auto-upload="true">
-                        <el-button size="mini" type="primary">上传图片/PDF</el-button>
-                        <span slot="tip" class="el-upload__tip" style="margin-left: 12px">支持一次选择多张图片或
-                          PDF，批量识别工单相关信息</span>
+                        :file-list="ocrPendingFiles" :show-file-list="true" :limit="10"
+                        :on-change="handleOcrFileChange" :on-remove="handleOcrFileRemove"
+                        :on-exceed="handleOcrExceed" :auto-upload="false" :disabled="ocrUploading">
+                        <el-button size="mini" type="primary" icon="el-icon-plus" :disabled="ocrUploading">选择图片/PDF</el-button>
+                        <el-button slot="tip" size="mini" type="success" icon="el-icon-search"
+                          :loading="ocrUploading" :disabled="ocrPendingFiles.length === 0"
+                          style="margin-left: 8px" @click.stop="recognizeOcrFiles">开始识别</el-button>
+                        <span slot="tip" class="el-upload__tip" style="margin-left: 12px">最多选择 10 个图片或 PDF</span>
                       </el-upload>
                       <ul v-if="ocrRecognizeRecords.length" class="recognize-records-list">
                         <li v-for="(record, index) in ocrRecognizeRecords" :key="record.id"
@@ -139,7 +147,8 @@
                       { validator: this.validCertNum(this.form.agentCertType), trigger: 'blur' }
                     ]">
                       <el-input v-model="form.agentCertNum" placeholder="请输入代理人证件号码"
-                        :maxlength="this.validCertNumLength(this.form.agentCertType)" show-word-limit clearable />
+                        :maxlength="this.validCertNumLength(this.form.agentCertType)" show-word-limit clearable
+                        @input="applyRecognizedIdentityRules" />
                     </el-form-item>
                   </el-col>
                 </el-row>
@@ -1648,9 +1657,8 @@ export default {
       formId: null,
       ocrRecognizeRecords: [],
       activeOcrRecordId: null,
-      ocrBatchFiles: [],
-      ocrBatchOptions: [],
-      ocrBatchTimer: null,
+      ocrPendingFiles: [],
+      ocrUploading: false,
       excelRecognizeRecords: [],
       activeExcelRecordId: null,
       asrRecognizeRecords: [],
@@ -1719,6 +1727,7 @@ export default {
           this.sseList = [];
           this.ocrRecognizeRecords = [];
           this.activeOcrRecordId = null;
+          this.ocrPendingFiles = [];
           this.excelRecognizeRecords = [];
           this.activeExcelRecordId = null;
           this.asrRecognizeRecords = [];
@@ -1742,6 +1751,7 @@ export default {
           this.diaputeForm = this.getDefaultDiaputeForm();
           this.ocrRecognizeRecords = [];
           this.activeOcrRecordId = null;
+          this.ocrPendingFiles = [];
           this.excelRecognizeRecords = [];
           this.activeExcelRecordId = null;
           this.asrRecognizeRecords = [];
@@ -1814,18 +1824,71 @@ export default {
     disabledDate(time) {
       return time.getTime() < Date.now();
     },
+    normalizeRecognizedCertNumber(certNum) {
+      if (certNum == null) {
+        return '';
+      }
+      return String(certNum).replace(/[\s\u200B-\u200D\uFEFF]/g, '').toUpperCase();
+    },
+    getResidentIdCardCore(certNum) {
+      const val = this.normalizeRecognizedCertNumber(certNum);
+      if (!/^\d{17}[\dX]*$/.test(val)) {
+        return null;
+      }
+      const core = val.substring(0, 17);
+      const match = core.match(/^[1-9]\d{5}(18|19|20)(\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}$/);
+      if (!match) {
+        return null;
+      }
+      const year = parseInt(core.substring(6, 10), 10);
+      const month = parseInt(core.substring(10, 12), 10);
+      const day = parseInt(core.substring(12, 14), 10);
+      const birthDate = new Date(year, month - 1, day);
+      if (birthDate.getFullYear() !== year || birthDate.getMonth() !== month - 1 || birthDate.getDate() !== day) {
+        return null;
+      }
+      return core;
+    },
+    isResidentIdCardNumber(certNum) {
+      const val = this.normalizeRecognizedCertNumber(certNum);
+      return val.length === 18 && this.getResidentIdCardCore(val) != null;
+    },
+    isUnifiedSocialCreditCode(certNum) {
+      const val = this.normalizeRecognizedCertNumber(certNum);
+      return /^[0-9A-HJ-NPQRTUWXY]{18}$/.test(val) && !this.isResidentIdCardNumber(val);
+    },
+    getCertTypeValueByLabel(label) {
+      const certTypeDict = this.dict && this.dict.type && this.dict.type.cert_type;
+      const options = Array.isArray(certTypeDict) ? certTypeDict : (certTypeDict && certTypeDict.options) || [];
+      const matched = options.find(item => item && item.label === label);
+      if (matched) {
+        return matched.value;
+      }
+      return label === '统一社会信用代码' ? '4' : null;
+    },
+    inferCertTypeFromNumber(certNum) {
+      if (this.isResidentIdCardNumber(certNum)) {
+        return CERT_TYPE.CERT_TYPE0;
+      }
+      if (this.isUnifiedSocialCreditCode(certNum)) {
+        return this.getCertTypeValueByLabel('统一社会信用代码');
+      }
+      if (this.getResidentIdCardCore(certNum)) {
+        return CERT_TYPE.CERT_TYPE0;
+      }
+      return null;
+    },
     /** 18 位居民身份证解析性别、年龄（与手动输入证件号规则一致） */
     parseIdCardSexAndAge(certType, certNum) {
       if (certType !== CERT_TYPE.CERT_TYPE0 || certNum == null || certNum === '') {
         return null;
       }
-      const val = String(certNum).trim().toUpperCase();
-      const regex = /^[1-9]\d{5}(18|19|20)?\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}(\d|X)$/;
-      if (!regex.test(val) || val.length < 18) {
+      const core = this.getResidentIdCardCore(certNum);
+      if (!core) {
         return null;
       }
-      const sex = val.charAt(16) % 2 === 0 ? SYS_SEX.man : SYS_SEX.woman;
-      const birthDateStr = val.substring(6, 14);
+      const sex = core.charAt(16) % 2 === 0 ? SYS_SEX.man : SYS_SEX.woman;
+      const birthDateStr = core.substring(6, 14);
       const birthYear = parseInt(birthDateStr.substring(0, 4), 10);
       const birthMonth = parseInt(birthDateStr.substring(4, 6), 10) - 1;
       const birthDay = parseInt(birthDateStr.substring(6, 8), 10);
@@ -1838,6 +1901,36 @@ export default {
         return { sex };
       }
       return { sex, age };
+    },
+    /** 根据识别出的号码确定主体与证件类型，再计算身份证派生字段 */
+    applyRecognizedIdentityRules() {
+      const consumerCertNum = this.normalizeRecognizedCertNumber(this.form.certNum);
+      const consumerCertType = this.inferCertTypeFromNumber(consumerCertNum);
+      if (consumerCertType != null) {
+        this.$set(this.form, 'certNum', consumerCertNum);
+        this.$set(this.form, 'certType', consumerCertType);
+        if (consumerCertType === CERT_TYPE.CERT_TYPE0) {
+          this.$set(this.form, 'consumerIdentityType', DM_IDENTITY_TYPE.NATURAL);
+        } else {
+          this.$set(this.form, 'consumerIdentityType', DM_IDENTITY_TYPE.LEGAL);
+          this.$set(this.form, 'isSelf', SYS_YES_NO.sys_no);
+          this.$set(this.form, 'sex', null);
+          this.$set(this.form, 'age', null);
+          this.$set(this.form, 'nation', null);
+        }
+      }
+
+      const agentCertNum = this.normalizeRecognizedCertNumber(this.form.agentCertNum);
+      const agentCertType = this.inferCertTypeFromNumber(agentCertNum);
+      if (agentCertType != null) {
+        this.$set(this.form, 'agentCertNum', agentCertNum);
+        this.$set(this.form, 'agentCertType', agentCertType);
+        if (agentCertType !== CERT_TYPE.CERT_TYPE0) {
+          this.$set(this.form, 'agentSex', null);
+        }
+      }
+
+      this.applyIdCardDerivedFields();
     },
     /** 回填后按证件类型+证件号推导性别、年龄（消费者/代理人/机构代表） */
     applyIdCardDerivedFields() {
@@ -1860,20 +1953,8 @@ export default {
       }
     },
     // 根据身份证号自动填充年龄性别
-    cardNumChange(val) {
-      if (this.form.certType !== CERT_TYPE.CERT_TYPE0) {
-        return;
-      }
-      const parsed = this.parseIdCardSexAndAge(this.form.certType, val);
-      if (!parsed) {
-        return;
-      }
-      if (parsed.sex != null) {
-        this.form.sex = parsed.sex;
-      }
-      if (parsed.age != null) {
-        this.form.age = parsed.age;
-      }
+    cardNumChange() {
+      this.applyRecognizedIdentityRules();
     },
     /** 校验数字并且小数点后两位 */
     validAmount(value, str) {
@@ -1973,11 +2054,11 @@ export default {
       return true;
     },
     handleOcrExceed() {
-      this.$modal.msgError('上传文件数量不能超过 5 个');
+      this.$modal.msgError('上传文件数量不能超过 10 个');
     },
-    /** el-upload 自定义上传：取原生 File（option.file.raw） */
+    /** 从 el-upload 文件项或自定义上传参数中取得原生 File。 */
     resolveUploadRawFile(option) {
-      const f = option && option.file;
+      const f = option && option.file ? option.file : option;
       const raw = f && f.raw != null ? f.raw : f;
       if (raw instanceof File || raw instanceof Blob) {
         return raw;
@@ -1999,33 +2080,46 @@ export default {
         ]
       });
     },
-    handleOcrUpload(option) {
-      const raw = this.resolveUploadRawFile(option);
-      if (!raw) {
-        this.$modal.msgError('无法读取文件，请重新选择');
-        option.onError(new Error('invalid upload file'));
+    handleOcrFileChange(file, fileList) {
+      this.ocrPendingFiles = fileList.slice();
+    },
+    handleOcrFileRemove(file, fileList) {
+      this.ocrPendingFiles = fileList.slice();
+    },
+    recognizeOcrFiles() {
+      if (this.ocrUploading) {
         return;
       }
-      this.ocrBatchFiles.push(raw);
-      this.ocrBatchOptions.push(option);
-      clearTimeout(this.ocrBatchTimer);
-      this.ocrBatchTimer = setTimeout(() => this.flushOcrBatchUpload(), 80);
+      const files = [];
+      for (const item of this.ocrPendingFiles) {
+        const raw = this.resolveUploadRawFile(item);
+        if (!raw) {
+          this.$modal.msgError('无法读取文件，请删除后重新选择');
+          return;
+        }
+        if (!this.beforeOcrUpload(raw)) {
+          return;
+        }
+        files.push(raw);
+      }
+      if (!files.length) {
+        this.$modal.msgError('请先选择需要识别的图片或 PDF');
+        return;
+      }
+      this.flushOcrBatchUpload(files);
     },
-    flushOcrBatchUpload() {
-      const files = [...this.ocrBatchFiles];
-      const options = [...this.ocrBatchOptions];
-      this.ocrBatchFiles = [];
-      this.ocrBatchOptions = [];
+    flushOcrBatchUpload(files) {
       if (!files.length) {
         return;
       }
+      this.ocrUploading = true;
       this.$modal.loading('正在上传并识别，请稍候...');
       const fd = new FormData();
       files.forEach(f => {
         fd.append('file', f, f.name);
       });
       const fileLabel = files.map(f => f.name || '文件').join('、');
-      uploadOcr(fd, 120000)
+      uploadOcr(fd, 300000)
         .then(res => {
           const body = res.data;
           const code = body && typeof body.code !== 'undefined' ? body.code : null;
@@ -2033,21 +2127,18 @@ export default {
             const msg = (body && body.msg) || `上传失败 (${res.status})`;
             this.$modal.closeLoading();
             this.$modal.msgError(msg);
-            options.forEach(opt => opt.onError(new Error(msg)));
             return;
           }
           if (body.status != null && body.status !== 'success') {
             const msg = (body && body.msg) || '识别失败';
             this.$modal.closeLoading();
             this.$modal.msgError(msg);
-            options.forEach(opt => opt.onError(new Error(msg)));
             return;
           }
           if (code !== null && code !== 200) {
             const msg = (body && body.msg) || '识别失败';
             this.$modal.closeLoading();
             this.$modal.msgError(msg);
-            options.forEach(opt => opt.onError(new Error(msg)));
             return;
           }
           const data = body.data;
@@ -2055,14 +2146,13 @@ export default {
             const msg = (body && body.msg) || '识别结果中缺少 data 表单字段对象（需与接口约定字段名一致）';
             this.$modal.closeLoading();
             this.$modal.msgError(msg);
-            options.forEach(opt => opt.onError(new Error(msg)));
             return;
           }
           const mapped = this.applyOcrDataToForm(body);
           const record = this.addOcrRecognizeRecord(data, fileLabel);
           this.uploadRecognizeFilesToAttachment(files, record.id, this.ocrRecognizeRecords);
           this.$modal.closeLoading();
-          options.forEach(opt => opt.onSuccess(body, opt.file));
+          this.ocrPendingFiles = [];
           if (this.$refs.ocrUpload) {
             this.$refs.ocrUpload.clearFiles();
           }
@@ -2072,7 +2162,9 @@ export default {
           this.$modal.closeLoading();
           const msg = (err.response && err.response.data && err.response.data.msg) || err.message || '上传失败';
           this.$modal.msgError(msg);
-          options.forEach(opt => opt.onError(err));
+        })
+        .finally(() => {
+          this.ocrUploading = false;
         });
     },
     uploadRecognizeFilesToAttachment(files, recordId, records) {
@@ -2502,7 +2594,6 @@ export default {
         'updateTime',
         'entryChannel', // 用户手动选择，OCR 不覆盖
         'deptType', // 由 deptId 变化自动联动，OCR 不覆盖
-        'deptId', // 树形选择，OCR 不覆盖
         // ...(this.$store.getters.userInfo.isDMInstitution ? ['deptId'] : []),
         // ...(this.$store.getters.userInfo.isDMInstitution ? ['deptType'] : []),
         ...(this.$store.getters.userInfo.isDMEntryClerk ? ['selfCollectionCaseType'] : [])
@@ -2541,12 +2632,31 @@ export default {
         insuranceType1: 'dm_insurance_type'
       };
       let count = 0;
+      let deptIdChanged = false;
       Object.keys(data).forEach(key => {
         if (systemSkipKeys.has(key)) {
           return;
         }
         const raw = data[key];
         if (this.isOcrFieldNoneValue(raw)) {
+          return;
+        }
+
+        // 后端只返回已经与机构库匹配成功的 deptId；机构用户仍保留自己的固定机构。
+        if (key === 'deptId') {
+          if (this.$store.getters.userInfo.isDMInstitution || !this.deptMap) {
+            return;
+          }
+          const numericId = Number(raw);
+          const matchedId = this.deptMap.has(raw)
+            ? raw
+            : (Number.isFinite(numericId) && this.deptMap.has(numericId) ? numericId : null);
+          if (matchedId == null) {
+            return;
+          }
+          this.$set(this.form, 'deptId', matchedId);
+          deptIdChanged = true;
+          count += 1;
           return;
         }
 
@@ -2627,8 +2737,11 @@ export default {
         this.$set(this.form, key, strVal);
         count += 1;
       });
-      // 每次图片/PDF 识别回填后，根据身份证号重新推导消费者性别、年龄（覆盖 OCR 原文返回值）
-      this.applyIdCardDerivedFields();
+      if (deptIdChanged) {
+        this.$nextTick(() => this.deptChange());
+      }
+      // 每次图片/PDF 识别回填后，根据证件号码修正主体、证件类型及身份证派生字段
+      this.applyRecognizedIdentityRules();
       return count;
     },
     /**
@@ -2705,7 +2818,7 @@ export default {
       if (deptIdChanged) {
         this.$nextTick(() => this.deptChange());
       }
-      this.applyIdCardDerivedFields();
+      this.applyRecognizedIdentityRules();
       return count;
     },
     normalizeExcelFormValue(key, raw, numericInputKeys, contactPhoneKeys, cascaderKeys) {
@@ -2854,6 +2967,7 @@ export default {
       this.resetForm('form');
       this.ocrRecognizeRecords = [];
       this.activeOcrRecordId = null;
+      this.ocrPendingFiles = [];
       this.excelRecognizeRecords = [];
       this.activeExcelRecordId = null;
       this.asrRecognizeRecords = [];
@@ -3185,6 +3299,7 @@ export default {
       if (!this.form.entryChannel || this.form.entryChannel === DM_ENTRY_CHANNEL.E) {
         this.ocrRecognizeRecords = [];
         this.activeOcrRecordId = null;
+        this.ocrPendingFiles = [];
         if (this.$refs.ocrUpload) {
           this.$refs.ocrUpload.clearFiles();
         }
@@ -3240,7 +3355,7 @@ export default {
       if (!this.smartScriptVisible || !this.isCallAnswered() || this.smartScriptSessionEnded) return;
       this.smartScriptTimer = setInterval(() => {
         this.fetchSmartScriptAnalysis({ silent: true });
-      }, 10000);
+      }, 5000);
     },
     stopSmartScriptPolling() {
       if (this.smartScriptTimer) {
@@ -3252,12 +3367,13 @@ export default {
       return this.sseList
         .filter(d => d && String(d.message || '').trim())
         .map(d => ({
-          role: this.mapRoleToTranscriptRole(d.role),
+          role: this.mapRoleToSmartScriptRole(d.role),
           content: String(d.message || '').trim(),
           timestamp: this.formatTranscriptTimestamp(d.timestamp)
         }));
     },
     async fetchSmartScriptAnalysis({ silent = false } = {}) {
+      if (silent && (this.smartScriptLoading || this.smartScriptRegenerating)) return;
       const messages = this.buildSmartScriptMessages();
       if (!messages.length) {
         if (!silent) {
@@ -3271,6 +3387,9 @@ export default {
         const res = await analyzeTypicalChat({ messages });
         const body = res && res.data ? res.data : res;
         if (body && body.code === 200 && body.data) {
+          if (silent && JSON.stringify(this.smartScriptData || {}) === JSON.stringify(body.data)) {
+            return;
+          }
           this.smartScriptData = body.data;
           return;
         }
@@ -3540,6 +3659,9 @@ export default {
     mapRoleToTranscriptRole(role) {
       return role === '投诉人' ? 'consumer' : 'mediator';
     },
+    mapRoleToSmartScriptRole(role) {
+      return role === '投诉人' ? 'customer' : 'mediator';
+    },
     formatTranscriptTimestamp(ts) {
       const date = ts != null ? new Date(ts) : new Date();
       if (Number.isNaN(date.getTime())) {
@@ -3632,7 +3754,7 @@ export default {
               // 找到城市，补齐provinceName并返回完整信息
               return {
                 type: 'city',
-                provinceCode: city.value,
+                provinceCode: province.value,
                 provinceName: province.label, // 从父级获取省份名称
                 cityCode: city.value,
                 cityName: city.label

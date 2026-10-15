@@ -22,7 +22,7 @@
         :rules="[{ required: true, message: form.status === '10' ? '办结日期为必填项' : '调解日期为必填项', trigger: 'change' }]">
         <el-date-picker v-model="form.finishTime" type="datetimerange" range-separator="至" start-placeholder="开始日期"
           end-placeholder="结束日期" :picker-options="pickerOptions"
-          :default-time="['16:30:00', '16:30:00']"></el-date-picker>
+          :default-time="['00:00:00', '23:59:59']"></el-date-picker>
       </el-form-item>
     </el-form>
 
@@ -56,10 +56,10 @@ export default {
             text: '今天',
             onClick(picker) {
               const nowTime = new Date();
-              const todayTime = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate(), 16, 30);
+              const todayTime = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate());
               const start = new Date(todayTime);
               const end = new Date(todayTime);
-              start.setDate(start.getDate() - 1);
+              end.setHours(23, 59, 59);
               picker.$emit('pick', [start, end]);
             }
           },
@@ -67,11 +67,12 @@ export default {
             text: '昨天',
             onClick(picker) {
               const nowTime = new Date();
-              const todayTime = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate(), 16, 30);
+              const todayTime = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate());
               const start = new Date(todayTime);
               const end = new Date(todayTime);
-              start.setDate(start.getDate() - 2);
+              start.setDate(start.getDate() - 1);
               end.setDate(end.getDate() - 1);
+              end.setHours(23, 59, 59);
               picker.$emit('pick', [start, end]);
             }
           },
@@ -79,11 +80,12 @@ export default {
             text: '前天',
             onClick(picker) {
               const nowTime = new Date();
-              const todayTime = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate(), 16, 30);
+              const todayTime = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate());
               const start = new Date(todayTime);
               const end = new Date(todayTime);
-              start.setDate(start.getDate() - 3);
+              start.setDate(start.getDate() - 2);
               end.setDate(end.getDate() - 2);
+              end.setHours(23, 59, 59);
               picker.$emit('pick', [start, end]);
             }
           }
@@ -96,10 +98,12 @@ export default {
   methods: {
     open() {
       const nowTime = new Date();
-      const todayTime = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate(), 16, 30);
+      const todayTime = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate());
       const start = new Date(todayTime);
       const end = new Date(todayTime);
       start.setDate(start.getDate() - 1);
+      end.setDate(end.getDate() - 1);
+      end.setHours(23, 59, 59);
       this.form = {
         industry: undefined,
         status: undefined,
