@@ -32,8 +32,8 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="渠道类型" prop="channelType"
-              :rules="disabled ? [] : [{ required: true, message: '渠道类型为必填项', trigger: 'change' }]">
-              <el-select v-model="form.channelType" disabled placeholder="请选择渠道类型" clearable style="width: 100%">
+              :rules="disabled ? [] : [{ required: true, validator: validateDisplayedChannelType, message: '渠道类型为必填项', trigger: 'change' }]">
+              <el-select :value="displayChannelType" disabled placeholder="请选择渠道类型" clearable style="width: 100%">
                 <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
@@ -305,8 +305,8 @@
                     </el-col> -->
           <el-col :span="12">
             <el-form-item label="机构类型" prop="institutionType">
-              <el-cascader v-model="form.institutionType" disabled
-                :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
+              <el-cascader :value="displayInstitutionType" disabled
+                :options="displayInstitutionTypeOptions"
                 :props="{ expandTrigger: 'hover', emitPath: false }" :placeholder="disabled ? '' : '请选择机构类型'" clearable
                 style="width: 100%" />
             </el-form-item>
@@ -1063,7 +1063,8 @@
 </template>
 
 <script>
-import { updateDisputeMediation, updateDisputeMediationAttachment, getDisputeMediationExpandInfo, saveOrUpdateDisputeMediationExpand, getProvinces, getCities, getByDeptId, getProvinceCityTree } from '@/api/project/disputeMediation';
+import { updateDisputeMediation, updateDisputeMediationAttachment, getDisputeMediationExpandInfo, saveOrUpdateDisputeMediationExpand, getProvinces, getCities, getProvinceCityTree } from '@/api/project/disputeMediation';
+import caseTypeDisplay from './mixins/caseTypeDisplay';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import {
@@ -1081,6 +1082,7 @@ import {
 import { mapGetters } from 'vuex';
 
 export default {
+  mixins: [caseTypeDisplay],
   components: { Treeselect },
   dicts: [
     'dept_type',
@@ -1280,7 +1282,7 @@ export default {
         //   { required: true, message: '受理状态为必填项', trigger: 'change' },
         // ],
         markCaseType: [{ required: true, message: '案件类型为必填项', trigger: 'change' }],
-        institutionType: [{ required: true, message: '机构类型为必填项', trigger: 'change' }]
+        institutionType: [{ required: true, validator: this.validateDisplayedInstitutionType, message: '机构类型为必填项', trigger: 'change' }]
         // mediationNumber: [{ required: true, message: '调解次数为必填项', trigger: 'change' }]
       },
       disabled: false,
@@ -1704,12 +1706,6 @@ export default {
           }
           if (res.data != null && res.data.channelType != null && res.data.channelType !== '') {
             this.$set(this.form, 'channelType', String(res.data.channelType));
-          } else {
-            if (this.form.entryChannel && (this.form.entryChannel === DM_ENTRY_CHANNEL.C || this.form.entryChannel === DM_ENTRY_CHANNEL.G)) {
-              this.form.channelType = '0';
-            } else {
-              this.form.channelType = '1';
-            }
           }
           if (res.data != null && res.data.provinceCode != null && res.data.provinceCode !== '') {
             // 1. 动态构建级联选择器的回显数组
@@ -1732,17 +1728,6 @@ export default {
         })
         .catch(() => { });
 
-      if (!this.form.institutionType) {
-        if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
-          this.form.institutionType = this.form.deptType;
-        }
-        if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
-          const res = await getByDeptId(this.form.deptId);
-          if (res.code === 200) {
-            this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
-          }
-        }
-      }
       if (this.$refs && this.$refs.form) {
         this.$refs.form.clearValidate('institutionType');
       }
@@ -1761,7 +1746,8 @@ export default {
       });
     },
     /** 提交按钮 */
-    submitForm() {
+    async submitForm() {
+      await this.prepareCaseTypesForSubmit();
       this.$refs['form'].validate(valid => {
         if (valid) {
           this.loading = true;
@@ -1876,22 +1862,10 @@ export default {
         //   this.form.deptHandlerPhone = null;
         //   this.form.deptHandlerCertNum = null;
         // }
-        if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
-          this.form.institutionType = this.form.deptType;
-          // 强制重新计算
-          this.$nextTick(() => {
-            this.filteredDeptTypeOptions;
-          });
-        }
-        if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
-          const res = await getByDeptId(this.form.deptId);
-          if (res.code === 200) {
-            this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
-          }
-        }
       } else {
         this.form.deptType = null;
       }
+      this.$set(this.form, 'institutionType', null);
       if (this.$refs && this.$refs.form) {
         this.$refs.form.clearValidate('institutionType');
       }

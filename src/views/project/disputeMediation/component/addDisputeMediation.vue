@@ -38,7 +38,7 @@
                     DEPT_TYPE.nonBankList.includes(form.deptType)
                   ">
                     <el-form-item label="渠道类型" prop="channelType">
-                      <el-select disabled v-model="form.channelType" placeholder="请选择渠道类型" clearable
+                      <el-select disabled :value="displayChannelType" placeholder="请选择渠道类型" clearable
                         style="width: 100%">
                         <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label"
                           :value="dict.value"></el-option>
@@ -378,8 +378,8 @@
                             </el-col> -->
                   <el-col :span="12">
                     <el-form-item label="机构类型" prop="institutionType">
-                      <el-cascader v-model="form.institutionType" disabled
-                        :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
+                      <el-cascader :value="displayInstitutionType" disabled
+                        :options="displayInstitutionTypeOptions"
                         :props="{ expandTrigger: 'hover', emitPath: false }" placeholder="请选择机构类型" clearable
                         style="width: 100%" />
                     </el-form-item>
@@ -1447,7 +1447,6 @@ import {
   saveCallTranscriptDetail,
   updateCallQualityWorkOrder,
   saveOrUpdateDisputeMediationExpand,
-  getByDeptId,
   getProvinceCityTree
 } from '@/api/project/disputeMediation';
 import { uploadOcr } from '@/api/ocr';
@@ -1459,6 +1458,7 @@ import axios from 'axios';
 import { getToken } from '@/utils/auth';
 import { analyzeTypicalChat } from '@/api/ocr';
 import SmartScriptPanel from './mediationRecord/smartScriptPanel.vue';
+import caseTypeDisplay from './mixins/caseTypeDisplay';
 
 /** 与左侧表单 el-input 的 maxlength 一致，OCR 映射时超长则截取 */
 const OCR_FIELD_MAXLENGTH = {
@@ -1500,6 +1500,7 @@ const OCR_FIELD_MAXLENGTH = {
 };
 
 export default {
+  mixins: [caseTypeDisplay],
   components: { Treeselect, SmartScriptPanel },
   dicts: [
     'dept_type',
@@ -1536,10 +1537,10 @@ export default {
       // 表单校验
       rules: {
         entryChannel: [{ required: true, message: '进件渠道为必填项', trigger: 'change' }],
-        channelType: [{ required: true, message: '渠道类型为必填项', trigger: 'change' }],
+        channelType: [{ required: true, validator: this.validateDisplayedChannelType, message: '渠道类型为必填项', trigger: 'change' }],
         mediatorUserId: [{ required: true, message: '调解员为必填项', trigger: 'change' }],
         isSelf: [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }],
-        institutionType: [{ required: true, message: '机构类型为必填项', trigger: 'change' }],
+        institutionType: [{ required: true, validator: this.validateDisplayedInstitutionType, message: '机构类型为必填项', trigger: 'change' }],
         // agentCertNum: [
         //   { required: this.form.agentCertType, message: '代理人证件号码为必填项', trigger: 'blur' },
         //   { validator: , trigger: 'blur' },
@@ -3087,14 +3088,6 @@ export default {
           }
         });
       }
-      if (this.form.entryChannel) {
-        if (this.form.entryChannel && (this.form.entryChannel === DM_ENTRY_CHANNEL.C || this.form.entryChannel === DM_ENTRY_CHANNEL.G)) {
-          this.form.channelType = '0';
-        } else {
-          this.form.channelType = '1';
-        }
-      }
-
       this.visible = true;
     },
     // 更新调解员禁用状态
@@ -3124,6 +3117,7 @@ export default {
     /** 提交按钮 */
     async submitForm() {
       try {
+        await this.prepareCaseTypesForSubmit();
         const valid = await new Promise(resolve => {
           this.$refs['form'].validate(resolve);
         });
@@ -3218,23 +3212,10 @@ export default {
         //   this.form.deptHandlerPhone = null;
         //   this.form.deptHandlerCertNum = null;
         // }
-
-        if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
-          this.form.institutionType = this.form.deptType;
-          // 强制重新计算
-          this.$nextTick(() => {
-            this.filteredDeptTypeOptions;
-          });
-        }
-        if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
-          const res = await getByDeptId(this.form.deptId);
-          if (res.code === 200) {
-            this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
-          }
-        }
       } else {
         this.form.deptType = null;
       }
+      this.$set(this.form, 'institutionType', null);
       if (this.$refs && this.$refs.form) {
         this.$refs.form.clearValidate('institutionType');
       }
@@ -3313,11 +3294,7 @@ export default {
         }
       }
 
-      if (this.form.entryChannel && (this.form.entryChannel === DM_ENTRY_CHANNEL.C || this.form.entryChannel === DM_ENTRY_CHANNEL.G)) {
-        this.form.channelType = '0';
-      } else {
-        this.form.channelType = '1';
-      }
+      this.$set(this.form, 'channelType', null);
     },
     calculateRightBHeight() {
       const dialogLeftEl = this.$refs.dialogLeft && this.$refs.dialogLeft.$el;

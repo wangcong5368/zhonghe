@@ -43,7 +43,7 @@
           <el-row>
             <el-col :span="12">
               <el-form-item label="渠道类型" prop="channelType">
-                <el-select v-model="form.channelType" disabled placeholder="" clearable style="width: 100%">
+                <el-select :value="displayChannelType" disabled placeholder="" clearable style="width: 100%">
                   <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label"
                     :value="dict.value"></el-option>
                 </el-select>
@@ -270,8 +270,8 @@
                         </el-col> -->
             <el-col :span="12">
               <el-form-item label="机构类型" prop="institutionType">
-                <el-cascader disabled v-model="form.institutionType"
-                  :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
+                <el-cascader disabled :value="displayInstitutionType"
+                  :options="displayInstitutionTypeOptions"
                   :props="{ expandTrigger: 'hover', emitPath: false }" placeholder="" clearable style="width: 100%" />
               </el-form-item>
             </el-col>
@@ -814,10 +814,12 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { DEPT_TYPE, SYS_YES_NO, SYS_SEX, DM_ACCEPT_STATUS, DM_ENTRY_CHANNEL, CERT_TYPE, DM_FINISH_TYPE, formatMarkCaseTypeLabel, DM_IDENTITY_TYPE } from '@/views/constant/CommonConstant.js';
 import FileList from '@/components/FileList/index.vue';
-import { getDisputeMediationExpandInfo, getProvinces, getCities, getByDeptId, getProvinceCityTree } from '@/api/project/disputeMediation';
+import { getDisputeMediationExpandInfo, getProvinces, getCities, getProvinceCityTree } from '@/api/project/disputeMediation';
+import caseTypeDisplay from './mixins/caseTypeDisplay';
 
 export default {
   name: 'Detail',
+  mixins: [caseTypeDisplay],
   components: {
     Treeselect,
     FileList
@@ -1017,17 +1019,6 @@ export default {
           }
         })
         .catch(() => { });
-      // if (!this.form.institutionType) {
-      //   if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
-      //     this.form.institutionType = this.form.deptType;
-      //   }
-      //   if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
-      //     const res = await getByDeptId(this.form.deptId);
-      //     if (res.code === 200) {
-      //       this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
-      //     }
-      //   }
-      // }
       this.visible = true;
     },
     cancel() {

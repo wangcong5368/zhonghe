@@ -31,8 +31,8 @@
             DEPT_TYPE.nonBankList.includes(form.deptType)
           ">
             <el-form-item label="渠道类型" prop="channelType"
-              :rules="[{ required: true, message: '渠道类型为必填项', trigger: 'change' }]">
-              <el-select disabled v-model="form.channelType" placeholder="请选择渠道类型" clearable style="width: 100%">
+              :rules="[{ required: true, validator: validateDisplayedChannelType, message: '渠道类型为必填项', trigger: 'change' }]">
+              <el-select disabled :value="displayChannelType" placeholder="请选择渠道类型" clearable style="width: 100%">
                 <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
@@ -263,8 +263,8 @@
         </el-col> -->
         <el-col :span="12">
           <el-form-item label="机构类型" prop="institutionType">
-            <el-cascader v-model="form.institutionType" disabled
-              :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
+            <el-cascader :value="displayInstitutionType" disabled
+              :options="displayInstitutionTypeOptions"
               :props="{ expandTrigger: 'hover', emitPath: false }" placeholder="请选择机构类型" clearable
               style="width: 100%" />
           </el-form-item>
@@ -606,14 +606,16 @@
 
 <script>
 import {
-  handle, handleReject, saveOrUpdateDisputeMediationExpand, getDisputeMediationExpandInfo, getProvinceCityTree, getByDeptId
+  handle, handleReject, saveOrUpdateDisputeMediationExpand, getDisputeMediationExpandInfo, getProvinceCityTree
 } from '@/api/project/disputeMediation';
+import caseTypeDisplay from './mixins/caseTypeDisplay';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { DEPT_TYPE, SYS_YES_NO, SYS_SEX, DM_ACCEPT_STATUS, DM_ENTRY_CHANNEL, CERT_TYPE, DM_IDENTITY_TYPE } from '@/views/constant/CommonConstant.js';
 import FileList from '@/components/FileList/index.vue';
 
 export default {
+  mixins: [caseTypeDisplay],
   components: { FileList, Treeselect },
   dicts: [
     'dept_type',
@@ -648,7 +650,7 @@ export default {
       rules: {
         entryChannel: [{ required: true, message: '进件渠道为必填项', trigger: 'change' }],
         isSelf: [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }],
-        institutionType: [{ required: true, message: '机构类型为必填项', trigger: 'change' }],
+        institutionType: [{ required: true, validator: this.validateDisplayedInstitutionType, message: '机构类型为必填项', trigger: 'change' }],
         // agentCertNum: [
         //   { validator: , trigger: "blur" },
         // ],
@@ -998,12 +1000,6 @@ export default {
           }
           if (res.data != null && res.data.channelType != null && res.data.channelType !== '') {
             this.$set(this.form, 'channelType', String(res.data.channelType));
-          } else {
-            if (this.form.entryChannel && (this.form.entryChannel === DM_ENTRY_CHANNEL.C || this.form.entryChannel === DM_ENTRY_CHANNEL.G)) {
-              this.form.channelType = '0';
-            } else {
-              this.form.channelType = '1';
-            }
           }
           if (res.data != null && res.data.institutionType != null && res.data.institutionType !== '') {
             this.$set(this.form, 'institutionType', String(res.data.institutionType));
@@ -1055,21 +1051,11 @@ export default {
         })
         .catch(() => { });
 
-      if (!this.form.institutionType) {
-        if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
-          this.form.institutionType = this.form.deptType;
-        }
-        if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
-          const res = await getByDeptId(this.form.deptId);
-          if (res.code === 200) {
-            this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
-          }
-        }
-      }
       this.visible = true;
     },
     /** 提交按钮 */
-    submitForm() {
+    async submitForm() {
+      await this.prepareCaseTypesForSubmit();
       this.$refs['form'].validate(valid => {
         if (valid) {
           this.loading = true;

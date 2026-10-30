@@ -24,6 +24,21 @@
       </div>
     </template>
 
+    <div v-if="!disabled" class="feedback-ocr-bar">
+      <span class="feedback-ocr-label">图片/pdf信息识别</span>
+      <el-upload ref="feedbackOcrUpload" class="feedback-ocr-upload" action=""
+        accept="image/*,.pdf,application/pdf" multiple :file-list="feedbackOcrPendingFiles" :show-file-list="true"
+        :limit="10" :on-change="handleFeedbackOcrFileChange" :on-remove="handleFeedbackOcrFileRemove"
+        :on-exceed="handleFeedbackOcrExceed" :auto-upload="false" :disabled="ocrUploading">
+        <el-button size="mini" type="primary" icon="el-icon-plus" :disabled="ocrUploading">选择图片/PDF</el-button>
+        <el-button slot="tip" size="mini" type="success" icon="el-icon-search" :loading="ocrUploading"
+          :disabled="feedbackOcrPendingFiles.length === 0 || ocrUploading" @click.stop="recognizeFeedbackOcrFiles">
+          开始识别
+        </el-button>
+        <span slot="tip" class="el-upload__tip feedback-ocr-tip">最多选择 10 个图片或 PDF</span>
+      </el-upload>
+    </div>
+
     <el-form ref="form" :model="form" :rules="rules" label-width="120px">
       <div>
         <div class="min_title">工单信息</div>
@@ -59,9 +74,9 @@
                 style="width: 100%" disabled></el-date-picker>
             </el-form-item>
           </el-col>
-          <el-col :span="12" v-if="form.channelType">
+          <el-col :span="12" v-if="displayChannelType">
             <el-form-item label="渠道类型" prop="channelType">
-              <el-select v-model="form.channelType" disabled placeholder="" clearable style="width: 100%">
+              <el-select :value="displayChannelType" disabled placeholder="" clearable style="width: 100%">
                 <el-option v-for="dict in dict.type.dm_channel_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
@@ -234,9 +249,9 @@
                 </el-col> -->
         <el-col :span="12">
           <el-form-item label="机构类型" prop="institutionType"
-            :rules="[{ required: true, message: '机构类型为必填项', trigger: 'change' }]">
-            <el-cascader v-model="form.institutionType" disabled
-              :options="DEPT_TYPE.insuranceList.includes(form.deptType) ? filteredDeptTypeOptions : dict.type.dm_institution_type"
+            :rules="[{ required: true, validator: validateDisplayedInstitutionType, message: '机构类型为必填项', trigger: 'change' }]">
+            <el-cascader :value="displayInstitutionType" disabled
+              :options="displayInstitutionTypeOptions"
               :props="{ expandTrigger: 'hover', emitPath: false }" :placeholder="disabled ? '' : '请选择机构类型'" clearable
               style="width: 100%" />
           </el-form-item>
@@ -821,12 +836,15 @@
 </template>
 
 <script>
-import { feedback2, temporarySaveFeedback, temporaryLoadFeedback, getDisputeMediationExpandInfo, getProvinces, getCities, saveOrUpdateDisputeMediationExpand, getByDeptId, getProvinceCityTree } from '@/api/project/disputeMediation';
+import { feedback2, temporarySaveFeedback, temporaryLoadFeedback, getDisputeMediationExpandInfo, getProvinces, getCities, saveOrUpdateDisputeMediationExpand, getProvinceCityTree } from '@/api/project/disputeMediation';
+import caseTypeDisplay from './mixins/caseTypeDisplay';
+import { uploadOcr } from '@/api/ocr';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { DEPT_TYPE, SYS_YES_NO, SYS_SEX, DM_ACCEPT_STATUS, DM_ENTRY_CHANNEL, CERT_TYPE, DM_AGREEMENT_STEP, DM_STATUS, DM_CREATE_TYPE, DM_IDENTITY_TYPE } from '@/views/constant/CommonConstant.js';
 
 export default {
+  mixins: [caseTypeDisplay],
   components: { Treeselect },
   dicts: [
     'dept_type',
@@ -862,6 +880,8 @@ export default {
       hasTemporary: false,
       attachmentForm: {},
       loading: false,
+      ocrUploading: false,
+      feedbackOcrPendingFiles: [],
       // 表单校验
       rules: {
         // isSelf: [{ required: true, message: '是否消费者本人为必填项', trigger: 'change' }],
@@ -981,6 +1001,250 @@ export default {
   },
   created() { },
   methods: {
+    handleFeedbackOcrFileChange(file, fileList) {
+      this.feedbackOcrPendingFiles = fileList.slice();
+    },
+    handleFeedbackOcrFileRemove(file, fileList) {
+      this.feedbackOcrPendingFiles = fileList.slice();
+    },
+    handleFeedbackOcrExceed() {
+      this.$modal.msgWarning('一次最多选择 10 个图片或 PDF');
+    },
+    recognizeFeedbackOcrFiles() {
+      if (this.ocrUploading) {
+        return;
+      }
+      const files = this.feedbackOcrPendingFiles.map(item => item.raw || item);
+      if (!files.length) {
+        this.$modal.msgError('请先选择需要识别的图片或 PDF');
+        return;
+      }
+      const invalidFile = files.find(file => {
+        const name = String(file.name || '').toLowerCase();
+        const type = String(file.type || '');
+        return !type.startsWith('image/') && !name.endsWith('.pdf');
+      });
+      if (invalidFile) {
+        this.$modal.msgError(`仅支持图片或 PDF：${invalidFile.name}`);
+        return;
+      }
+
+      const formData = new FormData();
+      files.forEach(file => formData.append('file', file, file.name));
+      this.ocrUploading = true;
+      uploadOcr(formData, 300000)
+        .then(response => {
+          const body = response && response.data ? response.data : {};
+          const success = body.status === 'success' || body.code === 200;
+          if (!success || !body.data || typeof body.data !== 'object') {
+            throw new Error(body.message || body.msg || 'OCR 识别失败');
+          }
+          const count = this.applyFeedbackOcrData(body.data);
+          if (count > 0) {
+            this.$modal.msgSuccess(`识别完成，已回填 ${count} 个字段`);
+          } else {
+            this.$modal.msgWarning('识别完成，但没有可回填的内容');
+          }
+          this.feedbackOcrPendingFiles = [];
+          if (this.$refs.feedbackOcrUpload) {
+            this.$refs.feedbackOcrUpload.clearFiles();
+          }
+        })
+        .catch(error => {
+          const body = error && error.response && error.response.data;
+          this.$modal.msgError((body && (body.message || body.msg)) || error.message || 'OCR 识别失败');
+        })
+        .finally(() => {
+          this.ocrUploading = false;
+        });
+    },
+    isEmptyOcrValue(value) {
+      if (value === undefined || value === null) {
+        return true;
+      }
+      const text = Array.isArray(value) ? value.join('') : String(value);
+      return !text.trim() || text.trim() === '无';
+    },
+    normalizeFeedbackOcrText(value) {
+      let text = String(value == null ? '' : value)
+        .replace(/\\r\\n|\\n|\\r|\/n/g, '\n')
+        .replace(/\\t/g, ' ')
+        .replace(/```(?:json)?/gi, '')
+        .replace(/[{}]/g, '');
+      const nextSectionPattern = /(?:银行\s*[\/／、]\s*(?:保险\s*[\/／、]\s*)?机构|金融机构|银行机构|保险机构|机构)?\s*(?:授权)?调解代理人信息|(?:^|\n)\s*(?:姓名|联系方式|证件类型|证件号码|银行\s*[\/／、]\s*机构公章|机构公章)\s*[：:]/m;
+      const nextSectionIndex = text.search(nextSectionPattern);
+      if (nextSectionIndex >= 0) {
+        text = text.slice(0, nextSectionIndex);
+      }
+      return text
+        .split('\n')
+        .map(line => line.replace(/^\s*[*#]+\s*/, '').trim().replace(/^["`,]+|["`,]+$/g, ''))
+        .filter(Boolean)
+        .join('\n')
+        .trim();
+    },
+    findFeedbackCascaderValue(options, rawValue) {
+      if (!Array.isArray(options)) {
+        return undefined;
+      }
+      const target = String(rawValue).trim();
+      for (const option of options) {
+        if (String(option.value) === target || option.label === target) {
+          return option.value;
+        }
+        const childValue = this.findFeedbackCascaderValue(option.children, target);
+        if (childValue !== undefined) {
+          return childValue;
+        }
+      }
+      return undefined;
+    },
+    applyFeedbackOcrData(data) {
+      const protectedFields = new Set([
+        'workOrderId', 'entryChannel', 'feedbackTime', 'channelType', 'deptId', 'deptName', 'deptType',
+        'institutionType', 'deptAcceptMediate', 'manageDeptId', 'mediatorUserId', 'assistantUserId',
+        'status', 'createId', 'createTime', 'updateId', 'updateTime', 'attachment',
+        'applicationAttachment', 'stampedFeedbackAttachment', 'photocopyAttachment'
+      ]);
+      const enumFields = {
+        isSelf: 'sys_yes_no',
+        agentCertType: 'cert_type',
+        agentSex: 'sys_user_sex',
+        consumerIdentityType: 'dm_consumer_identity_type',
+        certType: 'cert_type',
+        sex: 'sys_user_sex',
+        identityType: 'dm_identity_type',
+        isRepeatedly: 'sys_yes_no',
+        isBlackIndustry: 'sys_yes_no',
+        isThirdPartyAgent: 'sys_yes_no',
+        isHighRisk: 'sys_yes_no',
+        handleChannel: 'dm_handle_channel',
+        saleChannel: 'dm_sale_channel',
+        bankComplaintType: 'dm_bank_complaint_type',
+        insuranceComplaintType: 'dm_insurance_complaint_type',
+        consumerAcceptMediate: 'sys_yes_no',
+        needCheck: 'sys_yes_no',
+        enforceAgreementType: 'dm_enforce_agreement_type',
+        acceptStatus: 'dm_accept_status',
+        rejectReason: 'dm_reject_reason',
+        deptContactSex: 'sys_user_sex',
+        deptContactCertType: 'cert_type',
+        selfCollectionCaseType: DEPT_TYPE.insuranceList.includes(this.form.deptType)
+          ? 'dm_insurance_self_collection_case_type'
+          : 'dm_bank_self_collection_case_type'
+      };
+      const cascaderFields = {
+        businessType1: 'dm_business_type',
+        insuranceType1: 'dm_insurance_type'
+      };
+      const amountFields = new Set([
+        'involveAmount', 'appealAmount', 'solutionAmount', 'cashValue', 'lossAssessmentAmount', 'claimAmount'
+      ]);
+      const phoneFields = new Set(['phone', 'agentPhone', 'deptHandlerPhone', 'deptContactPhone']);
+      const plainTextFields = new Set(['solution', 'complaintContent', 'appeal']);
+      const maxlength = {
+        solution: 2000,
+        complaintContent: 5000,
+        appeal: 400,
+        product: 40,
+        contract: 40,
+        deptHandlerName: 10,
+        deptHandlerPhone: 11,
+        businessType2: 20,
+        businessType3: 20,
+        insuranceType2: 40,
+        policyholder: 10,
+        insured: 10,
+        businessCompany: 100,
+        salesman: 10,
+        salesmanJobNum: 10,
+        salesmanCertNum: 18,
+        deptContact: 10,
+        deptContactPhone: 11,
+        deptContactPosition: 30,
+        deptContactCertNum: 18
+      };
+      let count = 0;
+
+      Object.keys(data).forEach(key => {
+        const rawValue = data[key];
+        if (protectedFields.has(key) || this.isEmptyOcrValue(rawValue)) {
+          return;
+        }
+
+        if (enumFields[key]) {
+          const items = this.dict && this.dict.type && this.dict.type[enumFields[key]];
+          if (!items || !items.length) {
+            return;
+          }
+          const rawText = String(rawValue).trim();
+          const matched = items.find(item => String(item.value) === rawText || item.label === rawText);
+          if (matched) {
+            this.$set(this.form, key, matched.value);
+            count += 1;
+          }
+          return;
+        }
+
+        if (cascaderFields[key]) {
+          const dictData = this.dict && this.dict.type && this.dict.type[cascaderFields[key]];
+          const options = dictData && (dictData.options2 || dictData.options);
+          const matchedValue = this.findFeedbackCascaderValue(options, rawValue);
+          if (matchedValue !== undefined) {
+            this.$set(this.form, key, matchedValue);
+            count += 1;
+          }
+          return;
+        }
+
+        if (key === 'cityName' && rawValue) {
+          const area = this.findAreaInfo(String(rawValue).trim());
+          if (area) {
+            this.$set(this.form, 'provinceCode', area.provinceCode);
+            this.$set(this.form, 'provinceName', area.provinceName);
+            this.$set(this.form, 'cityCode', area.cityCode || '');
+            this.$set(this.form, 'cityName', area.cityName || '');
+            this.$set(this.form, 'financialServiceArea', area.cityCode || area.provinceCode);
+            count += 1;
+          }
+          return;
+        }
+
+        if (typeof rawValue !== 'string' && typeof rawValue !== 'number') {
+          return;
+        }
+        let value = String(rawValue).trim();
+        if (plainTextFields.has(key)) {
+          value = this.normalizeFeedbackOcrText(value);
+          if (!value) {
+            return;
+          }
+        } else if (amountFields.has(key)) {
+          const match = value.replace(/,/g, '').match(/\d+(?:\.\d{1,2})?/);
+          if (!match) {
+            return;
+          }
+          value = match[0];
+        } else if (phoneFields.has(key)) {
+          value = value.replace(/\D/g, '');
+          if (!value) {
+            return;
+          }
+        }
+        if (maxlength[key] && value.length > maxlength[key]) {
+          value = value.slice(0, maxlength[key]);
+        }
+        this.$set(this.form, key, value);
+        count += 1;
+      });
+
+      this.$nextTick(() => {
+        if (this.$refs.form) {
+          this.$refs.form.clearValidate();
+        }
+      });
+      return count;
+    },
     /** 校验数字并且小数点后两位 */
     validAmount(value, str) {
       // 使用正则表达式限制输入
@@ -1059,6 +1323,10 @@ export default {
     },
     // 表单重置
     reset() {
+      this.feedbackOcrPendingFiles = [];
+      if (this.$refs.feedbackOcrUpload) {
+        this.$refs.feedbackOcrUpload.clearFiles();
+      }
       this.form = {
         provinceCode: null,
         provinceName: null,
@@ -1242,18 +1510,6 @@ export default {
         })
         .catch(() => { });
 
-      if (!this.form.institutionType) {
-        if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
-          this.form.institutionType = this.form.deptType;
-        }
-        if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
-          const res = await getByDeptId(this.form.deptId);
-          if (res.code === 200) {
-            this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
-          }
-        }
-      }
-
       this.visible = true;
     },
     temporarySave() {
@@ -1276,7 +1532,8 @@ export default {
       });
     },
     /** 提交按钮 */
-    submitForm() {
+    async submitForm() {
+      await this.prepareCaseTypesForSubmit();
       this.$refs['form'].validate(valid => {
         if (valid) {
           this.loading = true;
@@ -1424,6 +1681,39 @@ export default {
 <style lang="scss" scoped>
 .endItem ::v-deep .el-textarea__inner {
   padding-bottom: 36px;
+}
+
+.feedback-ocr-bar {
+  display: flex;
+  align-items: flex-start;
+  min-height: 34px;
+  margin: 0 0 10px 16px;
+}
+
+.feedback-ocr-label {
+  flex: 0 0 108px;
+  padding-top: 7px;
+  color: #606266;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.feedback-ocr-upload {
+  flex: 1;
+}
+
+.feedback-ocr-upload ::v-deep .el-upload-list {
+  max-width: 520px;
+}
+
+.feedback-ocr-tip {
+  margin-left: 12px;
+  color: #909399;
+  font-size: 12px;
+}
+
+.feedback-ocr-upload ::v-deep .el-button + .el-button {
+  margin-left: 8px;
 }
 
 .min_title {

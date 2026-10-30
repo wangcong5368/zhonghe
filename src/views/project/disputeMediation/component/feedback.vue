@@ -169,10 +169,8 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="机构类型" prop="institutionType" label-width="125px">
-              <el-select disabled v-model="form.institutionType" placeholder="" clearable style="width: 100%">
-                <el-option v-for="dict in dict.type.dm_institution_type" :key="dict.value" :label="dict.label"
-                  :value="dict.value"></el-option>
-              </el-select>
+              <el-cascader disabled :value="displayInstitutionType" :options="displayInstitutionTypeOptions"
+                :props="{ expandTrigger: 'hover', emitPath: false }" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -680,15 +678,17 @@
 </template>
 
 <script>
-import { feedback, getByDeptId } from '@/api/project/disputeMediation';
+import { feedback } from '@/api/project/disputeMediation';
+import caseTypeDisplay from './mixins/caseTypeDisplay';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { DEPT_TYPE, SYS_YES_NO, SYS_SEX, DM_ACCEPT_STATUS, DM_ENTRY_CHANNEL, CERT_TYPE, DM_AGREEMENT_STEP, DM_STATUS, DM_CREATE_TYPE } from '@/views/constant/CommonConstant.js';
 
 export default {
+  mixins: [caseTypeDisplay],
   components: { Treeselect },
   dicts: [
-    // 'dept_type',
+    'dept_type',
     'dm_status',
     'dm_sale_channel',
     'dm_bank_complaint_type',
@@ -970,17 +970,6 @@ export default {
       }
 
       this.attachmentForm = { ...row };
-      // if (!this.form.institutionType) {
-      //   if (DEPT_TYPE.insuranceList.includes(this.form.deptType)) {
-      //     this.form.institutionType = this.form.deptType;
-      //   }
-      //   if (DEPT_TYPE.nonBankList.includes(this.form.deptType) || DEPT_TYPE.bankList.includes(this.form.deptType)) {
-      //     const res = await getByDeptId(this.form.deptId);
-      //     if (res.code === 200) {
-      //       this.form.institutionType = this.dict.type.dm_institution_type.find(ite => ite.label === res.data.departLable).value
-      //     }
-      //   }
-      // }
       this.disabled =
         (DM_STATUS.DM_STATUS4 === this.form.status && this.form.agreementStep != null && DM_AGREEMENT_STEP.AR !== this.form.agreementStep) || DM_STATUS.DM_STATUS10 === this.form.status;
       this.visible = true;
