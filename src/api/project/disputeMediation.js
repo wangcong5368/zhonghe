@@ -41,8 +41,8 @@ const ASR_SERVICE_BASE_URL = 'http://192.168.50.18:8080/api/v1/';
 export function getAsrStreamUrl(code) {
   const base = ASR_SERVICE_BASE_URL.replace(/\/$/, '');
   const seatCode = encodeURIComponent(String(code ?? '').trim());
-  // return `${base}/asr/stream/?code=${seatCode}`;
-  return `${base}/asr/stream/?code=139`;
+  return `${base}/asr/stream/?code=${seatCode}`;
+  // return `${base}/asr/stream/?code=139`;
 }
 
 /** FormData 上传至 expand 服务（multipart，不使用全局 application/json） */

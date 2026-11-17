@@ -30,16 +30,19 @@ export default {
         // baseUrl: _envS('$baseUrl', 'http://172.16.5.13:8080/tj-mediation-server'),
         // baseUrl: _envS('$baseUrl', 'http://172.16.5.171:8080/tj-mediation-server'),
         // baseUrl: _envS('$baseUrl', 'http://172.16.5.199:8080/tj-mediation-server'),
-        baseUrl: _envS('$baseUrl', 'http://192.168.0.173:8080/tj-mediation-server'),
+        baseUrl: _envS('$baseUrl', 'http://192.168.0.60:8080/tj-mediation-server'),
 
         /** 纠纷扩展服务（案件类型、满意度等），需全路径对接时可单独配置 */
-        expandBaseUrl: _envS('$expandBaseUrl', 'http://192.168.0.173:6582/tj-mediation-server-expand'),
+        expandBaseUrl: _envS('$expandBaseUrl', 'http://192.168.0.60:6582/tj-mediation-server-expand'),
 
         /** OCR 识别服务基址（如 /ocr/upload 等接口均在此服务下） */
         ocrBaseUrl: _envS('$ocrBaseUrl', 'http://192.168.0.60:35000/api'),
 
         /** 图片 OCR 识别上传（新服务，须全路径调用；zhishan 分支代码使用） */
         ocrUploadUrl: _envS('$ocrUploadUrl', 'http://192.168.0.60:35000/api/ocr/upload'),
+
+        /** 新平台典型案例页面地址 */
+        typicalCaseUrl: _envS('$typicalCaseUrl', 'http://192.168.50.18/mediator-management/case-management'),
 
         // baseUrl: _envS('$baseUrl', 'http://data.zhi-shan.cn/tj-mediation-server'),
         publicPath: _envS('$publicPath', 'tj-mediation-manage'),

@@ -18,8 +18,8 @@
           ]" :key="item.value" :label="item.label" :value="item.value"></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item :label="form.status === '10' ? '办结日期' : '调解日期'" prop="finishTime"
-        :rules="[{ required: true, message: form.status === '10' ? '办结日期为必填项' : '调解日期为必填项', trigger: 'change' }]">
+      <el-form-item label="办结日期" prop="finishTime"
+        :rules="[{ required: true, message: '办结日期为必填项', trigger: 'change' }]">
         <el-date-picker v-model="form.finishTime" type="datetimerange" range-separator="至" start-placeholder="开始日期"
           end-placeholder="结束日期" :picker-options="pickerOptions"
           :default-time="['00:00:00', '23:59:59']"></el-date-picker>

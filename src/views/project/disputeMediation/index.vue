@@ -257,6 +257,12 @@
     </div>
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
+        <el-button type="primary" round icon="el-icon-tickets" size="mini"
+          @click="openTypicalCasePlatform">典型案例</el-button>
+      </el-col>
+    </el-row>
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
         <template v-hasPermi="['project:disputeMediation:add']">
           <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
             v-if="$store.getters.userInfo.isDMEntryClerk || $store.getters.userInfo.isDMInstitutionEntryClerk">
@@ -952,6 +958,7 @@
 
 <script>
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import conf from '@/conf';
 import { institutionList } from '@/api/system/dept';
 import {
   DEPT_TYPE,
@@ -1299,6 +1306,9 @@ export default {
     }
   },
   methods: {
+    openTypicalCasePlatform() {
+      window.open(conf.server.typicalCaseUrl, '_blank', 'noopener,noreferrer');
+    },
     // 处理地址栏参数
     handlePhone() {
       if (this.$route.query.phoneNumber) {

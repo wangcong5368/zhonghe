@@ -1,4 +1,4 @@
-FROM nginx:latest
+FROM docker.1ms.run/nginx:latest
 
 ARG ppath
 RUN echo "public path is ${ppath}"

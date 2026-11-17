@@ -23,6 +23,16 @@
                 </el-select>
             </el-form-item>
             <el-form-item
+                v-if="DM_STATUS.DM_STATUS2 === row.status"
+                label="案件类型"
+                prop="selfCollectionCaseType"
+                :rules="[{ required: true, message: '案件类型为必填项', trigger: 'change' }]"
+            >
+                <el-select v-model="form.selfCollectionCaseType" placeholder="请选择案件类型" clearable style="width: 100%">
+                    <el-option v-for="dict in caseTypeOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
+                </el-select>
+            </el-form-item>
+            <el-form-item
                 :rules="[{ required: DM_STATUS.DM_STATUS4 === this.row.status, message: '终止调解原因为必填项', trigger: 'blur' }]"
                 label="终止调解原因"
                 prop="terminateReason"
@@ -46,17 +56,21 @@
 
 <script>
 import { terminate, saveOrUpdateDisputeMediationExpand, getDisputeMediationExpandInfo } from '@/api/project/disputeMediation';
-import { DM_STATUS } from '@/views/constant/CommonConstant';
+import { DEPT_TYPE, DM_STATUS } from '@/views/constant/CommonConstant';
 
 export default {
     name: '',
     computed: {
         DM_STATUS() {
             return DM_STATUS;
+        },
+        caseTypeOptions() {
+            const insurance = this.row.industry === 'insurance' || (!this.row.industry && DEPT_TYPE.insuranceList.includes(this.row.deptType));
+            return insurance ? this.dict.type.dm_insurance_self_collection_case_type : this.dict.type.dm_bank_self_collection_case_type;
         }
     },
     props: ['title'],
-    dicts: ['dm_self_reject_reason', 'dm_terminate_mediate_reason'],
+    dicts: ['dm_self_reject_reason', 'dm_terminate_mediate_reason', 'dm_bank_self_collection_case_type', 'dm_insurance_self_collection_case_type'],
     data() {
         return {
             row: {},
@@ -76,12 +90,19 @@ export default {
                 workOrderId: row.workOrderId,
                 terminateReason: DM_STATUS.DM_STATUS2 === this.row.status ? '1' : undefined,
                 selfRejectReason: undefined,
+                selfCollectionCaseType: undefined,
                 terminateRemark: undefined
             };
+            const openedForm = this.form;
             getDisputeMediationExpandInfo(row.workOrderId)
                 .then(res => {
+                    if (this.form !== openedForm || !this.visible) return;
                     if (res.data != null && res.data.selfRejectReason != null && res.data.selfRejectReason !== '') {
                         this.$set(this.form, 'selfRejectReason', String(res.data.selfRejectReason));
+                    }
+                    if (DM_STATUS.DM_STATUS2 === row.status && !this.form.selfCollectionCaseType
+                        && res.data != null && res.data.selfCollectionCaseType != null && res.data.selfCollectionCaseType !== '') {
+                        this.$set(this.form, 'selfCollectionCaseType', String(res.data.selfCollectionCaseType));
                     }
                 })
                 .catch(() => {});
@@ -91,7 +112,10 @@ export default {
             this.$refs['form'].validate(valid => {
                 if (valid) {
                     this.loading = true;
-                    const { selfRejectReason, ...restForm } = this.form;
+                    const { selfRejectReason, selfCollectionCaseType, ...restForm } = this.form;
+                    if (DM_STATUS.DM_STATUS2 === this.row.status) {
+                        restForm.selfCollectionCaseType = selfCollectionCaseType;
+                    }
 
                     terminate({ ...restForm })
                         .then(async res => {
