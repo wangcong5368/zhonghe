@@ -74,7 +74,7 @@ export default {
             this.resetForm('form');
             this.form = {
                 workOrderId: row.workOrderId,
-                terminateReason: DM_STATUS.DM_STATUS2 === this.row.status ? '1' : undefined,
+                terminateReason: undefined,
                 selfRejectReason: undefined,
                 terminateRemark: undefined
             };
@@ -92,15 +92,16 @@ export default {
                 if (valid) {
                     this.loading = true;
                     const { selfRejectReason, ...restForm } = this.form;
+                    const saveReason = DM_STATUS.DM_STATUS2 === this.row.status
+                        ? saveOrUpdateDisputeMediationExpand({
+                            workOrderId: this.form.workOrderId,
+                            selfRejectReason
+                        })
+                        : Promise.resolve();
 
-                    terminate({ ...restForm })
-                        .then(async res => {
-                            if (res.code === 200) {
-                                await saveOrUpdateDisputeMediationExpand({
-                                    workOrderId: this.form.workOrderId,
-                                    selfRejectReason
-                                });
-                            }
+                    saveReason
+                        .then(() => terminate({ ...restForm }))
+                        .then(() => {
                             this.$modal.msgSuccess('操作成功');
                             this.loading = false;
                             this.visible = false;
