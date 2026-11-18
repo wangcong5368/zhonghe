@@ -5,8 +5,8 @@
         <!-- 第一行 -->
         <el-row>
           <el-col :span="6">
-            <el-form-item label="消费者姓名" prop="name">
-              <el-input v-model="queryParams.name" placeholder="请输入消费者姓名" clearable @keyup.enter.native="handleQuery"
+            <el-form-item label="姓名" prop="name">
+              <el-input v-model="queryParams.name" placeholder="请输入姓名" clearable @keyup.enter.native="handleQuery"
                 style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -17,8 +17,9 @@
             </el-form-item>
           </el-col>
           <el-col :span="6">
-            <el-form-item label="工单状态" prop="status">
-              <el-select v-model="queryParams.status" placeholder="请选择工单状态" clearable style="width: 100%">
+            <el-form-item label="工单状态" prop="params.statusIn">
+              <el-select v-model="queryParams.params.statusIn" placeholder="请选择工单状态" clearable multiple
+                style="width: 100%">
                 <el-option v-for="dict in dict.type.dm_status" :key="dict.value" :label="dict.label"
                   :value="dict.value" />
               </el-select>
@@ -185,8 +186,9 @@
 
           <el-row>
             <el-col :span="6">
-              <el-form-item label="业务类型" prop="industry">
-                <el-select v-model="queryParams.industry" placeholder="请选择业务类型" clearable style="width: 100%">
+              <el-form-item label="业务类型" prop="params.industryIn">
+                <el-select v-model="queryParams.params.industryIn" placeholder="请选择业务类型" clearable multiple
+                  style="width: 100%">
                   <el-option v-for="dict in dict.type.dm_industry" :key="dict.value" :label="dict.label"
                     :value="dict.value" />
                 </el-select>
@@ -195,6 +197,13 @@
             <el-col :span="7">
               <el-form-item label="创建时间" prop="createTime">
                 <el-date-picker v-model="queryParams.params.createTime" value-format="yyyy-MM-dd HH:mm:ss"
+                  type="datetimerange" range-separator="至" start-placeholder="开始日期"
+                  end-placeholder="结束日期"></el-date-picker>
+              </el-form-item>
+            </el-col>
+            <el-col :span="7">
+              <el-form-item label="办结时间" prop="finishTime">
+                <el-date-picker v-model="queryParams.params.finishTime" value-format="yyyy-MM-dd HH:mm:ss"
                   type="datetimerange" range-separator="至" start-placeholder="开始日期"
                   end-placeholder="结束日期"></el-date-picker>
               </el-form-item>
@@ -1190,7 +1199,14 @@ export default {
         assistantUserId: null,
         finishType: null,
         status: null,
-        params: { phone: null, createTime: null, executionCompletedFlag: null }
+        params: {
+          phone: null,
+          createTime: null,
+          finishTime: null,
+          executionCompletedFlag: null,
+          statusIn: [],
+          industryIn: []
+        }
       },
       // 列信息
       columns: [
@@ -1339,7 +1355,7 @@ export default {
         .catch(() => { });
     },
     queryToData() {
-      const data = { ...this.queryParams };
+      const data = { ...this.queryParams, params: { ...this.queryParams.params } };
       if (this.backlog) {
         data.params.backlog = true;
       } else {
@@ -1369,8 +1385,19 @@ export default {
       } else {
         delete data.params.createTime;
       }
+      if (this.queryParams.params.finishTime && this.queryParams.params.finishTime.length === 2) {
+        data.params.finishTimeStart = this.queryParams.params.finishTime[0];
+        data.params.finishTimeEnd = this.queryParams.params.finishTime[1];
+      } else {
+        delete data.params.finishTimeStart;
+        delete data.params.finishTimeEnd;
+      }
+      delete data.params.finishTime;
       if (data.params.statusIn && data.params.statusIn.length === 0) {
         delete data.params.statusIn;
+      }
+      if (data.params.industryIn && data.params.industryIn.length === 0) {
+        delete data.params.industryIn;
       }
       return data;
     },
@@ -1430,7 +1457,14 @@ export default {
       this.resetForm('queryForm');
       this.queryParams.businessType1 = null;
       this.queryParams.insuranceType1 = null;
-      this.queryParams.params = { phone: null, createTime: null, executionCompletedFlag: null };
+      this.queryParams.params = {
+        phone: null,
+        createTime: null,
+        finishTime: null,
+        executionCompletedFlag: null,
+        statusIn: [],
+        industryIn: []
+      };
     },
     /** 重置按钮操作 */
     resetQuery() {

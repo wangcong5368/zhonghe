@@ -759,10 +759,10 @@
           </el-row>
           <el-row>
             <el-col :span="12">
-              <el-form-item label="终止受理原因" prop="terminateReason"
-                v-if="form.terminateReason && DM_FINISH_TYPE.terminateAccept === form.finishType">
-                <el-select v-model="form.terminateReason" disabled style="width: 100%">
-                  <el-option v-for="dict in dict.type.dm_terminate_accept_reason" :key="dict.value" :label="dict.label"
+              <el-form-item label="终止受理原因" prop="selfRejectReason"
+                v-if="form.selfRejectReason && DM_FINISH_TYPE.terminateAccept === form.finishType">
+                <el-select v-model="form.selfRejectReason" disabled style="width: 100%">
+                  <el-option v-for="dict in dict.type.dm_self_reject_reason" :key="dict.value" :label="dict.label"
                     :value="dict.value" />
                 </el-select>
               </el-form-item>
@@ -995,6 +995,9 @@ export default {
           }
           if (res.data != null && res.data.selfCollectionCaseType != null && res.data.selfCollectionCaseType !== '') {
             this.$set(this.form, 'selfCollectionCaseType', String(res.data.selfCollectionCaseType));
+          }
+          if (res.data != null && res.data.selfRejectReason != null && res.data.selfRejectReason !== '') {
+            this.$set(this.form, 'selfRejectReason', String(res.data.selfRejectReason));
           }
           if (res.data != null && res.data.controversyCause != null && res.data.controversyCause !== '') {
             this.$set(this.form, 'controversyCause', String(res.data.controversyCause));

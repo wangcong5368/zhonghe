@@ -88,7 +88,7 @@ export default {
             this.resetForm('form');
             this.form = {
                 workOrderId: row.workOrderId,
-                terminateReason: DM_STATUS.DM_STATUS2 === this.row.status ? '1' : undefined,
+                terminateReason: undefined,
                 selfRejectReason: undefined,
                 selfCollectionCaseType: undefined,
                 terminateRemark: undefined
@@ -112,6 +112,17 @@ export default {
             this.$refs['form'].validate(valid => {
                 if (valid) {
                     this.loading = true;
+                    const { selfRejectReason, ...restForm } = this.form;
+                    const saveReason = DM_STATUS.DM_STATUS2 === this.row.status
+                        ? saveOrUpdateDisputeMediationExpand({
+                            workOrderId: this.form.workOrderId,
+                            selfRejectReason
+                        })
+                        : Promise.resolve();
+
+                    saveReason
+                        .then(() => terminate({ ...restForm }))
+                        .then(() => {
                     const { selfRejectReason, selfCollectionCaseType, ...restForm } = this.form;
                     if (DM_STATUS.DM_STATUS2 === this.row.status) {
                         restForm.selfCollectionCaseType = selfCollectionCaseType;
