@@ -105,7 +105,7 @@
           <el-row>
             <el-col :span="12">
               <el-form-item label="消费者身份类型" prop="consumerIdentityType">
-                <el-select :value="DM_IDENTITY_TYPE.NATURAL" disabled style="width: 100%" placeholder="">
+                <el-select v-model="form.consumerIdentityType" disabled style="width: 100%" placeholder="">
                   <el-option v-for="dict in dict.type.dm_consumer_identity_type" :key="dict.value" :label="dict.label"
                     :value="dict.value"></el-option>
                 </el-select>
