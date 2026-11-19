@@ -123,19 +123,6 @@ export default {
                     saveReason
                         .then(() => terminate({ ...restForm }))
                         .then(() => {
-                    const { selfRejectReason, selfCollectionCaseType, ...restForm } = this.form;
-                    if (DM_STATUS.DM_STATUS2 === this.row.status) {
-                        restForm.selfCollectionCaseType = selfCollectionCaseType;
-                    }
-
-                    terminate({ ...restForm })
-                        .then(async res => {
-                            if (res.code === 200) {
-                                await saveOrUpdateDisputeMediationExpand({
-                                    workOrderId: this.form.workOrderId,
-                                    selfRejectReason
-                                });
-                            }
                             this.$modal.msgSuccess('操作成功');
                             this.loading = false;
                             this.visible = false;
