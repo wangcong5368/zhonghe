@@ -319,6 +319,11 @@
           v-hasPermi="['project:disputeMediation:export']">自收案件总局导出</el-button>
       </el-col>
       <el-col :span="1.5">
+        <el-button type="warning" plain icon="el-icon-download" size="mini"
+          @click="$refs.executionFeedbackExportRef.open()"
+          v-hasPermi="['project:disputeMediation:export']">执行阶段导出</el-button>
+      </el-col>
+      <el-col :span="1.5">
         <el-button type="warning" icon="el-icon-download" size="mini" @click="handleExport"
           v-hasPermi="['project:disputeMediation:dataExport']">数据导出</el-button>
       </el-col>
@@ -944,6 +949,8 @@
     <ExportAll ref="exportAllRef" />
     <!-- 自收案件导出组件 -->
     <Export ref="exportRef" />
+    <!-- 执行阶段导出组件 -->
+    <ExecutionFeedbackExport ref="executionFeedbackExportRef" />
 
     <!-- 自动分配表 -->
     <AutoAssign ref="autoAssignRef" />
@@ -1035,6 +1042,7 @@ import Detail from './component/detail.vue';
 import Import from './component/import.vue';
 import Export from './component/export.vue';
 import ExportAll from './component/exportAll.vue';
+import ExecutionFeedbackExport from './component/executionFeedbackExport.vue';
 import AutoAssign from './component/autoAssign.vue';
 import Terminate from './component/terminate.vue';
 import EvidenceComparison from './component/evidenceComparison.vue';
@@ -1077,6 +1085,7 @@ export default {
     Import,
     Export,
     ExportAll,
+    ExecutionFeedbackExport,
     AutoAssign,
     Terminate,
     EvidenceComparison,
