@@ -198,14 +198,14 @@
               <el-form-item label="创建时间" prop="createTime">
                 <el-date-picker v-model="queryParams.params.createTime" value-format="yyyy-MM-dd HH:mm:ss"
                   type="datetimerange" range-separator="至" start-placeholder="开始日期"
-                  end-placeholder="结束日期"></el-date-picker>
+                  end-placeholder="结束日期" :default-time="['00:00:00', '23:59:59']"></el-date-picker>
               </el-form-item>
             </el-col>
             <el-col :span="7">
               <el-form-item label="办结时间" prop="finishTime">
                 <el-date-picker v-model="queryParams.params.finishTime" value-format="yyyy-MM-dd HH:mm:ss"
                   type="datetimerange" range-separator="至" start-placeholder="开始日期"
-                  end-placeholder="结束日期"></el-date-picker>
+                  end-placeholder="结束日期" :default-time="['00:00:00', '23:59:59']"></el-date-picker>
               </el-form-item>
             </el-col>
           </el-row>
