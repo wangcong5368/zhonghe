@@ -35,9 +35,22 @@
 
 <script>
 export default {
+  props: {
+    title: {
+      type: String,
+      default: '消保平台自收案件导出'
+    },
+    exportPath: {
+      type: String,
+      default: 'project/disputeMediation/selfReceivingCaseExport'
+    },
+    courtCase: {
+      type: Boolean,
+      default: false
+    }
+  },
   data() {
     return {
-      title: '消保平台自收案件导出',
       visible: false,
       // 导入参数
       form: {
@@ -124,9 +137,10 @@ export default {
             '银行业_4': '银行-调解中自收反馈',
             '保险业_4': '保险-调解中自收反馈'
           };
-          const exportFileName = `${exportFileNameMap[`${this.form.industry}_${this.form.status}`]}_${this.parseTime(finishTimeEnd, '{y}-{m}-{d}')}.xlsx`;
+          const courtPrefix = this.courtCase ? '法院-' : '';
+          const exportFileName = `${courtPrefix}${exportFileNameMap[`${this.form.industry}_${this.form.status}`]}_${this.parseTime(finishTimeEnd, '{y}-{m}-{d}')}.xlsx`;
           this.download(
-            'project/disputeMediation/selfReceivingCaseExport',
+            this.exportPath,
             {
               params: {
                 industry: this.form.industry,

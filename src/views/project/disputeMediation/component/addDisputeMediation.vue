@@ -3155,6 +3155,8 @@ export default {
             email,
             identityType,
             consumerIdentityType,
+            legalName: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.name : '',
+            legalCertNum: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.certNum : '',
             disputedProductType,
             selfCollectionCaseType,
             controversyCause,

@@ -319,6 +319,10 @@
           v-hasPermi="['project:disputeMediation:export']">自收案件总局导出</el-button>
       </el-col>
       <el-col :span="1.5">
+        <el-button type="warning" plain icon="el-icon-download" size="mini" @click="$refs.courtExportRef.open()"
+          v-hasPermi="['project:disputeMediation:export']">法院自收案件总局导出</el-button>
+      </el-col>
+      <el-col :span="1.5">
         <el-button type="warning" icon="el-icon-download" size="mini" @click="handleExport"
           v-hasPermi="['project:disputeMediation:dataExport']">数据导出</el-button>
       </el-col>
@@ -944,6 +948,9 @@
     <ExportAll ref="exportAllRef" />
     <!-- 自收案件导出组件 -->
     <Export ref="exportRef" />
+    <!-- 法院自收案件导出组件 -->
+    <Export ref="courtExportRef" title="法院自收案件总局导出"
+      export-path="project/disputeMediation/courtSelfReceivingCaseExport" :court-case="true" />
 
     <!-- 自动分配表 -->
     <AutoAssign ref="autoAssignRef" />
