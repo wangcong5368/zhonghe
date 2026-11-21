@@ -122,10 +122,10 @@
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item :label="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '法人或非法人组织' : '消费者姓名'"
-              prop="name" :rules="disabled ? [] : [{ required: true, message: '消费者姓名为必填项', trigger: 'blur' }]"
-              :label-width="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '140px' : '120px'">
-              <el-input v-model="form.name" :placeholder="disabled ? '' : '请输入消费者姓名'" clearable maxlength="50"
+            <el-form-item :label="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '法人或非法人组织名称' : '消费者姓名'"
+              prop="name" :rules="disabled ? [] : [{ required: true, message: form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '法人或非法人组织名称为必填项' : '消费者姓名为必填项', trigger: 'blur' }]"
+              :label-width="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '160px' : '120px'">
+              <el-input v-model="form.name" :placeholder="disabled ? '' : form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '请输入法人或非法人组织名称' : '请输入消费者姓名'" clearable maxlength="50"
                 show-word-limit :disabled="disabled" />
             </el-form-item>
           </el-col>
@@ -163,7 +163,7 @@
                   { validator: this.validCertNum(this.form.certType), trigger: 'blur' }
                 ]
                 " :label-width="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '140px' : '120px'">
-              <el-input v-model="form.certNum" :placeholder="disabled ? '' : '请输入证件号码'"
+              <el-input v-model="form.certNum" :placeholder="disabled ? '' : form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '请输入统一社会信用代码' : '请输入证件号码'"
                 :maxlength="this.validCertNumLength(this.form.certType)" show-word-limit clearable :disabled="disabled"
                 @input="cardNumChange" />
             </el-form-item>
@@ -1700,6 +1700,10 @@ export default {
           }
           if (res.data != null && res.data.consumerIdentityType != null && res.data.consumerIdentityType !== '') {
             this.$set(this.form, 'consumerIdentityType', String(res.data.consumerIdentityType));
+            if (String(res.data.consumerIdentityType) === DM_IDENTITY_TYPE.LEGAL) {
+              this.$set(this.form, 'name', res.data.legalName == null ? '' : String(res.data.legalName));
+              this.$set(this.form, 'certNum', res.data.legalCertNum == null ? '' : String(res.data.legalCertNum));
+            }
           }
           if (res.data != null && res.data.disputedProductType != null && res.data.disputedProductType !== '') {
             this.$set(this.form, 'disputedProductType', String(res.data.disputedProductType));
@@ -1773,6 +1777,14 @@ export default {
             ...restForm
           } = this.form;
 
+          restForm.consumerIdentityType = consumerIdentityType;
+          restForm.legalName = consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.name : null;
+          restForm.legalCertNum = consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.certNum : null;
+          if (consumerIdentityType === DM_IDENTITY_TYPE.LEGAL) {
+            restForm.name = null;
+            restForm.certNum = null;
+          }
+
           if (this.disabled) {
             updateDisputeMediationAttachment(restForm)
               .then(() => this.syncExpandMarkCaseType(markCaseType))
@@ -1784,8 +1796,8 @@ export default {
                   mediationNumber,
                   identityType,
                   consumerIdentityType,
-                  legalName: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.name : '',
-                  legalCertNum: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.certNum : '',
+                  legalName: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.name : null,
+                  legalCertNum: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.certNum : null,
                   disputedProductType,
                   channelType,
                   provinceCode,
@@ -1815,8 +1827,8 @@ export default {
                   mediationNumber,
                   identityType,
                   consumerIdentityType,
-                  legalName: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.name : '',
-                  legalCertNum: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.certNum : '',
+                  legalName: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.name : null,
+                  legalCertNum: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.certNum : null,
                   disputedProductType,
                   channelType,
                   provinceCode,

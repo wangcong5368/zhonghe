@@ -192,9 +192,9 @@
                 </el-row>
                 <el-row>
                   <el-col :span="12">
-                    <el-form-item v-if="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL" label="法人或非法人组织"
-                      prop="name" label-width="140px">
-                      <el-input v-model="form.name" placeholder="请输入法人或非法人组织" clearable maxlength="50"
+                    <el-form-item v-if="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL" label="法人或非法人组织名称"
+                      prop="name" label-width="160px">
+                      <el-input v-model="form.name" placeholder="请输入法人或非法人组织名称" clearable maxlength="50"
                         show-word-limit />
                     </el-form-item>
                     <el-form-item v-else label="消费者姓名" prop="name">
@@ -3147,6 +3147,14 @@ export default {
           ...restForm
         } = this.form;
 
+        restForm.consumerIdentityType = consumerIdentityType;
+        restForm.legalName = consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.name : null;
+        restForm.legalCertNum = consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.certNum : null;
+        if (consumerIdentityType === DM_IDENTITY_TYPE.LEGAL) {
+          restForm.name = null;
+          restForm.certNum = null;
+        }
+
         const response = await addDisputeMediation(restForm);
         if (response.code === 200) {
           const recordData = response.data || {};
@@ -3155,8 +3163,8 @@ export default {
             email,
             identityType,
             consumerIdentityType,
-            legalName: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.name : '',
-            legalCertNum: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.certNum : '',
+            legalName: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.name : null,
+            legalCertNum: consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? this.form.certNum : null,
             disputedProductType,
             selfCollectionCaseType,
             controversyCause,

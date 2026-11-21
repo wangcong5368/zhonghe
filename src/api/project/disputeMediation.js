@@ -739,17 +739,17 @@ export function rollbackStatus(data) {
   });
 }
 
-// 纠纷扩展服务：工单扩展信息（案件类型、满意度等），使用 expandBaseUrl 全路径
+// 工单扩展信息由主服务统一读写
 export function getDisputeMediationExpandInfo(workOrderId) {
   return request({
-    url: expandServiceUrl(`/project/disputeMediationExpand/getWorkOrderInfo/${workOrderId}`),
+    url: `/project/disputeMediationExpand/getWorkOrderInfo/${workOrderId}`,
     method: "get",
   });
 }
 
 export function saveOrUpdateDisputeMediationExpand(data) {
   return request({
-    url: expandServiceUrl("/project/disputeMediationExpand/saveOrUpdate"),
+    url: "/project/disputeMediationExpand/saveOrUpdate",
     method: "post",
     data,
   });

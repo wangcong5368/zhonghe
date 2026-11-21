@@ -114,8 +114,8 @@
           </el-row>
           <el-row>
             <el-col :span="12">
-              <el-form-item :label="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '法人或非法人组织' : '消费者姓名'"
-                prop="name" :label-width="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '140px' : '120px'">
+              <el-form-item :label="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '法人或非法人组织名称' : '消费者姓名'"
+                prop="name" :label-width="form.consumerIdentityType === DM_IDENTITY_TYPE.LEGAL ? '160px' : '120px'">
                 <el-input v-model="form.name" readonly maxlength="50" />
               </el-form-item>
             </el-col>
@@ -988,6 +988,10 @@ export default {
           }
           if (res.data != null && res.data.consumerIdentityType != null && res.data.consumerIdentityType !== '') {
             this.$set(this.form, 'consumerIdentityType', String(res.data.consumerIdentityType));
+            if (String(res.data.consumerIdentityType) === DM_IDENTITY_TYPE.LEGAL) {
+              this.$set(this.form, 'name', res.data.legalName == null ? '' : String(res.data.legalName));
+              this.$set(this.form, 'certNum', res.data.legalCertNum == null ? '' : String(res.data.legalCertNum));
+            }
           }
           if (res.data != null && res.data.disputedProductType != null && res.data.disputedProductType !== '') {
             this.$set(this.form, 'disputedProductType', String(res.data.disputedProductType));
